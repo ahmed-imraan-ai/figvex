@@ -18,18 +18,24 @@ If PlantUML itself draws something wrong, check whether the Java release does th
 
 | Branch | Deployed to | Used for |
 | --- | --- | --- |
-| `dev` | nowhere | Day-to-day work. Feature branches start here and merge back here. |
+| `dev` | nowhere | Day-to-day work. Every change branches from here and merges back here. |
 | `staging` | `staging--<site>.netlify.app` | Testing a release on Netlify before it goes live. |
 | `main` | the live site | Releases only. |
 
-Changes move one way: `dev` to `staging` to `main`. `main` and `staging` are protected: they only accept pull requests, CI (`test` and `docker`) has to pass, and the branches can't be deleted. The repository admin can override these rules, including force-pushing, when needed. Commit directly to `dev` or to a feature branch.
+Changes move one way: `dev` to `staging` to `main`. `main` and `staging` are protected: they only accept pull requests, CI (`test` and `docker`) has to pass, and the branches can't be deleted. The repository admin can override these rules, including force-pushing, when needed.
+
+Every change, however small, gets its own branch from `dev`, named after its type: `feat/graphviz`, `fix/export-pdf`, `docs/readme`. When it's done, it's merged into `dev` and the branch is deleted. Nothing is committed straight to `dev`.
 
 ```sh
-# Work
-git switch dev
-git switch -c my-change        # optional feature branch
+# Work on a branch of its own
+git switch dev && git pull
+git switch -c feat/my-change
 # ...commit...
-git switch dev && git merge my-change && git push
+
+# Merge it into dev and delete the branch
+git switch dev && git merge --no-ff feat/my-change && git push origin dev
+git branch -d feat/my-change
+git push origin --delete feat/my-change   # only if the branch was pushed
 
 # Send to staging for testing
 gh pr create --base staging --head dev --title "chore(release): promote dev to staging"
