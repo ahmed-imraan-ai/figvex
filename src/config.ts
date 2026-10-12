@@ -1,6 +1,7 @@
 export const APP_NAME = "Figvex";
 export const APP_VERSION = __APP_VERSION__;
 export const DEPLOY_LABEL = __DEPLOY_LABEL__;
+export const ON_NETLIFY = __ON_NETLIFY__;
 export const PLANTUML_VERSION = __PLANTUML_VERSION__;
 export const MERMAID_VERSION = __MERMAID_VERSION__;
 
