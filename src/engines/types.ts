@@ -1,6 +1,6 @@
-export type Engine = "plantuml" | "mermaid" | "graphviz" | "echarts" | "bpmn" | "sketch";
+export type Engine = "plantuml" | "mermaid" | "graphviz" | "echarts" | "bpmn" | "sketch" | "orgchart";
 
-export const ENGINES: readonly Engine[] = ["plantuml", "mermaid", "graphviz", "echarts", "bpmn", "sketch"];
+export const ENGINES: readonly Engine[] = ["plantuml", "mermaid", "graphviz", "echarts", "bpmn", "sketch", "orgchart"];
 
 export function isEngine(value: unknown): value is Engine {
   return ENGINES.includes(value as Engine);
@@ -24,6 +24,8 @@ export interface RenderOptions {
   bpmnStyle: BpmnStyle;
   /** Sketch only: straight lines or a hand-drawn look. */
   sketchStyle: SketchStyle;
+  /** Org charts only: card design. */
+  orgStyle: OrgStyle;
 }
 
 export type GraphvizStyle = "plain" | "default";
@@ -33,6 +35,8 @@ export type ChartStyle = "default" | "colour-blind" | "greyscale";
 export type BpmnStyle = "plain" | "colour";
 
 export type SketchStyle = "clean" | "hand-drawn";
+
+export type OrgStyle = "cards" | "minimal" | "bold";
 
 export type MermaidTheme = "default" | "neutral" | "base" | "forest" | "neo" | "redux" | "redux-color";
 
@@ -65,6 +69,7 @@ export const ENGINE_LABEL: Record<Engine, string> = {
   echarts: "ECharts",
   bpmn: "BPMN",
   sketch: "Sketch",
+  orgchart: "Org chart",
 };
 
 export const ENGINE_EXT: Record<Engine, string> = {
@@ -74,6 +79,7 @@ export const ENGINE_EXT: Record<Engine, string> = {
   echarts: "echarts",
   bpmn: "bpmn",
   sketch: "sketch",
+  orgchart: "org",
 };
 
 /** Short tag shown next to diagrams in lists. */
@@ -84,6 +90,7 @@ export const ENGINE_TAG: Record<Engine, string> = {
   echarts: "chart",
   bpmn: "bpmn",
   sketch: "sketch",
+  orgchart: "org",
 };
 
 /** File extensions recognised when opening a file. */
@@ -94,6 +101,7 @@ export const ENGINE_FILE_EXTS: Record<Engine, string[]> = {
   echarts: ["echarts", "json", "jsonc"],
   bpmn: ["bpmn", "bpmn2"],
   sketch: ["sketch"],
+  orgchart: ["org", "orgchart"],
 };
 
 /** Info string for a Markdown code block. */
@@ -104,4 +112,5 @@ export const ENGINE_FENCE: Record<Engine, string> = {
   echarts: "echarts",
   bpmn: "bpmn",
   sketch: "sketch",
+  orgchart: "orgchart",
 };
