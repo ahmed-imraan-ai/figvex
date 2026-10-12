@@ -1149,6 +1149,10 @@ body.is-resizing .stage {
   color: var(--accent);
 }
 
+.engine-tag[data-engine="orgchart"] {
+  color: var(--syn-keyword);
+}
+
 .library-item .item-actions {
   display: flex;
   padding-right: 4px;

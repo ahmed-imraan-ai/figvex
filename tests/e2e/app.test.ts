@@ -272,6 +272,18 @@ describe.skipIf(!chrome || !built)("Figvex in the browser", () => {
     expect(await text()).toMatch(/box dev 200 /);
   });
 
+  it("draws an org chart, reports mistakes by line and jumps to a person", async () => {
+    const broken = await openDiagram("orgchart", "Broken org", "orgchart\nJane: CEO\n  Ravi: CTO\nRavi .. Nobody");
+    expect(broken.error).toContain("line 4");
+    expect(broken.error).toContain('"Nobody"');
+    const ok = await openDiagram("orgchart", "Org click", "orgchart\nJane: CEO [Exec]\n  Ravi: CTO\n  Mia: CFO\n");
+    expect(ok.error).toBeNull();
+    expect(await page.$eval("#engine-label", (el) => el.textContent)).toBe("Org chart");
+    const box = await (await page.$('#sheet [data-qualified-name="Mia"] rect'))!.boundingBox();
+    await page.mouse.click(box!.x + box!.width / 2, box!.y + box!.height / 2);
+    expect(await page.$eval("#status-cursor", (el) => el.textContent)).toMatch(/^Ln 4,/);
+  });
+
   it("hides the drawing tools for other languages", async () => {
     await openDiagram("plantuml", "No tools", "@startuml\nTools -> Hidden\n@enduml");
     expect(await page.$eval(".sketch-tools", (el) => (el as HTMLElement).hidden)).toBe(true);

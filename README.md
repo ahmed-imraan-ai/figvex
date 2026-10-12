@@ -4,7 +4,7 @@
 
 **Live site: [figvex.sudo520.com](https://figvex.sudo520.com)**
 
-A live editor for PlantUML, Mermaid, Graphviz and BPMN diagrams, data charts and freeform sketches. Type on the left, the diagram redraws on the right. It runs in the browser, and your diagrams stay on your machine unless you share them or turn on the PlantUML server option.
+A live editor for PlantUML, Mermaid, Graphviz and BPMN diagrams, org charts, data charts and freeform sketches. Type on the left, the diagram redraws on the right. It runs in the browser, and your diagrams stay on your machine unless you share them or turn on the PlantUML server option.
 
 It was built for computer science students: UML for software engineering courses, ER diagrams for databases, state machines and automata for theory, trees and graphs for algorithms, Gantt charts for group projects, and charts of results for lab reports.
 
@@ -13,8 +13,9 @@ It was built for computer science students: UML for software engineering courses
 ## Features
 
 - Live preview for PlantUML, Mermaid, Graphviz DOT, BPMN 2.0 and ECharts data charts, with the language picked up from the first line
+- Org charts from an indented list of people, with departments, assistants, vacancies, dotted lines and three card styles
 - A sketch canvas for freeform diagrams: boxes, arrows that stay attached, text and pen, in a clean or hand-drawn style
-- 58 templates written around coursework: a library system class diagram, JWT login sequence, TCP state machine, DFA for multiples of 3, binary search tree, hash table, confusion matrix, sorting benchmark, library loan process, login wireframe, university ER schema, capstone Gantt plan and more
+- 62 templates written around coursework: a library system class diagram, JWT login sequence, TCP state machine, DFA for multiples of 3, binary search tree, hash table, confusion matrix, sorting benchmark, library loan process, login wireframe, society committee org chart, university ER schema, capstone Gantt plan and more
 - Export to SVG, PNG, JPG, WEBP and vector PDF, at 1× to 4× scale, with a solid or transparent background
 - Copy the image straight to the clipboard for pasting into a report or slides
 - Share links that carry the whole diagram in the URL, with no server involved
@@ -24,7 +25,7 @@ It was built for computer science students: UML for software engineering courses
 - Errors point at the line, with a marker in the editor
 - Every diagram saved in the browser, with rename, duplicate, delete and undo; collapsed, the list stays as a narrow rail of recent diagrams
 - Pick the language when you create a diagram; after that it follows the first line, shown as a label above the editor
-- Open `.puml`, `.mmd`, `.gv`, `.dot`, `.bpmn`, `.sketch`, chart and Markdown files, or drag them onto the window; a `.csv` file opens as a bar chart of its columns
+- Open `.puml`, `.mmd`, `.gv`, `.dot`, `.bpmn`, `.sketch`, `.org`, chart and Markdown files, or drag them onto the window; a `.csv` file opens as a bar chart of its columns
 - Light and dark themes for the app and for the diagrams, separately
 - Pan and zoom with mouse, trackpad or touch; works on phones as two tabs
 
@@ -116,6 +117,38 @@ text note 40 160 "Notes go here" size=18
 ```
 
 Elements are `box`, `ellipse`, `diamond`, `text`, `arrow`, `line` and `pen`. Options are `fill=`, `stroke=`, `width=`, `size=`, `dashed`, `round` and `bold`; arrows and lines also take `both` or `none` for their heads and `elbow` for right angles, and either end can name a side, such as `ceo.bottom`. The Style menu switches between **Clean** and **Hand-drawn**.
+
+## Org charts
+
+Write the people as an indented list and Figvex lays out the chart. Indenting a line puts that person under the line above.
+
+```
+orgchart
+title "Northwind Software"
+counts
+Jane Smith: Chief Executive [Executive]
+  + Lee Park: Executive Assistant
+  Ravi Patel: Chief Technology Officer [Engineering]
+    Ana Lopez #ana: Engineering Manager
+      Tom Reed: Developer
+      ?: Graduate Developer
+  Mia Chen #mia: Chief Financial Officer [Finance]
+ana .. mia "budget"
+```
+
+| Write | For |
+| --- | --- |
+| `Name: Job title [Department]` | A person. Only the name is needed. People without a department take their manager's colour. |
+| `+ Name: Job title` | An assistant, shown beside the manager rather than below |
+| `?: Job title` | A vacant post, drawn dashed |
+| `Name #id` | A short name, for dotted lines or when two people share a name |
+| `a .. b "label"` | A dotted-line (matrix) reporting line |
+| `title "…"` | A heading above the chart |
+| `direction right` | Left to right instead of top down |
+| `compact` | Stack the bottom level of each branch in a column, for wide teams |
+| `counts` | Show how many people sit under each manager |
+
+The Style menu has **Cards** (initials and a department colour strip), **Minimal** (black and white, for printing) and **Bold** (department-coloured headers). Department colours come with a legend, and clicking a person jumps to their line. For a chart you want to arrange by hand instead, use a sketch with the Connector tool.
 
 ## Charts
 
@@ -236,7 +269,7 @@ Set these as environment variables when building (in Netlify under **Site config
 ```
 src/
   main.ts             wiring: documents, rendering, toolbar, shortcuts
-  engines/            PlantUML, Mermaid, Graphviz, ECharts, BPMN and sketch engines, language detection, themes
+  engines/            PlantUML, Mermaid, Graphviz, ECharts, BPMN, sketch and org chart engines, language detection, themes
   editor/             CodeMirror setup, syntax colouring, autocomplete
   preview.ts          pan and zoom canvas, click-to-source
   export.ts           SVG, PNG, JPG, WEBP and PDF export

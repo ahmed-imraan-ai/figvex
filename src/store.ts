@@ -1,7 +1,7 @@
 // Diagrams and settings live in localStorage. Every access is guarded: private
 // windows and blocked storage must still give a working (if forgetful) app.
 
-import { isEngine, type BpmnStyle, type SketchStyle, type ChartStyle, type Engine, type GraphvizStyle, type MermaidTheme, type RenderOptions } from "./engines/types";
+import { isEngine, type BpmnStyle, type OrgStyle, type SketchStyle, type ChartStyle, type Engine, type GraphvizStyle, type MermaidTheme, type RenderOptions } from "./engines/types";
 
 export interface Doc {
   id: string;
@@ -22,6 +22,7 @@ export interface Settings {
   chartStyle: ChartStyle;
   bpmnStyle: BpmnStyle;
   sketchStyle: SketchStyle;
+  orgStyle: OrgStyle;
   fontSize: number;
   wrap: boolean;
   liveRender: boolean;
@@ -39,6 +40,7 @@ export const DEFAULT_SETTINGS: Settings = {
   chartStyle: "default",
   bpmnStyle: "plain",
   sketchStyle: "clean",
+  orgStyle: "cards",
   fontSize: 14,
   wrap: false,
   liveRender: true,
@@ -179,5 +181,6 @@ export function renderOptions(dark: boolean): RenderOptions {
     chartStyle: s.chartStyle,
     bpmnStyle: s.bpmnStyle,
     sketchStyle: s.sketchStyle,
+    orgStyle: s.orgStyle,
   };
 }
