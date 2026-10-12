@@ -88,13 +88,21 @@ For diagrams that don't fit a language: draw them. Pick **Blank sketch** under T
 
 | Tool | Key | |
 | --- | --- | --- |
-| Select | V | Click to select, Shift-click to add, drag to move, drag a corner to resize |
+| Select | V | Click to select, Shift-click to add, drag on empty space to box-select, drag to move, drag a corner to resize |
 | Box, Ellipse, Diamond | R, O, D | Drag to draw, or click for the usual size |
 | Arrow, Line | A, L | Start or end on a shape to attach to it; attached lines follow when it moves |
+| Connector | C | An arrow with right angles, for org charts and flow diagrams |
 | Text | T | Click and type |
 | Pen | P | Freehand |
 
-Double-click a shape or arrow (or press Enter) to edit its label; double-click empty space to add text. Delete removes the selection, Ctrl/⌘ D duplicates it, arrow keys nudge it, and Ctrl/⌘ Z undoes. Shapes snap to a 10 px grid; hold Alt to place freely.
+Double-click a shape or arrow (or press Enter) to edit its label; double-click empty space to add text. Delete removes the selection, Ctrl/⌘ D duplicates it, arrow keys nudge it, and Ctrl/⌘ Z undoes. Shapes snap to a 10 px grid; hold Alt to place freely. Scroll, or hold Space and drag, to pan.
+
+Snapping and arranging:
+
+- While moving, resizing or drawing, a shape lines up with the edges and centres of the shapes around it, and a guide line shows what it lined up with.
+- While drawing or re-attaching a line, the shape under the pointer shows a connection point on each side. Drop on one to pin the line to that side (`ceo.bottom`); drop anywhere else on the shape and the side follows the shape's position.
+- E switches the selected lines between straight and right angles.
+- With two or more shapes selected, buttons appear to align their left edges, centres, right edges, tops, middles or bottoms; with three or more, to space them evenly across or down.
 
 A sketch is stored as text, one element per line, so it saves, shares and undoes like everything else, and you can edit it on either side:
 
@@ -103,10 +111,11 @@ sketch
 box login 40 40 160 80 "Login page" round fill=#fde68a
 ellipse user 260 60 120 60 "User"
 arrow user -> login "signs in" dashed
+line login.right -> user.left elbow dashed
 text note 40 160 "Notes go here" size=18
 ```
 
-Elements are `box`, `ellipse`, `diamond`, `text`, `arrow`, `line` and `pen`. Options are `fill=`, `stroke=`, `width=`, `size=`, `dashed`, `round` and `bold`; arrows also take `both` or `none` for their heads. The Style menu switches between **Clean** and **Hand-drawn**.
+Elements are `box`, `ellipse`, `diamond`, `text`, `arrow`, `line` and `pen`. Options are `fill=`, `stroke=`, `width=`, `size=`, `dashed`, `round` and `bold`; arrows and lines also take `both` or `none` for their heads and `elbow` for right angles, and either end can name a side, such as `ceo.bottom`. The Style menu switches between **Clean** and **Hand-drawn**.
 
 ## Charts
 

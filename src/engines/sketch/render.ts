@@ -1,7 +1,7 @@
 // Draws a sketch as SVG. "clean" uses straight lines; "hand-drawn" wobbles
 // them with a seeded random so the same sketch always looks the same.
 
-import type { End, LinkEl, Point, ShapeEl, Sketch, SketchEl } from "./model";
+import type { LinkEl, Point, ShapeEl, Side, Sketch, SketchEl } from "./model";
 
 export interface SketchDraw {
   dark: boolean;
@@ -10,6 +10,12 @@ export interface SketchDraw {
   interactive?: boolean;
   /** Ids of selected elements (shape ids, or "#n" for the n-th element). */
   selected?: Set<string>;
+  /** Alignment guides to draw while dragging. */
+  guides?: { x: number[]; y: number[] };
+  /** A shape a line is about to attach to, and the side if one is chosen. */
+  target?: { id: string; side?: Side };
+  /** A box-selection rectangle. */
+  marquee?: { x: number; y: number; w: number; h: number };
 }
 
 const FONT = "Helvetica, Arial, sans-serif";
@@ -116,17 +122,95 @@ export function shapeCenter(el: ShapeEl): Point {
   return { x: b.x + b.w / 2, y: b.y + b.h / 2 };
 }
 
-/** Both ends of a link in canvas coordinates, clipped to the shapes they join. */
-export function linkEnds(link: LinkEl, shapes: Map<string, ShapeEl>): [Point, Point] {
-  const raw = (e: End): Point => ("id" in e ? shapeCenter(shapes.get(e.id)!) : e);
-  let a = raw(link.from);
-  let b = raw(link.to);
+const GAP = 4;
+export const SIDES: Side[] = ["top", "right", "bottom", "left"];
+
+/** The middle of one side of a shape, just outside it. */
+export function sidePoint(el: ShapeEl, side: Side, gap = GAP): Point {
+  const b = shapeBox(el);
+  if (side === "top") return { x: b.x + b.w / 2, y: b.y - gap };
+  if (side === "bottom") return { x: b.x + b.w / 2, y: b.y + b.h + gap };
+  if (side === "left") return { x: b.x - gap, y: b.y + b.h / 2 };
+  return { x: b.x + b.w + gap, y: b.y + b.h / 2 };
+}
+
+/** The side of a shape that faces a point, allowing for its proportions. */
+export function facingSide(el: ShapeEl, to: Point): Side {
+  const b = shapeBox(el);
+  const dx = (to.x - (b.x + b.w / 2)) / (b.w / 2 || 1);
+  const dy = (to.y - (b.y + b.h / 2)) / (b.h / 2 || 1);
+  if (Math.abs(dy) >= Math.abs(dx)) return dy > 0 ? "bottom" : "top";
+  return dx > 0 ? "right" : "left";
+}
+
+const vertical = (side: Side) => side === "top" || side === "bottom";
+
+/**
+ * The points a link passes through. Straight links run between the shapes'
+ * outlines (or pinned sides); elbow links leave and enter through sides and
+ * turn at right angles, so an org chart's lines stay square as boxes move.
+ */
+export function linkPath(link: LinkEl, shapes: Map<string, ShapeEl>): Point[] {
   const fa = "id" in link.from ? shapes.get(link.from.id) : undefined;
   const fb = "id" in link.to ? shapes.get(link.to.id) : undefined;
-  if (fa) a = edgePoint(fa, b);
-  if (fb) b = edgePoint(fb, fa ? shapeCenter(fa) : a);
-  if (fa && fb) a = edgePoint(fa, shapeCenter(fb));
-  return [a, b];
+  const pinA = "id" in link.from ? link.from.side : undefined;
+  const pinB = "id" in link.to ? link.to.side : undefined;
+  const ca = fa ? shapeCenter(fa) : (link.from as Point);
+  const cb = fb ? shapeCenter(fb) : (link.to as Point);
+
+  if (link.route !== "elbow") {
+    let a = fa ? (pinA ? sidePoint(fa, pinA) : edgePoint(fa, cb)) : ca;
+    const b = fb ? (pinB ? sidePoint(fb, pinB) : edgePoint(fb, pinA ? a : ca)) : cb;
+    if (fa && !pinA && pinB) a = edgePoint(fa, b);
+    return [a, b];
+  }
+
+  const sa = fa ? (pinA ?? facingSide(fa, cb)) : undefined;
+  const sb = fb ? (pinB ?? facingSide(fb, ca)) : undefined;
+  const a = fa ? sidePoint(fa, sa!) : ca;
+  const b = fb ? sidePoint(fb, sb!) : cb;
+  const va = sa ? vertical(sa) : sb ? vertical(sb) : Math.abs(b.y - a.y) >= Math.abs(b.x - a.x);
+  const vb = sb ? vertical(sb) : va;
+  let points: Point[];
+  if (va && vb) {
+    const midY = (a.y + b.y) / 2;
+    points = [a, { x: a.x, y: midY }, { x: b.x, y: midY }, b];
+  } else if (!va && !vb) {
+    const midX = (a.x + b.x) / 2;
+    points = [a, { x: midX, y: a.y }, { x: midX, y: b.y }, b];
+  } else if (va) {
+    points = [a, { x: a.x, y: b.y }, b];
+  } else {
+    points = [a, { x: b.x, y: a.y }, b];
+  }
+  // Drop repeated points and corners on a straight run.
+  return points.filter((p, i) => {
+    if (i === 0 || i === points.length - 1) return true;
+    const prev = points[i - 1];
+    const next = points[i + 1];
+    const same = Math.abs(p.x - prev.x) < 0.5 && Math.abs(p.y - prev.y) < 0.5;
+    const straightRun = (Math.abs(prev.x - p.x) < 0.5 && Math.abs(p.x - next.x) < 0.5) || (Math.abs(prev.y - p.y) < 0.5 && Math.abs(p.y - next.y) < 0.5);
+    return !same && !straightRun;
+  });
+}
+
+/** Both ends of a link in canvas coordinates. */
+export function linkEnds(link: LinkEl, shapes: Map<string, ShapeEl>): [Point, Point] {
+  const path = linkPath(link, shapes);
+  return [path[0], path[path.length - 1]];
+}
+
+function longestSegment(path: Point[]): [Point, Point] {
+  let best: [Point, Point] = [path[0], path[path.length - 1]];
+  let len = -1;
+  for (let i = 1; i < path.length; i++) {
+    const l = Math.hypot(path[i].x - path[i - 1].x, path[i].y - path[i - 1].y);
+    if (l > len) {
+      len = l;
+      best = [path[i - 1], path[i]];
+    }
+  }
+  return best;
 }
 
 export function sketchBounds(sketch: Sketch): { minX: number; minY: number; maxX: number; maxY: number } {
@@ -149,7 +233,7 @@ export function sketchBounds(sketch: Sketch): { minX: number; minY: number; maxX
     } else if (el.type === "pen") {
       for (const p of el.points) grow(p.x, p.y);
     } else if (el.type === "link") {
-      for (const p of linkEnds(el, shapes)) grow(p.x, p.y);
+      for (const p of linkPath(el, shapes)) grow(p.x, p.y);
     }
   }
   return { minX, minY, maxX, maxY };
@@ -250,12 +334,15 @@ export function drawSketch(sketch: Sketch, opts: SketchDraw): string {
         if (el.label) body += labelLines(el.label, cx, cy, el.style.size ?? 15, inkOn(el.style.fill, ink), font, el.style.bold);
       }
     } else if (el.type === "link") {
-      const [a, b] = linkEnds(el, shapes);
+      const path = linkPath(el, shapes);
       const heads = el.heads === "both" ? ' marker-start="url(#sk-head)" marker-end="url(#sk-head)"' : el.heads === "end" ? ' marker-end="url(#sk-head)"' : "";
-      const d = hand ? roughLine(a, b, rand).split("M").slice(0, 2).join("M") : `M${n(a.x)} ${n(a.y)}L${n(b.x)} ${n(b.y)}`;
-      if (opts.interactive) body += `<path d="M${n(a.x)} ${n(a.y)}L${n(b.x)} ${n(b.y)}" stroke="transparent" stroke-width="14" fill="none"/>`;
-      body += `<path d="${d}" fill="none" stroke="${stroke}" stroke-width="${sw}"${dash} stroke-linecap="round"${heads}/>`;
+      const straight = path.map((p, i) => `${i ? "L" : "M"}${n(p.x)} ${n(p.y)}`).join("");
+      // Hand-drawn: one wobbly pass per segment, so the arrow head stays on the last one.
+      const d = hand ? path.slice(1).map((p, i) => "M" + roughLine(path[i], p, rand).split("M")[1]).join("") : straight;
+      if (opts.interactive) body += `<path d="${straight}" stroke="transparent" stroke-width="14" fill="none"/>`;
+      body += `<path d="${d}" fill="none" stroke="${stroke}" stroke-width="${sw}"${dash} stroke-linecap="round" stroke-linejoin="round"${heads}/>`;
       if (el.label) {
+        const [a, b] = longestSegment(path);
         const mx = (a.x + b.x) / 2;
         const my = (a.y + b.y) / 2;
         const size = el.style.size ?? 13;
@@ -279,8 +366,30 @@ export function drawSketch(sketch: Sketch, opts: SketchDraw): string {
   });
 
   if (opts.interactive && opts.selected?.size) parts.push(selection(sketch, opts.selected, shapes, accent));
+  if (opts.interactive) parts.push(overlays(opts, shapes, accent, { minX, minY, maxX, maxY }));
 
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="${minX} ${minY} ${w} ${h}">${parts.join("")}</svg>`;
+}
+
+/** Guides, the attach target and the box-selection rectangle. */
+function overlays(opts: SketchDraw, shapes: Map<string, ShapeEl>, accent: string, b: { minX: number; minY: number; maxX: number; maxY: number }): string {
+  let out = "";
+  const line = `stroke="${accent}" stroke-width="1" stroke-dasharray="5 4" pointer-events="none"`;
+  for (const x of opts.guides?.x ?? []) out += `<path d="M${n(x)} ${b.minY}V${b.maxY}" ${line}/>`;
+  for (const y of opts.guides?.y ?? []) out += `<path d="M${b.minX} ${n(y)}H${b.maxX}" ${line}/>`;
+  const target = opts.target && shapes.get(opts.target.id);
+  if (target) {
+    const box = shapeBox(target);
+    out += `<rect x="${n(box.x - 3)}" y="${n(box.y - 3)}" width="${n(box.w + 6)}" height="${n(box.h + 6)}" rx="4" fill="none" stroke="${accent}" stroke-width="2" opacity="0.6" pointer-events="none"/>`;
+    for (const side of SIDES) {
+      const p = sidePoint(target, side, 0);
+      const on = opts.target!.side === side;
+      out += `<circle cx="${n(p.x)}" cy="${n(p.y)}" r="${on ? 6 : 4.5}" fill="${on ? accent : "#fff"}" stroke="${accent}" stroke-width="1.5" pointer-events="none"/>`;
+    }
+  }
+  const m = opts.marquee;
+  if (m) out += `<rect x="${n(m.x)}" y="${n(m.y)}" width="${n(m.w)}" height="${n(m.h)}" fill="${accent}" fill-opacity="0.06" stroke="${accent}" stroke-width="1" stroke-dasharray="4 3" pointer-events="none"/>`;
+  return out;
 }
 
 /** Outline and handles for the selected elements. */

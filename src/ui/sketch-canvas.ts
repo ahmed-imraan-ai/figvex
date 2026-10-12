@@ -13,15 +13,17 @@ import {
   type Point,
   type ShapeEl,
   type ShapeKind,
+  type Side,
   type Sketch,
   type SketchEl,
 } from "../engines/sketch/model";
-import { drawSketch, keyOf, linkEnds, shapeBox, shapeMap } from "../engines/sketch/render";
+import { drawSketch, keyOf, linkEnds, shapeBox, shapeMap, sidePoint, SIDES } from "../engines/sketch/render";
+import { align, alignSnap, distribute, edgeSnap, type Alignment, type Box, type Guides } from "../engines/sketch/snap";
 import type { SketchStyle } from "../engines/types";
 import { h, isMac } from "../lib/dom";
 import type { Preview, PreviewTool } from "../preview";
 
-type Tool = "select" | "box" | "ellipse" | "diamond" | "arrow" | "line" | "text" | "pen";
+type Tool = "select" | "box" | "ellipse" | "diamond" | "arrow" | "connector" | "line" | "text" | "pen";
 
 const TOOLS: { tool: Tool; key: string; label: string; icon: string }[] = [
   { tool: "select", key: "v", label: "Select and move", icon: '<path d="M6 4l12 7-5.5 1.5L10 18z"/>' },
@@ -29,6 +31,7 @@ const TOOLS: { tool: Tool; key: string; label: string; icon: string }[] = [
   { tool: "ellipse", key: "o", label: "Ellipse", icon: '<ellipse cx="12" cy="12" rx="8.5" ry="6"/>' },
   { tool: "diamond", key: "d", label: "Diamond", icon: '<path d="M12 4l8 8-8 8-8-8z"/>' },
   { tool: "arrow", key: "a", label: "Arrow", icon: '<path d="M5 19L19 5M11 5h8v8"/>' },
+  { tool: "connector", key: "c", label: "Connector with right angles", icon: '<path d="M4 5h7v14h8M16 16l3 3-3 3"/>' },
   { tool: "line", key: "l", label: "Line", icon: '<path d="M5 19L19 5"/>' },
   { tool: "text", key: "t", label: "Text", icon: '<path d="M6 6h12M12 6v13"/>' },
   { tool: "pen", key: "p", label: "Pen", icon: '<path d="M4 20l1-4L16 5l3 3L8 19z"/>' },
@@ -43,8 +46,12 @@ const DEFAULT_SIZE: Record<Exclude<ShapeKind, "text">, { w: number; h: number }>
 const GRID = 10;
 const snap = (v: number, free: boolean) => (free ? Math.round(v) : Math.round(v / GRID) * GRID);
 
+/** Where an element was when a move started. */
+type Snapshot = { x: number; y: number } | Point[] | [End, End];
+
 type Gesture =
-  | { kind: "move"; last: Point; moved: boolean }
+  | { kind: "move"; start: Point; moved: boolean; primary?: ShapeEl; orig: Map<SketchEl, Snapshot> }
+  | { kind: "marquee"; start: Point }
   | { kind: "resize"; key: string; corner: string; orig: { x: number; y: number; w: number; h: number }; start: Point }
   | { kind: "create"; el: ShapeEl; start: Point }
   | { kind: "link"; el: LinkEl; start: Point }
@@ -70,8 +77,26 @@ export class SketchCanvas implements PreviewTool {
   private bar: HTMLElement;
   private input: HTMLTextAreaElement | null = null;
   private lastDown: { t: number; x: number; y: number } | null = null;
+  private guides: Guides | undefined;
+  private target: { id: string; side?: Side } | undefined;
+  private marquee: Box | undefined;
+  /** Space is held: drags pan instead of selecting. */
+  private space = false;
+  private arrange: HTMLElement;
+  private arrangeSignature = "";
 
   constructor(private o: SketchCanvasOptions) {
+    window.addEventListener("keydown", (e) => {
+      if (e.key === " " && this.active && e.target === o.preview.stageElement) {
+        this.space = true;
+        e.preventDefault();
+      }
+    });
+    window.addEventListener("keyup", (e) => {
+      if (e.key === " ") this.space = false;
+    });
+    this.arrange = h("div", { class: "sketch-arrange", role: "toolbar", "aria-label": "Arrange", hidden: "" });
+    o.pane.append(this.arrange);
     const shortcut = (k: string) => k.toUpperCase();
     this.bar = h(
       "div",
@@ -110,6 +135,7 @@ export class SketchCanvas implements PreviewTool {
     if (!this.active) return;
     this.active = false;
     this.bar.hidden = true;
+    this.arrange.hidden = true;
     delete this.o.pane.dataset.sketchTool;
     this.closeInput(false);
     this.selected.clear();
@@ -134,11 +160,133 @@ export class SketchCanvas implements PreviewTool {
   }
 
   private render(): string {
-    return drawSketch(this.model!, { ...this.o.look(), interactive: true, selected: this.selected });
+    this.updateArrange();
+    return drawSketch(this.model!, {
+      ...this.o.look(),
+      interactive: true,
+      selected: this.selected,
+      guides: this.guides,
+      target: this.target,
+      marquee: this.marquee,
+    });
   }
 
   private redraw() {
     if (this.model) this.o.show(this.render());
+  }
+
+  /** Snapping distance in diagram units: about 7 screen pixels at any zoom. */
+  private get tolerance() {
+    return 7 / (this.o.preview.toStage(0, 0).scale || 1);
+  }
+
+  private selectedEls(): SketchEl[] {
+    return this.model ? this.model.elements.filter((el, i) => this.selected.has(keyOf(el, i))) : [];
+  }
+
+  private selectedShapes(): ShapeEl[] {
+    return this.selectedEls().filter((el): el is ShapeEl => el.type === "shape");
+  }
+
+  private selectedLinks(): LinkEl[] {
+    return this.selectedEls().filter((el): el is LinkEl => el.type === "link");
+  }
+
+  /** Boxes of the shapes that aren't selected, for alignment guides. */
+  private otherBoxes(except: Set<SketchEl>): Box[] {
+    return (this.model?.elements ?? []).filter((el): el is ShapeEl => el.type === "shape" && !except.has(el)).map(shapeBox);
+  }
+
+  /** Align and distribute for several shapes; straight or elbow for lines. */
+  private updateArrange() {
+    const els = this.selectedEls();
+    const shapes = els.filter((el): el is ShapeEl => el.type === "shape");
+    const links = els.filter((el): el is LinkEl => el.type === "link");
+    this.arrange.hidden = !!this.gesture || (shapes.length < 2 && !links.length);
+    // Rebuild only when the set of buttons changes, so they stay clickable.
+    const signature = `${Math.min(shapes.length, 3)}|${links.length ? links.every((l) => l.route === "elbow") : "-"}|${this.selected.size}`;
+    if (signature === this.arrangeSignature) return;
+    this.arrangeSignature = signature;
+    const button =(label: string, icon: string, run: () => void, pressed?: boolean) => {
+      const b = h("button", {
+        type: "button",
+        class: "sketch-tool",
+        title: label,
+        "aria-label": label,
+        "aria-pressed": pressed === undefined ? false : String(pressed),
+        onclick: run,
+      });
+      // Fixed icon markup below, not user input.
+      b.innerHTML = `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${icon}</svg>`;
+      return b;
+    };
+    const items: HTMLElement[] = [];
+    if (shapes.length >= 2) {
+      const a = (how: Alignment) => () => {
+        const now = this.selectedShapes();
+        this.arrangeShapes(now, align(now.map(shapeBox), how));
+      };
+      const spread = (axis: "x" | "y") => () => {
+        const now = this.selectedShapes();
+        this.arrangeShapes(now, distribute(now.map(shapeBox), axis));
+      };
+      items.push(
+        button("Align left", '<path d="M4 3v18"/><rect x="7" y="6" width="10" height="4"/><rect x="7" y="14" width="6" height="4"/>', a("left")),
+        button("Align centres", '<path d="M12 3v18"/><rect x="6" y="6" width="12" height="4"/><rect x="8" y="14" width="8" height="4"/>', a("center")),
+        button("Align right", '<path d="M20 3v18"/><rect x="7" y="6" width="10" height="4"/><rect x="11" y="14" width="6" height="4"/>', a("right")),
+        button("Align top", '<path d="M3 4h18"/><rect x="6" y="7" width="4" height="10"/><rect x="14" y="7" width="4" height="6"/>', a("top")),
+        button("Align middles", '<path d="M3 12h18"/><rect x="6" y="6" width="4" height="12"/><rect x="14" y="8" width="4" height="8"/>', a("middle")),
+        button("Align bottom", '<path d="M3 20h18"/><rect x="6" y="7" width="4" height="10"/><rect x="14" y="11" width="4" height="6"/>', a("bottom")),
+      );
+      if (shapes.length >= 3) {
+        items.push(
+          button("Space evenly across", '<path d="M3 4v16M21 4v16"/><rect x="9" y="8" width="6" height="8"/>', spread("x")),
+          button("Space evenly down", '<path d="M4 3h16M4 21h16"/><rect x="8" y="9" width="8" height="6"/>', spread("y")),
+        );
+      }
+    }
+    if (links.length) {
+      const elbow = links.every((l) => l.route === "elbow");
+      items.push(
+        button("Straight line (E)", '<path d="M5 19L19 5"/>', () => this.setRoute(this.selectedLinks(), "straight"), !elbow),
+        button("Right-angle line (E)", '<path d="M5 19V12h14V5"/>', () => this.setRoute(this.selectedLinks(), "elbow"), elbow),
+      );
+    }
+    this.arrange.replaceChildren(...items);
+  }
+
+  private arrangeShapes(shapes: ShapeEl[], boxes: Box[]) {
+    shapes.forEach((el, i) => {
+      el.x = Math.round(boxes[i].x);
+      el.y = Math.round(boxes[i].y);
+      this.dirty.add(el);
+    });
+    this.commit();
+  }
+
+  private setRoute(links: LinkEl[], route: LinkEl["route"]) {
+    for (const l of links) {
+      l.route = route;
+      this.dirty.add(l);
+    }
+    this.commit();
+  }
+
+  /** The shape under a point, and the side whose connection point is close. */
+  private attachAt(p: Point, except?: string): { id: string; side?: Side } | undefined {
+    const shape = this.shapeAt(p, except, this.tolerance * 2);
+    if (!shape || shape.kind === "text") return undefined;
+    let side: Side | undefined;
+    let best = this.tolerance * 2.2;
+    for (const s of SIDES) {
+      const q = sidePoint(shape, s, 0);
+      const d = Math.hypot(q.x - p.x, q.y - p.y);
+      if (d < best) {
+        best = d;
+        side = s;
+      }
+    }
+    return { id: shape.id, side };
   }
 
   private setTool(tool: Tool) {
@@ -176,14 +324,14 @@ export class SketchCanvas implements PreviewTool {
     return index < 0 ? null : { el: this.model.elements[index], key };
   }
 
-  /** Topmost shape whose box contains the point. */
-  private shapeAt(p: Point, except?: string): ShapeEl | null {
+  /** Topmost shape whose box (grown by `margin`) contains the point. */
+  private shapeAt(p: Point, except?: string, margin = 0): ShapeEl | null {
     if (!this.model) return null;
     for (let i = this.model.elements.length - 1; i >= 0; i--) {
       const el = this.model.elements[i];
       if (el.type !== "shape" || el.id === except) continue;
       const b = shapeBox(el);
-      if (p.x >= b.x && p.x <= b.x + b.w && p.y >= b.y && p.y <= b.y + b.h) return el;
+      if (p.x >= b.x - margin && p.x <= b.x + b.w + margin && p.y >= b.y - margin && p.y <= b.y + b.h + margin) return el;
     }
     return null;
   }
@@ -191,7 +339,7 @@ export class SketchCanvas implements PreviewTool {
   // -- Pointer input, called by the preview -------------------------------
 
   down(e: PointerEvent, at: Point): boolean {
-    if (!this.model || e.button !== 0) return false;
+    if (!this.model || e.button !== 0 || this.space) return false;
     this.closeInput(true);
     const free = e.altKey;
     // Pointer capture hides the real target from dblclick, so spot it here.
@@ -218,11 +366,15 @@ export class SketchCanvas implements PreviewTool {
       }
       const hit = this.elementAt(e.target);
       if (!hit) {
-        if (this.selected.size) {
-          this.selected.clear();
+        if (!e.shiftKey && this.selected.size) this.selected.clear();
+        // Touch drags on empty space pan; mouse drags draw a selection box.
+        if (e.pointerType === "touch") {
           this.redraw();
+          return false;
         }
-        return false; // let the preview pan
+        this.gesture = { kind: "marquee", start: at };
+        this.redraw();
+        return true;
       }
       if (e.shiftKey) {
         if (this.selected.has(hit.key)) this.selected.delete(hit.key);
@@ -230,7 +382,13 @@ export class SketchCanvas implements PreviewTool {
       } else if (!this.selected.has(hit.key)) {
         this.selected = new Set([hit.key]);
       }
-      this.gesture = { kind: "move", last: at, moved: false };
+      const orig = new Map<SketchEl, Snapshot>();
+      for (const el of this.selectedEls()) {
+        if (el.type === "shape") orig.set(el, { x: el.x, y: el.y });
+        else if (el.type === "pen") orig.set(el, el.points.map((p) => ({ ...p })));
+        else if (el.type === "link") orig.set(el, [{ ...el.from }, { ...el.to }]);
+      }
+      this.gesture = { kind: "move", start: at, moved: false, primary: hit.el.type === "shape" ? hit.el : undefined, orig };
       this.redraw();
       return true;
     }
@@ -243,15 +401,16 @@ export class SketchCanvas implements PreviewTool {
       this.gesture = { kind: "pen", el };
       return true;
     }
-    if (this.tool === "arrow" || this.tool === "line") {
-      const from = this.shapeAt(at);
+    if (this.tool === "arrow" || this.tool === "line" || this.tool === "connector") {
+      const from = this.attachAt(at);
       const el: LinkEl = {
         type: "link",
-        kind: this.tool,
-        from: from ? { id: from.id } : start,
+        kind: this.tool === "line" ? "line" : "arrow",
+        from: from ?? start,
         to: { ...start },
         label: "",
-        heads: this.tool === "arrow" ? "end" : "none",
+        heads: this.tool === "line" ? "none" : "end",
+        route: this.tool === "connector" ? "elbow" : "straight",
         style: {},
       };
       this.model.elements.push(el);
@@ -270,11 +429,21 @@ export class SketchCanvas implements PreviewTool {
       return true;
     }
     const kind = this.tool;
-    const el: ShapeEl = { type: "shape", kind, id: nextId(this.model, kind), x: start.x, y: start.y, w: 1, h: 1, label: "", style: kind === "box" ? { round: true } : {} };
+    const begin = free ? start : this.snapPoint(at, new Set());
+    const el: ShapeEl = { type: "shape", kind, id: nextId(this.model, kind), x: begin.x, y: begin.y, w: 1, h: 1, label: "", style: kind === "box" ? { round: true } : {} };
     this.model.elements.push(el);
     this.dirty.add(el);
-    this.gesture = { kind: "create", el, start };
+    this.gesture = { kind: "create", el, start: begin };
     return true;
+  }
+
+  /** A point snapped to the other shapes' lines where close, else to the grid. */
+  private snapPoint(p: Point, except: Set<SketchEl>): Point {
+    const others = this.otherBoxes(except);
+    const x = edgeSnap(p.x, others, "x", this.tolerance);
+    const y = edgeSnap(p.y, others, "y", this.tolerance);
+    this.guides = { x: x.guide === undefined ? [] : [x.guide], y: y.guide === undefined ? [] : [y.guide] };
+    return { x: x.guide === undefined ? snap(p.x, false) : x.value, y: y.guide === undefined ? snap(p.y, false) : y.value };
   }
 
   move(e: PointerEvent, at: Point) {
@@ -283,51 +452,100 @@ export class SketchCanvas implements PreviewTool {
     const g = this.gesture;
     if (!g || !this.model) return;
     const free = e.altKey;
+    this.guides = undefined;
+    this.target = undefined;
     switch (g.kind) {
       case "move": {
-        const dx = at.x - g.last.x;
-        const dy = at.y - g.last.y;
+        let dx = at.x - g.start.x;
+        let dy = at.y - g.start.y;
         if (!g.moved && Math.hypot(dx, dy) < 3) return;
         g.moved = true;
-        g.last = at;
-        this.translateSelected(dx, dy);
+        const p = g.primary && (g.orig.get(g.primary) as { x: number; y: number } | undefined);
+        if (g.primary && p && !free) {
+          // Grid first, then line up with other shapes when one is close.
+          dx = snap(p.x + dx, false) - p.x;
+          dy = snap(p.y + dy, false) - p.y;
+          const box = { ...shapeBox(g.primary), x: p.x + at.x - g.start.x, y: p.y + at.y - g.start.y };
+          const lined = alignSnap(box, this.otherBoxes(new Set(g.orig.keys())), this.tolerance);
+          if (lined.guides.x.length) dx = box.x + lined.dx - p.x;
+          if (lined.guides.y.length) dy = box.y + lined.dy - p.y;
+          this.guides = lined.guides;
+        }
+        for (const [el, snap0] of g.orig) {
+          this.dirty.add(el);
+          if (el.type === "shape") {
+            const o = snap0 as { x: number; y: number };
+            el.x = Math.round(o.x + dx);
+            el.y = Math.round(o.y + dy);
+          } else if (el.type === "pen") {
+            el.points = (snap0 as Point[]).map((q) => ({ x: q.x + dx, y: q.y + dy }));
+          } else if (el.type === "link") {
+            const [f, t] = snap0 as [End, End];
+            const shift = (end: End): End => ("id" in end ? end : { x: end.x + dx, y: end.y + dy });
+            el.from = shift(f);
+            el.to = shift(t);
+          }
+        }
         break;
       }
+      case "marquee":
+        this.marquee = {
+          x: Math.min(g.start.x, at.x),
+          y: Math.min(g.start.y, at.y),
+          w: Math.abs(at.x - g.start.x),
+          h: Math.abs(at.y - g.start.y),
+        };
+        break;
       case "resize": {
         const el = this.model.elements.find((x, i) => keyOf(x, i) === g.key) as ShapeEl | undefined;
         if (!el) return;
         const { orig } = g;
+        const others = this.otherBoxes(new Set([el]));
+        const guides: Guides = { x: [], y: [] };
+        const edge = (v: number, axis: "x" | "y") => {
+          if (free) return Math.round(v);
+          const s = edgeSnap(v, others, axis, this.tolerance);
+          if (s.guide === undefined) return snap(v, false);
+          guides[axis].push(s.guide);
+          return s.value;
+        };
         let x1 = orig.x;
         let y1 = orig.y;
         let x2 = orig.x + orig.w;
         let y2 = orig.y + orig.h;
-        if (g.corner.includes("w")) x1 = snap(at.x, free);
-        if (g.corner.includes("e")) x2 = snap(at.x, free);
-        if (g.corner.includes("n")) y1 = snap(at.y, free);
-        if (g.corner.includes("s")) y2 = snap(at.y, free);
+        if (g.corner.includes("w")) x1 = edge(at.x, "x");
+        if (g.corner.includes("e")) x2 = edge(at.x, "x");
+        if (g.corner.includes("n")) y1 = edge(at.y, "y");
+        if (g.corner.includes("s")) y2 = edge(at.y, "y");
         el.x = Math.min(x1, x2);
         el.y = Math.min(y1, y2);
         el.w = Math.max(20, Math.abs(x2 - x1));
         el.h = Math.max(20, Math.abs(y2 - y1));
+        this.guides = guides;
         this.dirty.add(el);
         break;
       }
       case "create": {
-        const x2 = snap(at.x, free);
-        const y2 = snap(at.y, free);
-        g.el.x = Math.min(g.start.x, x2);
-        g.el.y = Math.min(g.start.y, y2);
-        g.el.w = Math.max(1, Math.abs(x2 - g.start.x));
-        g.el.h = Math.max(1, Math.abs(y2 - g.start.y));
+        const end = free ? { x: Math.round(at.x), y: Math.round(at.y) } : this.snapPoint(at, new Set([g.el]));
+        g.el.x = Math.min(g.start.x, end.x);
+        g.el.y = Math.min(g.start.y, end.y);
+        g.el.w = Math.max(1, Math.abs(end.x - g.start.x));
+        g.el.h = Math.max(1, Math.abs(end.y - g.start.y));
         break;
       }
-      case "link":
-        g.el.to = { x: snap(at.x, free), y: snap(at.y, free) };
+      case "link": {
+        const fromId = "id" in g.el.from ? g.el.from.id : undefined;
+        this.target = this.attachAt(at, fromId);
+        g.el.to = this.target ? { ...this.target } : { x: snap(at.x, free), y: snap(at.y, free) };
         break;
-      case "end":
-        g.el[g.end] = { x: snap(at.x, free), y: snap(at.y, free) };
+      }
+      case "end": {
+        const other = g.el[g.end === "from" ? "to" : "from"];
+        this.target = this.attachAt(at, "id" in other ? other.id : undefined);
+        g.el[g.end] = this.target ? { ...this.target } : { x: snap(at.x, free), y: snap(at.y, free) };
         this.dirty.add(g.el);
         break;
+      }
       case "pen": {
         const last = g.el.points[g.el.points.length - 1];
         if (Math.hypot(at.x - last.x, at.y - last.y) >= 3) g.el.points.push({ x: at.x, y: at.y });
@@ -340,11 +558,33 @@ export class SketchCanvas implements PreviewTool {
   up(_e: PointerEvent, at: Point) {
     const g = this.gesture;
     this.gesture = null;
+    this.guides = undefined;
+    this.target = undefined;
     if (!g || !this.model) return;
     switch (g.kind) {
       case "move":
         if (g.moved) this.commit();
+        else this.redraw();
         return;
+      case "marquee": {
+        const m = this.marquee;
+        this.marquee = undefined;
+        if (m && (m.w > 2 || m.h > 2)) {
+          const inside = (p: Point) => p.x >= m.x && p.x <= m.x + m.w && p.y >= m.y && p.y <= m.y + m.h;
+          const shapes = shapeMap(this.model);
+          this.model.elements.forEach((el, i) => {
+            let ok = false;
+            if (el.type === "shape") {
+              const b = shapeBox(el);
+              ok = inside({ x: b.x, y: b.y }) && inside({ x: b.x + b.w, y: b.y + b.h });
+            } else if (el.type === "link") ok = linkEnds(el, shapes).every(inside);
+            else if (el.type === "pen") ok = el.points.every(inside);
+            if (ok) this.selected.add(keyOf(el, i));
+          });
+        }
+        this.redraw();
+        return;
+      }
       case "resize":
         this.commit();
         return;
@@ -364,8 +604,9 @@ export class SketchCanvas implements PreviewTool {
         return;
       }
       case "link": {
-        const target = this.shapeAt(at, "id" in g.el.from ? g.el.from.id : undefined);
-        if (target) g.el.to = { id: target.id };
+        const fromId = "id" in g.el.from ? g.el.from.id : undefined;
+        const target = this.attachAt(at, fromId);
+        if (target) g.el.to = target;
         const [a, b] = linkEnds(g.el, shapeMap(this.model));
         if (Math.hypot(b.x - a.x, b.y - a.y) < 8) {
           this.model.elements.pop();
@@ -379,8 +620,8 @@ export class SketchCanvas implements PreviewTool {
       }
       case "end": {
         const other = g.el[g.end === "from" ? "to" : "from"];
-        const target = this.shapeAt(at, "id" in other ? other.id : undefined);
-        if (target) g.el[g.end] = { id: target.id };
+        const target = this.attachAt(at, "id" in other ? other.id : undefined);
+        if (target) g.el[g.end] = target;
         this.commit();
         return;
       }
@@ -459,6 +700,11 @@ export class SketchCanvas implements PreviewTool {
     if (nudge[e.key] && this.selected.size) {
       this.translateSelected(...nudge[e.key]);
       this.commit();
+      return true;
+    }
+    const links = this.selectedEls().filter((el): el is LinkEl => el.type === "link");
+    if (k === "e" && links.length) {
+      this.setRoute(links, links.every((l) => l.route === "elbow") ? "straight" : "elbow");
       return true;
     }
     const tool = TOOLS.find((t) => t.key === k);
