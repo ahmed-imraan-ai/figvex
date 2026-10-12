@@ -1,6 +1,6 @@
-export type Engine = "plantuml" | "mermaid" | "graphviz" | "echarts";
+export type Engine = "plantuml" | "mermaid" | "graphviz" | "echarts" | "bpmn";
 
-export const ENGINES: readonly Engine[] = ["plantuml", "mermaid", "graphviz", "echarts"];
+export const ENGINES: readonly Engine[] = ["plantuml", "mermaid", "graphviz", "echarts", "bpmn"];
 
 export function isEngine(value: unknown): value is Engine {
   return ENGINES.includes(value as Engine);
@@ -20,11 +20,15 @@ export interface RenderOptions {
   graphvizStyle: GraphvizStyle;
   /** Charts only: the colour palette. */
   chartStyle: ChartStyle;
+  /** BPMN only: black on white, or tinted shapes. */
+  bpmnStyle: BpmnStyle;
 }
 
 export type GraphvizStyle = "plain" | "default";
 
 export type ChartStyle = "default" | "colour-blind" | "greyscale";
+
+export type BpmnStyle = "plain" | "colour";
 
 export type MermaidTheme = "default" | "neutral" | "base" | "forest" | "neo" | "redux" | "redux-color";
 
@@ -55,6 +59,7 @@ export const ENGINE_LABEL: Record<Engine, string> = {
   mermaid: "Mermaid",
   graphviz: "Graphviz",
   echarts: "ECharts",
+  bpmn: "BPMN",
 };
 
 export const ENGINE_EXT: Record<Engine, string> = {
@@ -62,6 +67,7 @@ export const ENGINE_EXT: Record<Engine, string> = {
   mermaid: "mmd",
   graphviz: "gv",
   echarts: "echarts",
+  bpmn: "bpmn",
 };
 
 /** Short tag shown next to diagrams in lists. */
@@ -70,6 +76,7 @@ export const ENGINE_TAG: Record<Engine, string> = {
   mermaid: "mmd",
   graphviz: "dot",
   echarts: "chart",
+  bpmn: "bpmn",
 };
 
 /** File extensions recognised when opening a file. */
@@ -78,6 +85,7 @@ export const ENGINE_FILE_EXTS: Record<Engine, string[]> = {
   mermaid: ["mmd", "mermaid"],
   graphviz: ["gv", "dot"],
   echarts: ["echarts", "json", "jsonc"],
+  bpmn: ["bpmn", "bpmn2"],
 };
 
 /** Info string for a Markdown code block. */
@@ -86,4 +94,5 @@ export const ENGINE_FENCE: Record<Engine, string> = {
   mermaid: "mermaid",
   graphviz: "dot",
   echarts: "echarts",
+  bpmn: "bpmn",
 };

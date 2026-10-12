@@ -216,7 +216,53 @@ function chartSource(ctx: CompletionContext): CompletionResult | null {
   return { from: word.from, options: CHART_KEYS, validFor: /^"?\w*$/ };
 }
 
-const SOURCES = { plantuml: plantumlSource, mermaid: mermaidSource, graphviz: dotSource, echarts: chartSource } as const;
+/** BPMN elements as [name, attributes and body]; "$P" is the file's namespace prefix. */
+const BPMN_ELEMENTS: [string, string, string][] = [
+  ["startEvent", 'startEvent id="${start}" name="${Start}" />', "start event"],
+  ["endEvent", 'endEvent id="${end}" name="${Done}" />', "end event"],
+  ["task", 'task id="${task}" name="${Do something}" />', "task"],
+  ["userTask", 'userTask id="${task}" name="${Review}" />', "task done by a person"],
+  ["serviceTask", 'serviceTask id="${task}" name="${Call API}" />', "automated task"],
+  ["sendTask", 'sendTask id="${task}" name="${Send email}" />', "task"],
+  ["receiveTask", 'receiveTask id="${task}" name="${Wait for reply}" />', "task"],
+  ["exclusiveGateway", 'exclusiveGateway id="${gateway}" name="${Approved?}" />', "XOR gateway"],
+  ["parallelGateway", 'parallelGateway id="${fork}" />', "AND gateway"],
+  ["inclusiveGateway", 'inclusiveGateway id="${gateway}" />', "OR gateway"],
+  ["eventBasedGateway", 'eventBasedGateway id="${gateway}" />', "gateway"],
+  ["sequenceFlow", 'sequenceFlow id="${flow}" sourceRef="${from}" targetRef="${to}" />', "arrow between steps"],
+  ["subProcess", 'subProcess id="${sub}" name="${Sub-process}">\n  ${}\n</$PsubProcess>', "sub-process"],
+  ["boundaryEvent", 'boundaryEvent id="${timeout}" attachedToRef="${task}">\n  <$PtimerEventDefinition />\n</$PboundaryEvent>', "event on a task's edge"],
+  ["intermediateCatchEvent", 'intermediateCatchEvent id="${wait}" name="${2 days}">\n  <$PtimerEventDefinition />\n</$PintermediateCatchEvent>', "wait for an event"],
+  ["messageEventDefinition", "messageEventDefinition />", "makes an event a message event"],
+  ["timerEventDefinition", "timerEventDefinition />", "makes an event a timer event"],
+  ["errorEventDefinition", "errorEventDefinition />", "makes an event an error event"],
+  ["process", 'process id="${process}" isExecutable="false">\n  ${}\n</$Pprocess>', "process"],
+  ["laneSet", 'laneSet id="${lanes}">\n  <$Plane id="${lane}" name="${Role}">\n    <$PflowNodeRef>${task}</$PflowNodeRef>\n  </$Plane>\n</$PlaneSet>', "swimlanes"],
+  ["lane", 'lane id="${lane}" name="${Role}">\n  <$PflowNodeRef>${task}</$PflowNodeRef>\n</$Plane>', "swimlane"],
+  ["flowNodeRef", "flowNodeRef>${task}</$PflowNodeRef>", "puts a step in a lane"],
+  ["collaboration", 'collaboration id="${collab}">\n  ${}\n</$Pcollaboration>', "pools and message flows"],
+  ["participant", 'participant id="${pool}" name="${Customer}" processRef="${process}" />', "pool"],
+  ["messageFlow", 'messageFlow id="${message}" sourceRef="${from}" targetRef="${to}" />', "message between pools"],
+  ["dataObjectReference", 'dataObjectReference id="${doc}" name="${Invoice}" dataObjectRef="${docObject}" />', "document"],
+  ["dataStoreReference", 'dataStoreReference id="${db}" name="${Database}" />', "database"],
+  ["textAnnotation", 'textAnnotation id="${note}">\n  <$Ptext>${Note}</$Ptext>\n</$PtextAnnotation>', "note"],
+  ["association", 'association id="${link}" sourceRef="${note}" targetRef="${task}" />', "links a note"],
+];
+
+function bpmnSource(ctx: CompletionContext): CompletionResult | null {
+  const tag = ctx.matchBefore(/<\/?[\w:]*/);
+  if (!tag || tag.text.startsWith("</")) return null;
+  const prefix = ctx.state.doc.toString().match(/<(\w+:)definitions\b/)?.[1] ?? "";
+  return {
+    from: tag.from + 1,
+    options: BPMN_ELEMENTS.map(([name, body, detail]) =>
+      snippetCompletion(prefix + body.replaceAll("$P", prefix), { label: prefix + name, detail, type: "keyword" }),
+    ),
+    validFor: /^[\w:]*$/,
+  };
+}
+
+const SOURCES = { plantuml: plantumlSource, mermaid: mermaidSource, graphviz: dotSource, echarts: chartSource, bpmn: bpmnSource } as const;
 
 export function completionSource(engine: Engine) {
   return SOURCES[engine];

@@ -1,4 +1,5 @@
 import type { Engine } from "../engines/types";
+import { bpmnTemplates } from "./bpmn";
 import { chartTemplates } from "./charts";
 import { graphvizTemplates } from "./graphviz";
 import { mermaidTemplates } from "./mermaid";
@@ -21,6 +22,7 @@ export const CATEGORIES = [
   "Data & databases",
   "Architecture & networks",
   "Planning",
+  "Business processes",
   "Charts",
 ] as const;
 
@@ -29,6 +31,17 @@ export const BLANK_CODE: Record<Engine, string> = {
   plantuml: "@startuml\n\n@enduml\n",
   mermaid: "flowchart TD\n    A --> B\n",
   graphviz: "digraph G {\n    a -> b\n}\n",
+  bpmn: `<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL" id="defs" targetNamespace="https://figvex.sudo520.com/bpmn">
+  <process id="process" isExecutable="false">
+    <startEvent id="start" name="Start" />
+    <task id="task" name="Do something" />
+    <endEvent id="end" name="Done" />
+    <sequenceFlow id="f1" sourceRef="start" targetRef="task" />
+    <sequenceFlow id="f2" sourceRef="task" targetRef="end" />
+  </process>
+</definitions>
+`,
   echarts: '{\n  "xAxis": { "type": "category" },\n  "yAxis": {},\n  "series": [{ "type": "bar" }]\n}\n---\nname,value\nA,3\nB,5\nC,4\n',
 };
 
@@ -65,9 +78,17 @@ const blank: Template[] = [
     summary: "A bar chart drawn from three rows of CSV.",
     code: BLANK_CODE.echarts,
   },
+  {
+    id: "blank-bpmn",
+    engine: "bpmn",
+    category: "Start from scratch",
+    title: "Blank BPMN",
+    summary: "A start event, one task and an end event, laid out automatically.",
+    code: BLANK_CODE.bpmn,
+  },
 ];
 
-export const TEMPLATES: Template[] = [...blank, ...plantumlTemplates, ...mermaidTemplates, ...graphvizTemplates, ...chartTemplates].sort(
+export const TEMPLATES: Template[] = [...blank, ...plantumlTemplates, ...mermaidTemplates, ...graphvizTemplates, ...chartTemplates, ...bpmnTemplates].sort(
   (a, b) => CATEGORIES.indexOf(a.category as never) - CATEGORIES.indexOf(b.category as never),
 );
 
