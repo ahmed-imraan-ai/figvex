@@ -2,7 +2,7 @@
 
 [![Netlify Status](https://api.netlify.com/api/v1/badges/ac4c269d-81bf-44c5-83cb-af9900b97a9a/deploy-status)](https://app.netlify.com/projects/figvex/deploys)
 
-**Live site: [figvex.netlify.app](https://figvex.netlify.app)**
+**Live site: [figvex.sudo520.com](https://figvex.sudo520.com)**
 
 A live editor for PlantUML and Mermaid diagrams. Type on the left, the diagram redraws on the right. It runs in the browser, and your diagrams stay on your machine unless you share them or turn on the PlantUML server option.
 
