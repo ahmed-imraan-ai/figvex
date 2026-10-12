@@ -20,7 +20,7 @@ import {
   type RenderResult,
 } from "./engines";
 import { isPlantUmlLoaded, loadPlantUml } from "./engines/plantuml";
-import { CHART_STYLES, GRAPHVIZ_STYLES, MERMAID_STYLES, PLANTUML_STYLES, PLANTUML_THEMES } from "./engines/themes";
+import { BPMN_STYLES, CHART_STYLES, GRAPHVIZ_STYLES, MERMAID_STYLES, PLANTUML_STYLES, PLANTUML_THEMES } from "./engines/themes";
 import { byId, debounce, h, icon, isMac, modKey } from "./lib/dom";
 import { Preview, type SourceHint } from "./preview";
 import { hasSharedDiagram, readSharedDiagram } from "./share";
@@ -191,6 +191,10 @@ function fillStylePicker() {
     select.append(...CHART_STYLES.map((s) => option(s.value, s.label)));
     select.value = store.settings.chartStyle;
     select.disabled = false;
+  } else if (engine === "bpmn") {
+    select.append(...BPMN_STYLES.map((s) => option(s.value, s.label)));
+    select.value = store.settings.bpmnStyle;
+    select.disabled = false;
   } else {
     select.append(...MERMAID_STYLES.map((s) => option(s.value, s.label)));
     select.value = store.settings.mermaidTheme;
@@ -203,6 +207,7 @@ ui.styleSelect.addEventListener("change", () => {
   if (engine === "plantuml") store.setSettings({ plantumlTheme: value });
   else if (engine === "graphviz") store.setSettings({ graphvizStyle: value as Settings["graphvizStyle"] });
   else if (engine === "echarts") store.setSettings({ chartStyle: value as Settings["chartStyle"] });
+  else if (engine === "bpmn") store.setSettings({ bpmnStyle: value as Settings["bpmnStyle"] });
   else store.setSettings({ mermaidTheme: value as Settings["mermaidTheme"] });
 });
 
@@ -463,7 +468,8 @@ function applySettings(force = false) {
     s.plantumlTheme !== prev.plantumlTheme ||
     s.mermaidTheme !== prev.mermaidTheme ||
     s.graphvizStyle !== prev.graphvizStyle ||
-    s.chartStyle !== prev.chartStyle;
+    s.chartStyle !== prev.chartStyle ||
+    s.bpmnStyle !== prev.bpmnStyle;
   if (styleChanged) fillStylePicker();
   const needsRender =
     s.diagramTheme !== prev.diagramTheme ||
@@ -546,9 +552,9 @@ async function openFile(file: File) {
   let eng: Engine | null = ENGINES.find((e) => ENGINE_FILE_EXTS[e].includes(ext)) ?? null;
 
   if (ext === "md" || ext === "markdown") {
-    const block = text.match(/```(plantuml|puml|mermaid|dot|graphviz|echarts)\s*\n([\s\S]*?)```/);
+    const block = text.match(/```(plantuml|puml|mermaid|dot|graphviz|echarts|bpmn)\s*\n([\s\S]*?)```/);
     if (!block) {
-      toast(`No plantuml, mermaid, dot or echarts code block found in ${file.name}.`, { error: true });
+      toast(`No plantuml, mermaid, dot, echarts or bpmn code block found in ${file.name}.`, { error: true });
       return;
     }
     eng = ENGINES.find((e) => ENGINE_FENCE[e] === block[1]) ?? (block[1] === "graphviz" ? "graphviz" : "plantuml");

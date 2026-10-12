@@ -1047,6 +1047,10 @@ body.is-resizing .stage {
   color: var(--syn-number);
 }
 
+.engine-tag[data-engine="bpmn"] {
+  color: var(--syn-label);
+}
+
 .library-item .item-actions {
   display: flex;
   padding-right: 4px;

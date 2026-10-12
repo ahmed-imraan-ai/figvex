@@ -12,6 +12,7 @@ export const ENGINE_VERSION = {
   mermaid: MERMAID_VERSION,
   graphviz: GRAPHVIZ_VERSION,
   echarts: ECHARTS_VERSION,
+  bpmn: "2.0",
 } as const;
 
 /** Set VITE_REPO_URL to an empty string to hide the GitHub links. */
@@ -35,4 +36,5 @@ export const DOCS = {
   mermaid: "https://mermaid.js.org/intro/syntax-reference.html",
   graphviz: "https://graphviz.org/doc/info/lang.html",
   echarts: "https://echarts.apache.org/en/option.html",
+  bpmn: "https://www.omg.org/spec/BPMN/2.0.2/",
 } as const;

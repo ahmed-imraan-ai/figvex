@@ -11,7 +11,7 @@ interface VizRenderResult {
   errors: { level?: "error" | "warning"; message: string }[];
 }
 
-interface VizInstance {
+export interface VizInstance {
   render(source: string, options?: { format?: string }): VizRenderResult;
 }
 

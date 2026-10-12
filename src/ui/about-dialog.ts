@@ -58,7 +58,7 @@ export function openAbout() {
     h(
       "p",
       { class: "about-text" },
-      "A live editor for PlantUML, Mermaid and Graphviz diagrams and ECharts data charts, built for computer science students. Diagrams are drawn in your browser and stay there unless you share them or turn on the PlantUML server option.",
+      "A live editor for PlantUML, Mermaid, Graphviz and BPMN diagrams and ECharts data charts, built for computer science students. Diagrams are drawn in your browser and stay there unless you share them or turn on the PlantUML server option.",
     ),
     REPO_URL ? null : h("p", { class: "about-text" }, `${APP_NAME} is open source under the MIT licence.`),
     links,
