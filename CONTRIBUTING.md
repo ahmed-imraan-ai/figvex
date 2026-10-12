@@ -2,6 +2,8 @@
 
 Bug reports, templates and code are all welcome.
 
+Everyone taking part is expected to follow the [Code of Conduct](CODE_OF_CONDUCT.md). Report problems to [report@sudo520.com](mailto:report@sudo520.com).
+
 ## Reporting a bug
 
 Open an issue with:
