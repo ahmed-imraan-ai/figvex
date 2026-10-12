@@ -1,6 +1,8 @@
 /// <reference types="vite/client" />
 
 declare const __APP_VERSION__: string;
+/** "staging", "preview" and so on; empty in production. */
+declare const __DEPLOY_LABEL__: string;
 declare const __PLANTUML_VERSION__: string;
 declare const __MERMAID_VERSION__: string;
 
