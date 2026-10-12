@@ -1,6 +1,10 @@
 # Roadmap
 
-Figvex started with PlantUML and Mermaid. The plan is to add more kinds of diagram and chart behind the same editor, preview, export and sharing. The work is split into three phases. Items within a phase aren't in a fixed order.
+Figvex started with PlantUML and Mermaid, and now also draws Graphviz DOT. The plan is to add more kinds of diagram and chart behind the same editor, preview, export and sharing. The work is split into three phases. Items within a phase aren't in a fixed order.
+
+## Done
+
+- **Graphviz.** DOT written directly, with every Graphviz layout engine, templates, syntax colouring and completions. It uses the Viz.js build that ships with PlantUML, so it added no dependency. PlantUML's `@startdot` blocks use it too.
 
 ## How new types fit in
 
@@ -30,7 +34,6 @@ This is a project policy, not legal advice.
 
 ## Phase 1: next
 
-- **Graphviz.** DOT written directly. Viz.js already ships with the PlantUML engine, so this adds no new dependency.
 - **Data charts with ECharts or Plotly.** One of the two, not both. ECharts is Apache 2.0 and Plotly is MIT. Charts would be written as a JSON spec, with CSV data pasted alongside or opened from a file.
 - **BPMN.** Process diagrams in standard BPMN 2.0 notation, without a watermark (see the licence policy below). Two routes: our own renderer written from the OMG BPMN 2.0 specification, or [bpmn-visualization](https://github.com/process-analytics/bpmn-visualization-js) (Apache 2.0, view only, no watermark). Not bpmn-js.
 - **Freeform diagrams.** A drawing canvas for sketches that don't fit any language, saved next to text diagrams and exported the same way. Built on Excalidraw (MIT) or our own canvas. Not tldraw.

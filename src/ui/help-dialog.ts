@@ -40,8 +40,10 @@ export function openHelp() {
         {},
         "Start from a template and change it bit by bit. The language references cover every option: ",
         h("a", { href: DOCS.plantuml, target: "_blank", rel: "noopener" }, "PlantUML"),
-        " and ",
+        ", ",
         h("a", { href: DOCS.mermaid, target: "_blank", rel: "noopener" }, "Mermaid"),
+        " and ",
+        h("a", { href: DOCS.graphviz, target: "_blank", rel: "noopener" }, "Graphviz DOT"),
         ".",
       ),
       h(

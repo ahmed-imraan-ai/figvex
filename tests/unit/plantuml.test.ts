@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { applyStyle, interpretSvg, isEmptyDiagram, unsupportedFeature } from "../../src/engines/plantuml";
+import { applyStyle, dotBlock, interpretSvg, isEmptyDiagram, unsupportedFeature } from "../../src/engines/plantuml";
 
 // Shape of the error image the browser engine draws (trimmed).
 const errorSvg = (line: number, message: string) => `<svg xmlns="http://www.w3.org/2000/svg" width="400" height="140">
@@ -49,6 +49,20 @@ describe("unsupportedFeature", () => {
     expect(unsupportedFeature("@startuml\nA -> B\n@enduml")).toBeUndefined();
     expect(unsupportedFeature("@startuml\n!include <C4/C4_Context>\n@enduml")).toBeUndefined();
     expect(unsupportedFeature("@startuml\nnote: salt is tasty\n@enduml")).toBeUndefined();
+  });
+});
+
+describe("dotBlock", () => {
+  it("extracts the graph from @startdot and records where it starts", () => {
+    expect(dotBlock("' notes\n@startdot\ndigraph { a -> b }\n@enddot")).toEqual({ source: "digraph { a -> b }", offset: 2 });
+  });
+
+  it("reads to the end when @enddot is missing", () => {
+    expect(dotBlock("@startdot\ngraph {\n}")).toEqual({ source: "graph {\n}", offset: 1 });
+  });
+
+  it("ignores other diagrams", () => {
+    expect(dotBlock("@startuml\nA -> B\n@enduml")).toBeNull();
   });
 });
 

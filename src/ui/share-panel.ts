@@ -1,5 +1,5 @@
 import { plantumlServerUrl } from "../engines/plantuml";
-import type { Engine } from "../engines/types";
+import { ENGINE_FENCE, type Engine } from "../engines/types";
 import { copyText, h, icon } from "../lib/dom";
 import { markdownBlock, shareUrl } from "../share";
 import { ICONS } from "./icons";
@@ -51,7 +51,13 @@ export function buildSharePanel(ctx: ShareContext): HTMLElement {
           "span",
           {},
           "Copy as Markdown code block",
-          h("span", { class: "menu-sub" }, `Renders on GitHub and GitLab as a \`${ctx.engine}\` block`),
+          h(
+            "span",
+            { class: "menu-sub" },
+            ctx.engine === "mermaid"
+              ? "Renders on GitHub and GitLab as a `mermaid` block"
+              : `A \`${ENGINE_FENCE[ctx.engine]}\` block for README files and notes`,
+          ),
         ),
       ),
     ),
