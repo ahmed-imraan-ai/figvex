@@ -633,6 +633,16 @@ body.is-resizing .stage {
   gap: 6px;
 }
 
+.status-link {
+  color: var(--ink-3);
+  text-decoration: none;
+}
+
+.status-link:hover {
+  color: var(--ink);
+  text-decoration: underline;
+}
+
 .status-render[data-state="error"] {
   color: var(--danger);
 }
@@ -1542,7 +1552,8 @@ dialog.modal.small {
     grid-template-columns: 1fr;
   }
 
-  .statusbar #status-cursor {
+  .statusbar #status-cursor,
+  .statusbar #status-engine {
     display: none;
   }
 

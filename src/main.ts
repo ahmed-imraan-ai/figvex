@@ -5,7 +5,7 @@ import "@fontsource/ibm-plex-mono/400.css";
 import "@fontsource/ibm-plex-mono/500.css";
 import "./styles.css";
 
-import { APP_NAME, DEPLOY_LABEL, DOCS, MERMAID_VERSION, PLANTUML_VERSION, REPO_URL } from "./config";
+import { APP_NAME, DEPLOY_LABEL, DOCS, ON_NETLIFY, MERMAID_VERSION, PLANTUML_VERSION, REPO_URL } from "./config";
 import { DiagramEditor } from "./editor/editor";
 import {
   detectEngine,
@@ -93,6 +93,8 @@ if (DEPLOY_LABEL) {
   badge.title = `This is the ${DEPLOY_LABEL} site, not the live one.`;
   badge.hidden = false;
 }
+
+if (ON_NETLIFY) byId("powered-by").hidden = false;
 
 if (REPO_URL) {
   const repo = byId<HTMLAnchorElement>("link-repo");

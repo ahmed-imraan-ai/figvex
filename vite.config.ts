@@ -21,6 +21,8 @@ export default defineConfig({
   ],
   define: {
     __DEPLOY_LABEL__: JSON.stringify(deployLabel),
+    // Netlify's Open Source plan asks for a "powered by Netlify" link.
+    __ON_NETLIFY__: JSON.stringify(process.env.NETLIFY === "true"),
     __APP_VERSION__: JSON.stringify(readVersion("./package.json")),
     __PLANTUML_VERSION__: JSON.stringify(readVersion("./node_modules/@plantuml/core/package.json")),
     __MERMAID_VERSION__: JSON.stringify(readVersion("./node_modules/mermaid/package.json")),
