@@ -181,6 +181,10 @@ AI assistance is planned alongside these, through MCP only: people use their own
 
 Ideas and pull requests are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) and the [Code of Conduct](CODE_OF_CONDUCT.md).
 
+## AI use
+
+This project was built with the help of Claude, Anthropic's AI model, used through Claude Code. Claude was used to write and edit code, tests and documentation.
+
 ## Licence
 
 Figvex is MIT licensed. See [LICENSE](LICENSE).
