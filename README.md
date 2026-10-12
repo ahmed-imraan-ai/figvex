@@ -181,6 +181,10 @@ AI assistance is planned alongside these, through MCP only: people use their own
 
 Ideas and pull requests are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) and the [Code of Conduct](CODE_OF_CONDUCT.md).
 
+## AI use
+
+AI was used in this project.
+
 ## Licence
 
 Figvex is MIT licensed. See [LICENSE](LICENSE).
