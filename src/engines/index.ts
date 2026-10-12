@@ -1,3 +1,4 @@
+import { renderBpmn } from "./bpmn";
 import { renderChart } from "./chart";
 import { renderGraphviz } from "./graphviz";
 import { renderMermaid } from "./mermaid";
@@ -12,6 +13,7 @@ const RENDERERS: Record<Engine, (code: string, options: RenderOptions) => Promis
   mermaid: renderMermaid,
   graphviz: renderGraphviz,
   echarts: renderChart,
+  bpmn: renderBpmn,
 };
 
 export function renderDiagram(engine: Engine, code: string, options: RenderOptions): Promise<RenderResult> {

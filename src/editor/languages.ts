@@ -1,4 +1,4 @@
-// Lightweight stream tokenizers for PlantUML, Mermaid, DOT and chart JSON. They only need to
+// Lightweight stream tokenizers for PlantUML, Mermaid, DOT, chart JSON and BPMN XML. They only need to
 // be good enough for colouring; the engines do the real parsing.
 
 import { StreamLanguage, type StringStream } from "@codemirror/language";
@@ -262,5 +262,71 @@ export const chartLanguage = StreamLanguage.define<ChartState>({
   },
   languageData: {
     commentTokens: { line: "//", block: { open: "/*", close: "*/" } },
+  },
+});
+
+interface XmlState {
+  comment: boolean;
+  cdata: boolean;
+  inTag: boolean;
+}
+
+/** XML, for BPMN files. BPMN element names are shown as keywords. */
+export const xmlLanguage = StreamLanguage.define<XmlState>({
+  name: "bpmn",
+  startState: () => ({ comment: false, cdata: false, inTag: false }),
+  token(stream: StringStream, state: XmlState) {
+    if (state.comment) {
+      if (stream.skipTo("-->")) {
+        stream.pos += 3;
+        state.comment = false;
+      } else {
+        stream.skipToEnd();
+      }
+      return "comment";
+    }
+    if (state.cdata) {
+      if (stream.skipTo("]]>")) {
+        stream.pos += 3;
+        state.cdata = false;
+      } else {
+        stream.skipToEnd();
+      }
+      return "string";
+    }
+    if (stream.eatSpace()) return null;
+    if (state.inTag) {
+      if (stream.match(/^\/?>/) || stream.match("?>")) {
+        state.inTag = false;
+        return "bracket";
+      }
+      if (stream.match(/^"[^"]*"?/) || stream.match(/^'[^']*'?/)) return "string";
+      if (stream.match(/^[\w:.-]+/)) return "macroName";
+      stream.next();
+      return null;
+    }
+    if (stream.match("<!--")) {
+      state.comment = true;
+      return "comment";
+    }
+    if (stream.match("<![CDATA[")) {
+      state.cdata = true;
+      return "string";
+    }
+    if (stream.match(/^<\?[\w:-]*/)) {
+      state.inTag = true;
+      return "meta";
+    }
+    if (stream.match(/^<\/?[\w:.-]*/)) {
+      state.inTag = true;
+      const name = stream.current().replace(/^<\/?/, "");
+      return /^(bpmndi|dc|di|omgdc|omgdi):|^bpmndi?:BPMN/i.test(name) ? "comment" : "keyword";
+    }
+    if (stream.match(/^&\w+;/)) return "atom";
+    stream.match(/^[^<&]+/) || stream.next();
+    return null;
+  },
+  languageData: {
+    commentTokens: { block: { open: "<!--", close: "-->" } },
   },
 });

@@ -1,11 +1,12 @@
 # Roadmap
 
-Figvex started with PlantUML and Mermaid, and now also draws Graphviz DOT and data charts. The plan is to add more kinds of diagram and chart behind the same editor, preview, export and sharing. The work is split into three phases. Items within a phase aren't in a fixed order.
+Figvex started with PlantUML and Mermaid, and now also draws Graphviz DOT, BPMN and data charts. The plan is to add more kinds of diagram and chart behind the same editor, preview, export and sharing. The work is split into three phases. Items within a phase aren't in a fixed order.
 
 ## Done
 
 - **Graphviz.** DOT written directly, with every Graphviz layout engine, templates, syntax colouring and completions. It uses the Viz.js build that ships with PlantUML, so it added no dependency. PlantUML's `@startdot` blocks use it too.
 - **Data charts.** Apache ECharts (Apache 2.0), chosen over Plotly because it renders straight to an SVG string and bundles only the chart types used. Charts are ECharts options in JSON, with CSV data under a `---` line or opened from a `.csv` file.
+- **BPMN.** Our own renderer, written from the OMG BPMN 2.0 specification, so there's no watermark and no new dependency. It draws files from modelling tools with their saved positions, and lays out files without them using Graphviz, with pools and lanes as bands. Owning the renderer leaves the way open for visual editing.
 
 ## How new types fit in
 
@@ -26,7 +27,7 @@ What this ruled out while planning:
 
 | Library | Condition | Instead |
 | --- | --- | --- |
-| bpmn-js | The bpmn.io watermark must stay on rendered diagrams | Own renderer from the BPMN 2.0 spec, or bpmn-visualization (Apache 2.0) |
+| bpmn-js | The bpmn.io watermark must stay on rendered diagrams | Own renderer from the BPMN 2.0 specification (built) |
 | tldraw | Production use needs a licence key; the free hobby licence requires a "made with tldraw" watermark | Excalidraw (MIT) or own canvas |
 
 When a library's licence doesn't fit, we implement the feature ourselves from public material: the open standard, published file formats and the library's user documentation. We don't copy or translate its source, and we don't remove or work around licence conditions in code we use. For a full clean-room reimplementation, the person writing the code must not have read the original source, and the process should be written down. AI-generated code doesn't meet that bar for well-known open-source projects, because the model may have seen their source. For standards such as BPMN 2.0 this isn't an issue, since the specification is the source.
@@ -35,7 +36,6 @@ This is a project policy, not legal advice.
 
 ## Phase 1: next
 
-- **BPMN.** Process diagrams in standard BPMN 2.0 notation, without a watermark (see the licence policy below). Two routes: our own renderer written from the OMG BPMN 2.0 specification, or [bpmn-visualization](https://github.com/process-analytics/bpmn-visualization-js) (Apache 2.0, view only, no watermark). Not bpmn-js.
 - **Freeform diagrams.** A drawing canvas for sketches that don't fit any language, saved next to text diagrams and exported the same way. Built on Excalidraw (MIT) or our own canvas. Not tldraw.
 - **Complex networking.** Topologies with device icons, subnets, VLANs and links, past what nwdiag and Mermaid's architecture diagrams can show.
 - **Visual editing.** Drag shapes in the preview and write the change back to the source, plus a canvas-first mode for people who'd rather not write code. This is the largest item, because each engine needs a mapping between shapes and source lines. Click-to-source is the first part of it and already works for PlantUML.

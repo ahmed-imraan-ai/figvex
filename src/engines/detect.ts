@@ -13,6 +13,9 @@ const MERMAID_TYPES = [
 
 const mermaidStart = new RegExp(`^(${MERMAID_TYPES.map((t) => t.replace(/-/g, "\\-")).join("|")})(\\s|$|:)`);
 
+// BPMN files are XML with a <definitions> root in the BPMN model namespace.
+const BPMN_ROOT = /BPMN\/20100524\/MODEL|<(\w+:)?definitions[\s>]/;
+
 // DOT shares the word "graph" with Mermaid. Mermaid follows it with a
 // direction or nothing; DOT follows it with an optional ID and a brace.
 const DOT_ID = String.raw`("(?:[^"\\]|\\.)*"|[\w.]+)`;
@@ -53,6 +56,7 @@ export function detectEngine(code: string): Engine | null {
       continue;
     }
     if (line.startsWith("{")) return "echarts"; // a JSON chart option
+    if (line.startsWith("<")) return BPMN_ROOT.test(code) ? "bpmn" : null;
     if (dotStart.test(line)) return "graphviz";
     if (mermaidStart.test(line)) return "mermaid";
     return null;
@@ -66,6 +70,10 @@ export function diagramKind(code: string, engine: Engine): string {
     const m = code.match(/@start(\w+)/);
     if (!m) return "";
     return m[1] === "uml" ? "" : m[1];
+  }
+  if (engine === "bpmn") {
+    if (/<(\w+:)?participant\b/.test(code)) return "collaboration";
+    return /<(\w+:)?process\b/.test(code) ? "process" : "";
   }
   if (engine === "echarts") {
     const types = [...code.matchAll(/"type"\s*:\s*"(\w+)"/g)].map((m) => m[1]);

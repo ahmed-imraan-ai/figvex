@@ -4,7 +4,7 @@
 
 **Live site: [figvex.sudo520.com](https://figvex.sudo520.com)**
 
-A live editor for PlantUML, Mermaid and Graphviz diagrams and data charts. Type on the left, the diagram redraws on the right. It runs in the browser, and your diagrams stay on your machine unless you share them or turn on the PlantUML server option.
+A live editor for PlantUML, Mermaid, Graphviz and BPMN diagrams and data charts. Type on the left, the diagram redraws on the right. It runs in the browser, and your diagrams stay on your machine unless you share them or turn on the PlantUML server option.
 
 It was built for computer science students: UML for software engineering courses, ER diagrams for databases, state machines and automata for theory, trees and graphs for algorithms, Gantt charts for group projects, and charts of results for lab reports.
 
@@ -12,8 +12,8 @@ It was built for computer science students: UML for software engineering courses
 
 ## Features
 
-- Live preview for PlantUML, Mermaid, Graphviz DOT and ECharts data charts, with the language picked up from the first line
-- 51 templates written around coursework: a library system class diagram, JWT login sequence, TCP state machine, DFA for multiples of 3, binary search tree, hash table, confusion matrix, sorting benchmark, university ER schema, capstone Gantt plan and more
+- Live preview for PlantUML, Mermaid, Graphviz DOT, BPMN 2.0 and ECharts data charts, with the language picked up from the first line
+- 55 templates written around coursework: a library system class diagram, JWT login sequence, TCP state machine, DFA for multiples of 3, binary search tree, hash table, confusion matrix, sorting benchmark, library loan process, university ER schema, capstone Gantt plan and more
 - Export to SVG, PNG, JPG, WEBP and vector PDF, at 1× to 4× scale, with a solid or transparent background
 - Copy the image straight to the clipboard for pasting into a report or slides
 - Share links that carry the whole diagram in the URL, with no server involved
@@ -23,7 +23,7 @@ It was built for computer science students: UML for software engineering courses
 - Errors point at the line, with a marker in the editor
 - Every diagram saved in the browser, with rename, duplicate, delete and undo; collapsed, the list stays as a narrow rail of recent diagrams
 - Pick the language when you create a diagram; after that it follows the first line, shown as a label above the editor
-- Open `.puml`, `.mmd`, `.gv`, `.dot`, chart and Markdown files, or drag them onto the window; a `.csv` file opens as a bar chart of its columns
+- Open `.puml`, `.mmd`, `.gv`, `.dot`, `.bpmn`, chart and Markdown files, or drag them onto the window; a `.csv` file opens as a bar chart of its columns
 - Light and dark themes for the app and for the diagrams, separately
 - Pan and zoom with mouse, trackpad or touch; works on phones as two tabs
 
@@ -59,6 +59,27 @@ PlantUML's `@startdot` blocks are drawn with Graphviz too.
 The browser build of PlantUML doesn't include these yet: Salt wireframes, ditaa, math and LaTeX, nwdiag, Chen ER, `@startfiles`, `@startchronology`, `@startboard`, `@startgit`, `@startwire`, `@starthcl`, and `!include` from a URL.
 
 When a diagram uses one of these, Figvex says so instead of showing a stack trace. In Settings you can turn on **Use server for missing types**. Only those diagrams are then sent to a PlantUML server to be drawn. The default is plantuml.com; you can point it at your own server (see Docker below).
+
+## BPMN
+
+Business process diagrams in BPMN 2.0 are drawn by Figvex's own renderer, written from the OMG specification. There's no bpmn.io watermark, because bpmn-js isn't used.
+
+- Files from Camunda Modeler, bpmn.io, Signavio and other tools open as they are, drawn with the positions saved in the file.
+- Files with no saved positions are laid out automatically: left to right, with pools and lanes as horizontal bands. A short process can be written by hand:
+
+```xml
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL">
+  <process id="p">
+    <startEvent id="start" name="Order received" />
+    <userTask id="pack" name="Pack order" />
+    <endEvent id="end" name="Shipped" />
+    <sequenceFlow id="f1" sourceRef="start" targetRef="pack" />
+    <sequenceFlow id="f2" sourceRef="pack" targetRef="end" />
+  </process>
+</definitions>
+```
+
+Supported: start, end, intermediate and boundary events with message, timer, error, signal, escalation, conditional, link, compensation, cancel and terminate markers; tasks of every type; sub-processes, transactions and call activities; loop and multi-instance markers; all five gateway types; data objects and data stores; pools, lanes, message flows, text annotations and groups. Colours set with bpmn.io's `bioc:` or the OMG `color:` attributes are kept. Typing `<` in the editor lists the BPMN elements.
 
 ## Charts
 
@@ -179,7 +200,7 @@ Set these as environment variables when building (in Netlify under **Site config
 ```
 src/
   main.ts             wiring: documents, rendering, toolbar, shortcuts
-  engines/            PlantUML, Mermaid, Graphviz and ECharts adapters, language detection, themes
+  engines/            PlantUML, Mermaid, Graphviz, ECharts and BPMN engines, language detection, themes
   editor/             CodeMirror setup, syntax colouring, autocomplete
   preview.ts          pan and zoom canvas, click-to-source
   export.ts           SVG, PNG, JPG, WEBP and PDF export
@@ -211,7 +232,7 @@ docker/               nginx config for the Docker image
 
 The full plan is in [ROADMAP.md](ROADMAP.md). It has three phases:
 
-1. BPMN, freeform diagrams, complex networking and visual editing.
+1. Freeform diagrams, complex networking and visual editing.
 2. Statistical charts, UI wireframes, network diagrams, advanced UML, cloud infrastructure, complex data models and coursework tools such as truth tables, Karnaugh maps and automata.
 3. Advanced scientific and financial charts, geographic maps, CAD, 3D, electrical schematics, formal process models and interactive visual analytics.
 

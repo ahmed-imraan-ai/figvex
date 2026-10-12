@@ -158,6 +158,26 @@ describe.skipIf(!chrome || !built)("Figvex in the browser", () => {
     await page.select("#style-select", "default");
   });
 
+  const bpmn = (body: string) =>
+    `<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL" id="d">\n<process id="p">\n${body}\n</process>\n</definitions>`;
+
+  it("reports BPMN XML errors and broken references with a line number", async () => {
+    const broken = await openDiagram("bpmn", "Broken BPMN", bpmn('<task id="t">\n<startEvent id="s" />'));
+    expect(broken.state).toBe("error");
+    expect(broken.error).toMatch(/line \d/);
+    const missing = await openDiagram("bpmn", "Missing ref", bpmn('<task id="t" />\n<sequenceFlow id="f" sourceRef="t" targetRef="nope" />'));
+    expect(missing.error).toContain("line 4");
+    expect(missing.error).toContain('"nope"');
+  });
+
+  it("lays out BPMN without saved positions and jumps to a task's line when clicked", async () => {
+    const result = await openDiagram("bpmn", "BPMN click", bpmn('<startEvent id="s" />\n<userTask id="t" name="Approve" />\n<sequenceFlow id="f" sourceRef="s" targetRef="t" />'));
+    expect(result.error).toBeNull();
+    const box = await (await page.$('#sheet [data-element-id="t"] rect'))!.boundingBox();
+    await page.mouse.click(box!.x + box!.width / 2, box!.y + box!.height - 6);
+    expect(await page.$eval("#status-cursor", (el) => el.textContent)).toMatch(/^Ln 4,/);
+  });
+
   it("explains diagram types the browser engine lacks", async () => {
     const result = await openDiagram("plantuml", "Wireframe", "@startsalt\n{\n  Login | \"user\"\n}\n@endsalt");
     expect(result.error).toContain("Salt wireframes");
