@@ -1,5 +1,9 @@
 # Figvex
 
+[![Netlify Status](https://api.netlify.com/api/v1/badges/ac4c269d-81bf-44c5-83cb-af9900b97a9a/deploy-status)](https://app.netlify.com/projects/figvex/deploys)
+
+**Live site: [figvex.sudo520.com](https://figvex.sudo520.com)**
+
 A live editor for PlantUML and Mermaid diagrams. Type on the left, the diagram redraws on the right. It runs in the browser, and your diagrams stay on your machine unless you share them or turn on the PlantUML server option.
 
 It was built for computer science students: UML for software engineering courses, ER diagrams for databases, state machines and automata for theory, Gantt charts for group projects.
@@ -131,7 +135,8 @@ Set these as environment variables when building (in Netlify under **Site config
 
 | Variable | Default | Purpose |
 | --- | --- | --- |
-| `VITE_REPO_URL` | empty | Adds a GitHub link to the header and the help dialog |
+| `VITE_REPO_URL` | `https://github.com/ahmed-imraan-ai/figvex` | GitHub links in the header, the help menu and the About box. Set it to an empty string to hide them |
+| `VITE_SITE_URL` | Netlify's `URL`, else `https://figvex.netlify.app` | Public address used for the canonical link, social preview cards, `robots.txt` and `sitemap.xml` |
 | `VITE_PLANTUML_SERVER` | `https://www.plantuml.com/plantuml` | Server for diagram types the browser engine lacks, and for copied image links |
 | `VITE_PLANTUML_STDLIB_URL` | `https://plantuml.github.io/plantuml/js-plantuml/` | Where stdlib bundles not shipped with the site come from |
 | `PLANTUML_STDLIB_SOURCE` | same as above | Where `scripts/fetch-stdlib.mjs` downloads bundles from during the build |
