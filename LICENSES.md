@@ -8,7 +8,7 @@ Diagrams you make with Figvex are yours. Figvex's licence doesn't cover your dia
 
 ## What the site ships
 
-The build bundles 155 open-source packages. `scripts/collect-licenses.mjs` runs during every build and writes `third-party-licenses.txt` with each package's name, version, licence and full licence text. The deployed site serves it at `/third-party-licenses.txt`, linked from the Help dialog. Run `npm run licenses` to regenerate it.
+The build bundles 158 open-source packages. `scripts/collect-licenses.mjs` runs during every build and writes `third-party-licenses.txt` with each package's name, version, licence and full licence text. The deployed site serves it at `/third-party-licenses.txt`, linked from the Help dialog. Run `npm run licenses` to regenerate it.
 
 At the time of writing:
 
@@ -16,14 +16,15 @@ At the time of writing:
 | --- | --- |
 | MIT | 103 |
 | ISC | 33 |
-| Apache-2.0 | 6 |
-| BSD-3-Clause | 6 |
+| Apache-2.0 | 7 |
+| BSD-3-Clause | 7 |
 | SIL OFL 1.1 (IBM Plex fonts) | 2 |
 | MPL-2.0 or Apache-2.0 (DOMPurify) | 1 |
 | EPL-2.0 (elkjs) | 1 |
 | MIT and Zlib | 1 |
 | MIT, with an extra "feel free" note (rgbcolor) | 1 |
 | Unlicense | 1 |
+| 0BSD (tslib) | 1 |
 
 The main components:
 
@@ -38,6 +39,9 @@ The main components:
 | PlantUML themes, inside the PlantUML package | MIT | By Brett Schwarz |
 | Mermaid | MIT | |
 | ELK layout (`elkjs`), used by Mermaid | EPL-2.0 | Source at github.com/kieler/elkjs |
+| Apache ECharts | Apache-2.0 | Its NOTICE file is reproduced in `third-party-licenses.txt` |
+| d3 code inside ECharts | BSD-3-Clause | A few layout helpers; licence text included with ECharts' |
+| ZRender, used by ECharts | BSD-3-Clause | |
 | CodeMirror | MIT | |
 | DOMPurify | MPL-2.0 or Apache-2.0 | |
 | jsPDF, svg2pdf.js | MIT | |

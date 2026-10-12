@@ -1,4 +1,10 @@
-export type Engine = "plantuml" | "mermaid";
+export type Engine = "plantuml" | "mermaid" | "graphviz" | "echarts" | "bpmn";
+
+export const ENGINES: readonly Engine[] = ["plantuml", "mermaid", "graphviz", "echarts", "bpmn"];
+
+export function isEngine(value: unknown): value is Engine {
+  return ENGINES.includes(value as Engine);
+}
 
 export interface RenderOptions {
   dark: boolean;
@@ -10,7 +16,19 @@ export interface RenderOptions {
   mermaidTheme: MermaidTheme;
   /** Mermaid only. */
   look: "classic" | "handDrawn";
+  /** Graphviz only: "plain" uses a sans-serif font, "default" keeps Graphviz's own. */
+  graphvizStyle: GraphvizStyle;
+  /** Charts only: the colour palette. */
+  chartStyle: ChartStyle;
+  /** BPMN only: black on white, or tinted shapes. */
+  bpmnStyle: BpmnStyle;
 }
+
+export type GraphvizStyle = "plain" | "default";
+
+export type ChartStyle = "default" | "colour-blind" | "greyscale";
+
+export type BpmnStyle = "plain" | "colour";
 
 export type MermaidTheme = "default" | "neutral" | "base" | "forest" | "neo" | "redux" | "redux-color";
 
@@ -39,9 +57,42 @@ export type RenderResult = RenderSuccess | RenderFailure;
 export const ENGINE_LABEL: Record<Engine, string> = {
   plantuml: "PlantUML",
   mermaid: "Mermaid",
+  graphviz: "Graphviz",
+  echarts: "ECharts",
+  bpmn: "BPMN",
 };
 
 export const ENGINE_EXT: Record<Engine, string> = {
   plantuml: "puml",
   mermaid: "mmd",
+  graphviz: "gv",
+  echarts: "echarts",
+  bpmn: "bpmn",
+};
+
+/** Short tag shown next to diagrams in lists. */
+export const ENGINE_TAG: Record<Engine, string> = {
+  plantuml: "puml",
+  mermaid: "mmd",
+  graphviz: "dot",
+  echarts: "chart",
+  bpmn: "bpmn",
+};
+
+/** File extensions recognised when opening a file. */
+export const ENGINE_FILE_EXTS: Record<Engine, string[]> = {
+  plantuml: ["puml", "plantuml", "pu", "iuml", "wsd"],
+  mermaid: ["mmd", "mermaid"],
+  graphviz: ["gv", "dot"],
+  echarts: ["echarts", "json", "jsonc"],
+  bpmn: ["bpmn", "bpmn2"],
+};
+
+/** Info string for a Markdown code block. */
+export const ENGINE_FENCE: Record<Engine, string> = {
+  plantuml: "plantuml",
+  mermaid: "mermaid",
+  graphviz: "dot",
+  echarts: "echarts",
+  bpmn: "bpmn",
 };

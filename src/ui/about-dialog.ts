@@ -1,4 +1,4 @@
-import { APP_NAME, APP_VERSION, ISSUES_URL, MERMAID_VERSION, PLANTUML_VERSION, REPO_URL } from "../config";
+import { APP_NAME, APP_VERSION, ECHARTS_VERSION, GRAPHVIZ_VERSION, ISSUES_URL, MERMAID_VERSION, PLANTUML_VERSION, REPO_URL } from "../config";
 import { h, icon } from "../lib/dom";
 import { ICONS, type IconName } from "./icons";
 import { closePopover, modal } from "./overlay";
@@ -58,11 +58,11 @@ export function openAbout() {
     h(
       "p",
       { class: "about-text" },
-      "A live editor for PlantUML and Mermaid diagrams, built for computer science students. Diagrams are drawn in your browser and stay there unless you share them or turn on the PlantUML server option.",
+      "A live editor for PlantUML, Mermaid, Graphviz and BPMN diagrams and ECharts data charts, built for computer science students. Diagrams are drawn in your browser and stay there unless you share them or turn on the PlantUML server option.",
     ),
     REPO_URL ? null : h("p", { class: "about-text" }, `${APP_NAME} is open source under the MIT licence.`),
     links,
-    h("p", { class: "about-foot" }, `PlantUML ${PLANTUML_VERSION} · Mermaid ${MERMAID_VERSION}`),
+    h("p", { class: "about-foot" }, `PlantUML ${PLANTUML_VERSION} · Mermaid ${MERMAID_VERSION} · Graphviz ${GRAPHVIZ_VERSION} · ECharts ${ECHARTS_VERSION}`),
   );
 
   modal({ title: `About ${APP_NAME}`, className: "small about", body });

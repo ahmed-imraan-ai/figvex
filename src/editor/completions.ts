@@ -1,5 +1,6 @@
 import type { Completion, CompletionContext, CompletionResult } from "@codemirror/autocomplete";
 import { snippetCompletion } from "@codemirror/autocomplete";
+import { SERIES_TYPES } from "../engines/chart";
 import { PLANTUML_THEMES } from "../engines/themes";
 import type { Engine } from "../engines/types";
 
@@ -99,6 +100,170 @@ function mermaidSource(ctx: CompletionContext): CompletionResult | null {
   };
 }
 
+const DOT_GRAPHS: Completion[] = [
+  snippetCompletion("digraph ${G} {\n  ${a} -> ${b}\n}", { label: "digraph", detail: "directed graph", type: "keyword" }),
+  snippetCompletion("graph ${G} {\n  ${a} -- ${b}\n}", { label: "graph", detail: "undirected graph", type: "keyword" }),
+];
+
+const DOT_SNIPPETS: Completion[] = [
+  snippetCompletion("subgraph cluster_${name} {\n  label=\"${Label}\"\n  ${}\n}", { label: "subgraph", detail: "cluster", type: "keyword" }),
+  snippetCompletion("node [${shape=box}]", { label: "node", detail: "default node attributes", type: "keyword" }),
+  snippetCompletion("edge [${color=gray}]", { label: "edge", detail: "default edge attributes", type: "keyword" }),
+  snippetCompletion("rankdir=${LR}", { label: "rankdir", detail: "layout direction", type: "property" }),
+  snippetCompletion("{ rank=same; ${a}; ${b} }", { label: "rank=same", detail: "same row", type: "keyword" }),
+];
+
+/** Common attributes and, where the set is small, their values. */
+const DOT_ATTRIBUTES: Record<string, string[]> = {
+  label: [], xlabel: [], color: [], fillcolor: [], fontcolor: [], fontname: [], fontsize: [], penwidth: [],
+  width: [], height: [], fixedsize: ["true", "false", "shape"], group: [], tooltip: [], URL: [], weight: [],
+  shape: `box ellipse circle doublecircle point plaintext plain none record Mrecord diamond square triangle
+    invtriangle house invhouse hexagon octagon parallelogram trapezium cylinder note tab folder box3d component
+    underline star`.split(/\s+/),
+  style: "filled rounded dashed dotted bold solid invis striped wedged".split(" "),
+  rankdir: ["TB", "LR", "BT", "RL"],
+  rank: ["same", "min", "max", "source", "sink"],
+  layout: ["dot", "neato", "fdp", "sfdp", "circo", "twopi", "osage", "patchwork"],
+  splines: ["true", "false", "ortho", "polyline", "curved", "line", "none"],
+  arrowhead: "normal inv dot odot none empty diamond ediamond open halfopen box obox crow tee vee".split(" "),
+  arrowtail: "normal inv dot odot none empty diamond ediamond open halfopen box obox crow tee vee".split(" "),
+  dir: ["forward", "back", "both", "none"],
+  constraint: ["true", "false"],
+  compound: ["true", "false"],
+  concentrate: ["true", "false"],
+  overlap: ["false", "true", "scale", "prism"],
+  labelloc: ["t", "b", "c"],
+  labeljust: ["l", "r", "c"],
+  nodesep: [], ranksep: [], bgcolor: [], lhead: [], ltail: [], headlabel: [], taillabel: [],
+};
+
+const DOT_ATTRIBUTE_NAMES: Completion[] = Object.keys(DOT_ATTRIBUTES).map((label) => ({ label, type: "property" }));
+
+function dotSource(ctx: CompletionContext): CompletionResult | null {
+  const line = ctx.state.doc.lineAt(ctx.pos);
+  const before = line.text.slice(0, ctx.pos - line.from);
+
+  const value = before.match(/\b(\w+)\s*=\s*"?([\w-]*)$/);
+  if (value && DOT_ATTRIBUTES[value[1]]?.length) {
+    return {
+      from: ctx.pos - value[2].length,
+      options: DOT_ATTRIBUTES[value[1]].map((label) => ({ label, type: "constant" })),
+      validFor: /^[\w-]*$/,
+    };
+  }
+  const word = ctx.matchBefore(/\w+/);
+  if (!word || (word.from === word.to && !ctx.explicit)) return null;
+  const inBrackets = before.lastIndexOf("[") > before.lastIndexOf("]");
+  if (inBrackets) return { from: word.from, options: DOT_ATTRIBUTE_NAMES, validFor: /^\w*$/ };
+  const text = ctx.state.doc.toString();
+  const beforeGraph = !/^\s*(strict\s+)?(di)?graph\b/im.test(text.slice(0, line.from));
+  return {
+    from: word.from,
+    options: beforeGraph ? DOT_GRAPHS : [...DOT_SNIPPETS, ...DOT_ATTRIBUTE_NAMES],
+    validFor: /^\w*$/,
+  };
+}
+
+const CHART_STARTERS: Completion[] = [
+  snippetCompletion(
+    '{\n  "title": { "text": "${Title}" },\n  "xAxis": { "type": "category" },\n  "yAxis": {},\n  "series": [{ "type": "${bar}" }]\n}\n---\n${name},value\nA,3\nB,5\n',
+    { label: "{ bar chart", detail: "with CSV data", type: "keyword" },
+  ),
+  snippetCompletion('{\n  "series": [{ "type": "pie", "data": [\n    { "name": "${A}", "value": ${40} },\n    { "name": "${B}", "value": ${60} }\n  ] }]\n}\n', {
+    label: "{ pie chart",
+    type: "keyword",
+  }),
+];
+
+const CHART_KEYS: Completion[] = [
+  ["title", '"title": { "text": "${}" }'],
+  ["legend", '"legend": {}'],
+  ["xAxis", '"xAxis": { "type": "${category}" }'],
+  ["yAxis", '"yAxis": { "type": "${value}" }'],
+  ["series", '"series": [{ "type": "${bar}" }]'],
+  ["dataset", '"dataset": { "source": [${}] }'],
+  ["grid", '"grid": { "left": ${60}, "right": ${20} }'],
+  ["visualMap", '"visualMap": { "min": ${0}, "max": ${10} }'],
+  ["radar", '"radar": { "indicator": [${}] }'],
+  ["width", '"width": ${720}'],
+  ["height", '"height": ${440}'],
+  ["name", '"name": "${}"'],
+  ["data", '"data": [${}]'],
+  ["encode", '"encode": { "x": "${}", "y": "${}" }'],
+  ["label", '"label": { "show": true }'],
+  ["stack", '"stack": "${total}"'],
+  ["smooth", '"smooth": true'],
+  ["markLine", '"markLine": { "data": [{ "type": "${average}" }] }'],
+].map(([label, snippet]) => snippetCompletion(snippet, { label, type: "property" }));
+
+function chartSource(ctx: CompletionContext): CompletionResult | null {
+  const line = ctx.state.doc.lineAt(ctx.pos);
+  const before = line.text.slice(0, ctx.pos - line.from);
+  const type = before.match(/"type"\s*:\s*"(\w*)$/);
+  if (type) {
+    return {
+      from: ctx.pos - type[1].length,
+      options: SERIES_TYPES.map((label) => ({ label, type: "constant" })),
+      validFor: /^\w*$/,
+    };
+  }
+  if (!ctx.state.doc.toString().trim()) {
+    return ctx.explicit || ctx.matchBefore(/\{$/) ? { from: line.from, options: CHART_STARTERS } : null;
+  }
+  const word = ctx.matchBefore(/"?\w*/);
+  if (!word || (word.from === word.to && !ctx.explicit)) return null;
+  if (/(^|\n)\s*---\s*\n/.test(ctx.state.doc.sliceString(0, line.from))) return null; // in the CSV part
+  return { from: word.from, options: CHART_KEYS, validFor: /^"?\w*$/ };
+}
+
+/** BPMN elements as [name, attributes and body]; "$P" is the file's namespace prefix. */
+const BPMN_ELEMENTS: [string, string, string][] = [
+  ["startEvent", 'startEvent id="${start}" name="${Start}" />', "start event"],
+  ["endEvent", 'endEvent id="${end}" name="${Done}" />', "end event"],
+  ["task", 'task id="${task}" name="${Do something}" />', "task"],
+  ["userTask", 'userTask id="${task}" name="${Review}" />', "task done by a person"],
+  ["serviceTask", 'serviceTask id="${task}" name="${Call API}" />', "automated task"],
+  ["sendTask", 'sendTask id="${task}" name="${Send email}" />', "task"],
+  ["receiveTask", 'receiveTask id="${task}" name="${Wait for reply}" />', "task"],
+  ["exclusiveGateway", 'exclusiveGateway id="${gateway}" name="${Approved?}" />', "XOR gateway"],
+  ["parallelGateway", 'parallelGateway id="${fork}" />', "AND gateway"],
+  ["inclusiveGateway", 'inclusiveGateway id="${gateway}" />', "OR gateway"],
+  ["eventBasedGateway", 'eventBasedGateway id="${gateway}" />', "gateway"],
+  ["sequenceFlow", 'sequenceFlow id="${flow}" sourceRef="${from}" targetRef="${to}" />', "arrow between steps"],
+  ["subProcess", 'subProcess id="${sub}" name="${Sub-process}">\n  ${}\n</$PsubProcess>', "sub-process"],
+  ["boundaryEvent", 'boundaryEvent id="${timeout}" attachedToRef="${task}">\n  <$PtimerEventDefinition />\n</$PboundaryEvent>', "event on a task's edge"],
+  ["intermediateCatchEvent", 'intermediateCatchEvent id="${wait}" name="${2 days}">\n  <$PtimerEventDefinition />\n</$PintermediateCatchEvent>', "wait for an event"],
+  ["messageEventDefinition", "messageEventDefinition />", "makes an event a message event"],
+  ["timerEventDefinition", "timerEventDefinition />", "makes an event a timer event"],
+  ["errorEventDefinition", "errorEventDefinition />", "makes an event an error event"],
+  ["process", 'process id="${process}" isExecutable="false">\n  ${}\n</$Pprocess>', "process"],
+  ["laneSet", 'laneSet id="${lanes}">\n  <$Plane id="${lane}" name="${Role}">\n    <$PflowNodeRef>${task}</$PflowNodeRef>\n  </$Plane>\n</$PlaneSet>', "swimlanes"],
+  ["lane", 'lane id="${lane}" name="${Role}">\n  <$PflowNodeRef>${task}</$PflowNodeRef>\n</$Plane>', "swimlane"],
+  ["flowNodeRef", "flowNodeRef>${task}</$PflowNodeRef>", "puts a step in a lane"],
+  ["collaboration", 'collaboration id="${collab}">\n  ${}\n</$Pcollaboration>', "pools and message flows"],
+  ["participant", 'participant id="${pool}" name="${Customer}" processRef="${process}" />', "pool"],
+  ["messageFlow", 'messageFlow id="${message}" sourceRef="${from}" targetRef="${to}" />', "message between pools"],
+  ["dataObjectReference", 'dataObjectReference id="${doc}" name="${Invoice}" dataObjectRef="${docObject}" />', "document"],
+  ["dataStoreReference", 'dataStoreReference id="${db}" name="${Database}" />', "database"],
+  ["textAnnotation", 'textAnnotation id="${note}">\n  <$Ptext>${Note}</$Ptext>\n</$PtextAnnotation>', "note"],
+  ["association", 'association id="${link}" sourceRef="${note}" targetRef="${task}" />', "links a note"],
+];
+
+function bpmnSource(ctx: CompletionContext): CompletionResult | null {
+  const tag = ctx.matchBefore(/<\/?[\w:]*/);
+  if (!tag || tag.text.startsWith("</")) return null;
+  const prefix = ctx.state.doc.toString().match(/<(\w+:)definitions\b/)?.[1] ?? "";
+  return {
+    from: tag.from + 1,
+    options: BPMN_ELEMENTS.map(([name, body, detail]) =>
+      snippetCompletion(prefix + body.replaceAll("$P", prefix), { label: prefix + name, detail, type: "keyword" }),
+    ),
+    validFor: /^[\w:]*$/,
+  };
+}
+
+const SOURCES = { plantuml: plantumlSource, mermaid: mermaidSource, graphviz: dotSource, echarts: chartSource, bpmn: bpmnSource } as const;
+
 export function completionSource(engine: Engine) {
-  return engine === "plantuml" ? plantumlSource : mermaidSource;
+  return SOURCES[engine];
 }

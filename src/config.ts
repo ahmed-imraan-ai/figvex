@@ -4,6 +4,16 @@ export const DEPLOY_LABEL = __DEPLOY_LABEL__;
 export const ON_NETLIFY = __ON_NETLIFY__;
 export const PLANTUML_VERSION = __PLANTUML_VERSION__;
 export const MERMAID_VERSION = __MERMAID_VERSION__;
+export const GRAPHVIZ_VERSION = __GRAPHVIZ_VERSION__;
+export const ECHARTS_VERSION = __ECHARTS_VERSION__;
+
+export const ENGINE_VERSION = {
+  plantuml: PLANTUML_VERSION,
+  mermaid: MERMAID_VERSION,
+  graphviz: GRAPHVIZ_VERSION,
+  echarts: ECHARTS_VERSION,
+  bpmn: "2.0",
+} as const;
 
 /** Set VITE_REPO_URL to an empty string to hide the GitHub links. */
 export const REPO_URL = (import.meta.env.VITE_REPO_URL ?? "https://github.com/ahmed-imraan-ai/figvex").replace(/\/+$/, "");
@@ -24,4 +34,7 @@ export const PLANTUML_SERVER = (import.meta.env.VITE_PLANTUML_SERVER || "https:/
 export const DOCS = {
   plantuml: "https://plantuml.com/",
   mermaid: "https://mermaid.js.org/intro/syntax-reference.html",
+  graphviz: "https://graphviz.org/doc/info/lang.html",
+  echarts: "https://echarts.apache.org/en/option.html",
+  bpmn: "https://www.omg.org/spec/BPMN/2.0.2/",
 } as const;

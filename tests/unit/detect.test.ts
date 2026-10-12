@@ -27,6 +27,25 @@ describe("detectEngine", () => {
     expect(detectEngine("%% a comment\n%%{init: {'theme':'dark'}}%%\nclassDiagram\n")).toBe("mermaid");
   });
 
+  it("recognises Graphviz DOT, including after comments", () => {
+    expect(detectEngine("digraph G {\n a -> b\n}")).toBe("graphviz");
+    expect(detectEngine("strict graph {\n a -- b\n}")).toBe("graphviz");
+    expect(detectEngine("graph {\n a -- b\n}")).toBe("graphviz");
+    expect(detectEngine('graph "My net" {')).toBe("graphviz");
+    expect(detectEngine("graph Network\n{\n a -- b\n}")).toBe("graphviz");
+    expect(detectEngine("// notes\n/* more\nnotes */\nDiGraph {}")).toBe("graphviz");
+  });
+
+  it("treats a JSON object as an ECharts chart", () => {
+    expect(detectEngine('{\n  "series": [{ "type": "bar" }]\n}')).toBe("echarts");
+    expect(detectEngine('// sales\n{ "series": [] }')).toBe("echarts");
+  });
+
+  it("keeps Mermaid's graph keyword for Mermaid", () => {
+    expect(detectEngine("graph TD\n A --> B")).toBe("mermaid");
+    expect(detectEngine("graph\n A --> B")).toBe("mermaid");
+  });
+
   it("returns null when the text is empty or ambiguous", () => {
     expect(detectEngine("")).toBeNull();
     expect(detectEngine("   \n  ")).toBeNull();
@@ -45,5 +64,18 @@ describe("diagramKind", () => {
     expect(diagramKind("---\ntitle: x\n---\nsankey-beta\n", "mermaid")).toBe("sankey");
     expect(diagramKind("stateDiagram-v2\n", "mermaid")).toBe("stateDiagram");
     expect(diagramKind("flowchart TD", "mermaid")).toBe("flowchart");
+  });
+
+  it("lists the chart's series types", () => {
+    expect(diagramKind('{ "xAxis": { "type": "category" }, "series": [{ "type": "bar" }, { "type": "line" }, { "type": "bar" }] }', "echarts")).toBe(
+      "bar, line",
+    );
+  });
+
+  it("names the Graphviz graph type, or the layout engine when one is set", () => {
+    expect(diagramKind("// x\ndigraph G {}", "graphviz")).toBe("digraph");
+    expect(diagramKind("strict graph {}", "graphviz")).toBe("graph");
+    expect(diagramKind("graph { layout=neato }", "graphviz")).toBe("neato");
+    expect(diagramKind('digraph { layout="dot" }', "graphviz")).toBe("digraph");
   });
 });

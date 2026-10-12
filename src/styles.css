@@ -545,6 +545,19 @@ kbd {
   background: var(--editor-bg);
 }
 
+/* Names the diagram's language. It follows the first line, so it isn't a
+   control; colours come from .engine-tag. */
+.engine-label {
+  flex: none;
+  padding: 2px 8px;
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+}
+
+.pane-head .text-link {
+  white-space: nowrap;
+}
+
 .pane-head {
   display: flex;
   align-items: center;
@@ -864,15 +877,65 @@ body.is-resizing .stage {
 
 .library {
   display: flex;
-  flex-direction: column;
-  width: 264px;
   min-height: 0;
   border-right: 1px solid var(--rule);
   background: var(--surface);
 }
 
-.library[hidden] {
+.library-panel {
+  display: flex;
+  flex-direction: column;
+  width: 264px;
+  min-height: 0;
+}
+
+/* Collapsed, the library keeps a rail with New and the recent diagrams. */
+.library-rail {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  width: 48px;
+  min-height: 0;
+  padding: 6px 0;
+}
+
+.library[data-open="true"] .library-rail,
+.library[data-open="false"] .library-panel {
   display: none;
+}
+
+.rail-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-height: 0;
+  margin: 6px 0 0;
+  padding: 8px 0 0;
+  border-top: 1px solid var(--rule);
+  overflow-y: auto;
+  list-style: none;
+}
+
+.rail-doc {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  background: var(--paper);
+  cursor: pointer;
+}
+
+.rail-doc:hover {
+  border-color: var(--rule-strong);
+}
+
+.rail-doc[aria-current="true"] {
+  border-color: var(--accent);
+  box-shadow: inset 0 0 0 1px var(--accent);
 }
 
 .library-head {
@@ -974,6 +1037,18 @@ body.is-resizing .stage {
 
 .engine-tag[data-engine="mermaid"] {
   color: var(--syn-string);
+}
+
+.engine-tag[data-engine="graphviz"] {
+  color: var(--syn-macro);
+}
+
+.engine-tag[data-engine="echarts"] {
+  color: var(--syn-number);
+}
+
+.engine-tag[data-engine="bpmn"] {
+  color: var(--syn-label);
 }
 
 .library-item .item-actions {
@@ -1592,6 +1667,15 @@ dialog.modal.about {
 
   .library {
     z-index: 5;
+    width: 100%;
+  }
+
+  /* Phones have no room for the rail: the library is an overlay or nothing. */
+  .library[data-open="false"] {
+    display: none;
+  }
+
+  .library-panel {
     width: 100%;
   }
 

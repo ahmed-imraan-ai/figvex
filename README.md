@@ -4,16 +4,16 @@
 
 **Live site: [figvex.sudo520.com](https://figvex.sudo520.com)**
 
-A live editor for PlantUML and Mermaid diagrams. Type on the left, the diagram redraws on the right. It runs in the browser, and your diagrams stay on your machine unless you share them or turn on the PlantUML server option.
+A live editor for PlantUML, Mermaid, Graphviz and BPMN diagrams and data charts. Type on the left, the diagram redraws on the right. It runs in the browser, and your diagrams stay on your machine unless you share them or turn on the PlantUML server option.
 
-It was built for computer science students: UML for software engineering courses, ER diagrams for databases, state machines and automata for theory, Gantt charts for group projects.
+It was built for computer science students: UML for software engineering courses, ER diagrams for databases, state machines and automata for theory, trees and graphs for algorithms, Gantt charts for group projects, and charts of results for lab reports.
 
 ![Figvex showing a class diagram](docs/screenshot.png)
 
 ## Features
 
-- Live preview for PlantUML and Mermaid, with the language picked up from the first line
-- 37 templates written around coursework: a library system class diagram, JWT login sequence, TCP state machine, DFA for multiples of 3, binary search, university ER schema, capstone Gantt plan and more
+- Live preview for PlantUML, Mermaid, Graphviz DOT, BPMN 2.0 and ECharts data charts, with the language picked up from the first line
+- 55 templates written around coursework: a library system class diagram, JWT login sequence, TCP state machine, DFA for multiples of 3, binary search tree, hash table, confusion matrix, sorting benchmark, library loan process, university ER schema, capstone Gantt plan and more
 - Export to SVG, PNG, JPG, WEBP and vector PDF, at 1× to 4× scale, with a solid or transparent background
 - Copy the image straight to the clipboard for pasting into a report or slides
 - Share links that carry the whole diagram in the URL, with no server involved
@@ -21,8 +21,9 @@ It was built for computer science students: UML for software engineering courses
 - Plain black-and-white PlantUML by default, with PlantUML's own colours and its 40 bundled themes one click away
 - Click a shape in the diagram to jump to the line that drew it
 - Errors point at the line, with a marker in the editor
-- Every diagram saved in the browser, with rename, duplicate, delete and undo
-- Open `.puml`, `.mmd` and Markdown files, or drag them onto the window
+- Every diagram saved in the browser, with rename, duplicate, delete and undo; collapsed, the list stays as a narrow rail of recent diagrams
+- Pick the language when you create a diagram; after that it follows the first line, shown as a label above the editor
+- Open `.puml`, `.mmd`, `.gv`, `.dot`, `.bpmn`, chart and Markdown files, or drag them onto the window; a `.csv` file opens as a bar chart of its columns
 - Light and dark themes for the app and for the diagrams, separately
 - Pan and zoom with mouse, trackpad or touch; works on phones as two tabs
 
@@ -31,6 +32,10 @@ It was built for computer science students: UML for software engineering courses
 PlantUML runs through [`@plantuml/core`](https://www.npmjs.com/package/@plantuml/core), the official build of PlantUML compiled to JavaScript with TeaVM. It is built from the same source as the Java release and carries the same version number. Graphviz layouts come from Viz.js. It needs neither Java nor a server.
 
 Mermaid runs through the [`mermaid`](https://www.npmjs.com/package/mermaid) package and is only downloaded the first time you open a Mermaid diagram.
+
+Graphviz DOT uses the same Viz.js file that PlantUML loads, so it adds nothing to the download. A DOT diagram on its own loads only that file, not the rest of PlantUML.
+
+Charts use [Apache ECharts](https://echarts.apache.org/), downloaded the first time you open one (about 280 KB compressed). Only the chart types listed below are bundled.
 
 The app itself is TypeScript, Vite and CodeMirror 6, with no UI framework.
 
@@ -42,18 +47,63 @@ The app itself is TypeScript, Vite and CodeMirror 6, with no UI framework.
 
 ## Supported diagrams
 
-| PlantUML | Mermaid |
-| --- | --- |
-| Sequence, use case, class, object, activity, component, deployment, state, timing | Flowchart, sequence, class, state, ER, user journey |
-| ER (crow's foot), JSON, YAML | Gantt, pie, quadrant, XY chart, Sankey |
-| Gantt, mind map, work breakdown | Git graph, mind map, timeline, Kanban |
-| Regex, EBNF, ArchiMate, C4 and the rest of the standard library | Packet, block, architecture, C4, requirement, radar, treemap and the newer types in Mermaid 12 |
+| PlantUML | Mermaid | Graphviz |
+| --- | --- | --- |
+| Sequence, use case, class, object, activity, component, deployment, state, timing | Flowchart, sequence, class, state, ER, user journey | Directed and undirected graphs, written in DOT |
+| ER (crow's foot), JSON, YAML | Gantt, pie, quadrant, XY chart, Sankey | Trees, automata, dependency graphs, record-based data structures |
+| Gantt, mind map, work breakdown | Git graph, mind map, timeline, Kanban | All Graphviz layouts: `dot`, `neato`, `fdp`, `sfdp`, `circo`, `twopi`, `osage`, `patchwork` |
+| Regex, EBNF, ArchiMate, C4 and the rest of the standard library | Packet, block, architecture, C4, requirement, radar, treemap and the newer types in Mermaid 12 | |
 
-The browser build of PlantUML doesn't include these yet: Salt wireframes, ditaa, math and LaTeX, nwdiag, Chen ER, `@startfiles`, `@startchronology`, `@startboard`, `@startdot`, `@startgit`, `@startwire`, `@starthcl`, and `!include` from a URL.
+PlantUML's `@startdot` blocks are drawn with Graphviz too.
+
+The browser build of PlantUML doesn't include these yet: Salt wireframes, ditaa, math and LaTeX, nwdiag, Chen ER, `@startfiles`, `@startchronology`, `@startboard`, `@startgit`, `@startwire`, `@starthcl`, and `!include` from a URL.
 
 When a diagram uses one of these, Figvex says so instead of showing a stack trace. In Settings you can turn on **Use server for missing types**. Only those diagrams are then sent to a PlantUML server to be drawn. The default is plantuml.com; you can point it at your own server (see Docker below).
 
-## Styling PlantUML
+## BPMN
+
+Business process diagrams in BPMN 2.0 are drawn by Figvex's own renderer, written from the OMG specification. There's no bpmn.io watermark, because bpmn-js isn't used.
+
+- Files from Camunda Modeler, bpmn.io, Signavio and other tools open as they are, drawn with the positions saved in the file.
+- Files with no saved positions are laid out automatically: left to right, with pools and lanes as horizontal bands. A short process can be written by hand:
+
+```xml
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL">
+  <process id="p">
+    <startEvent id="start" name="Order received" />
+    <userTask id="pack" name="Pack order" />
+    <endEvent id="end" name="Shipped" />
+    <sequenceFlow id="f1" sourceRef="start" targetRef="pack" />
+    <sequenceFlow id="f2" sourceRef="pack" targetRef="end" />
+  </process>
+</definitions>
+```
+
+Supported: start, end, intermediate and boundary events with message, timer, error, signal, escalation, conditional, link, compensation, cancel and terminate markers; tasks of every type; sub-processes, transactions and call activities; loop and multi-instance markers; all five gateway types; data objects and data stores; pools, lanes, message flows, text annotations and groups. Colours set with bpmn.io's `bioc:` or the OMG `color:` attributes are kept. Typing `<` in the editor lists the BPMN elements.
+
+## Charts
+
+A chart is an [ECharts option](https://echarts.apache.org/en/option.html) written as JSON. Comments and trailing commas are allowed. Data can go in the JSON, or as CSV under a line of three dashes, where it becomes the chart's dataset:
+
+```
+{
+  "title": { "text": "Students per language" },
+  "xAxis": { "type": "category" },
+  "yAxis": {},
+  "series": [{ "type": "bar" }]
+}
+---
+language,students
+Python,120
+Java,85
+C,40
+```
+
+Each column after the first becomes a series, in order. `"width"` and `"height"` at the top level set the size in pixels (720 × 440 by default).
+
+Chart types: bar, line, pie, scatter, radar, box plot, heatmap, candlestick, funnel, gauge, Sankey, graph, tree, treemap, sunburst, parallel coordinates and theme river. JSON can't hold functions, so options that need a JavaScript callback, such as a custom tooltip formatter, aren't available; string templates like `"{b}: {c}"` work.
+
+## Styles
 
 PlantUML diagrams are drawn with the `plain` theme by default: black lines, white boxes, no fills. That suits printed reports.
 
@@ -67,6 +117,10 @@ Alice -> Bob : hello
 ```
 
 A `!theme` line in the diagram always wins over the menu. Mermaid has the same menu, with its own themes.
+
+For Graphviz the menu has two choices. **Plain** draws labels in a sans-serif font, and **Graphviz defaults** keeps Times, as the `dot` command does. Colours, fonts and shapes set in the DOT source always win.
+
+For charts it sets the colour palette: ECharts' **Default**, **Colour-blind safe** (Okabe and Ito's palette) or **Greyscale** for black-and-white printing. A `"color"` list in the chart wins.
 
 ## Run it locally
 
@@ -146,7 +200,7 @@ Set these as environment variables when building (in Netlify under **Site config
 ```
 src/
   main.ts             wiring: documents, rendering, toolbar, shortcuts
-  engines/            PlantUML and Mermaid adapters, language detection, themes
+  engines/            PlantUML, Mermaid, Graphviz, ECharts and BPMN engines, language detection, themes
   editor/             CodeMirror setup, syntax colouring, autocomplete
   preview.ts          pan and zoom canvas, click-to-source
   export.ts           SVG, PNG, JPG, WEBP and PDF export
@@ -165,7 +219,7 @@ docker/               nginx config for the Docker image
 | Keys | Action |
 | --- | --- |
 | Ctrl/⌘ K | Templates |
-| Ctrl/⌘ B | Show or hide your diagrams |
+| Ctrl/⌘ B | Expand or collapse your diagrams |
 | Ctrl/⌘ O | Open a file |
 | Ctrl/⌘ S | Download the source file |
 | Ctrl/⌘ Shift E | Export image |
@@ -178,7 +232,7 @@ docker/               nginx config for the Docker image
 
 The full plan is in [ROADMAP.md](ROADMAP.md). It has three phases:
 
-1. Graphviz, data charts with ECharts or Plotly, BPMN, freeform diagrams, complex networking and visual editing.
+1. Freeform diagrams, complex networking and visual editing.
 2. Statistical charts, UI wireframes, network diagrams, advanced UML, cloud infrastructure, complex data models and coursework tools such as truth tables, Karnaugh maps and automata.
 3. Advanced scientific and financial charts, geographic maps, CAD, 3D, electrical schematics, formal process models and interactive visual analytics.
 
@@ -194,4 +248,4 @@ AI was used in this project.
 
 Figvex is MIT licensed. See [LICENSE](LICENSE).
 
-[LICENSES.md](LICENSES.md) covers everything Figvex ships or loads: the licence of each component, how the PlantUML standard library is handled, which services are contacted, and why the project uses MIT rather than GPL. Each build also writes `third-party-licenses.txt` with the full licence text of all 155 bundled packages; the deployed site links to it from the Help dialog.
+[LICENSES.md](LICENSES.md) covers everything Figvex ships or loads: the licence of each component, how the PlantUML standard library is handled, which services are contacted, and why the project uses MIT rather than GPL. Each build also writes `third-party-licenses.txt` with the full licence text of all 158 bundled packages; the deployed site links to it from the Help dialog.

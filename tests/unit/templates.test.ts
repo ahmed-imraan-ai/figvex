@@ -1,13 +1,14 @@
 import { describe, expect, it } from "vitest";
 import { detectEngine } from "../../src/engines/detect";
 import { unsupportedFeature } from "../../src/engines/plantuml";
+import { ENGINES } from "../../src/engines/types";
 import { CATEGORIES, TEMPLATES, WELCOME_CODE } from "../../src/templates";
 
 describe("templates", () => {
   it("have unique ids and titles within each engine", () => {
     const ids = TEMPLATES.map((t) => t.id);
     expect(new Set(ids).size).toBe(ids.length);
-    for (const engine of ["plantuml", "mermaid"]) {
+    for (const engine of ENGINES) {
       const titles = TEMPLATES.filter((t) => t.engine === engine).map((t) => t.title);
       expect(new Set(titles).size).toBe(titles.length);
     }
@@ -29,6 +30,12 @@ describe("templates", () => {
   it("only use PlantUML features the browser engine supports", () => {
     for (const t of TEMPLATES.filter((t) => t.engine === "plantuml")) {
       expect(unsupportedFeature(t.code), t.id).toBeUndefined();
+    }
+  });
+
+  it("have a blank starter for every engine", () => {
+    for (const engine of ENGINES) {
+      expect(TEMPLATES.some((t) => t.engine === engine && t.category === CATEGORIES[0]), engine).toBe(true);
     }
   });
 

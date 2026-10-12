@@ -22,7 +22,7 @@ If PlantUML itself draws something wrong, check whether the Java release does th
 | `staging` | `staging--<site>.netlify.app` | Testing a release on Netlify before it goes live. |
 | `main` | the live site | Releases only. |
 
-Changes move one way: `dev` to `staging` to `main`. `main` and `staging` are protected: they only accept pull requests, CI (`test` and `docker`) has to pass, and force-pushes and deletions are blocked. This applies to admins too. Commit directly to `dev` or to a feature branch.
+Changes move one way: `dev` to `staging` to `main`. `main` and `staging` are protected: they only accept pull requests, CI (`test` and `docker`) has to pass, and the branches can't be deleted. The repository admin can override these rules, including force-pushing, when needed. Commit directly to `dev` or to a feature branch.
 
 ```sh
 # Work
