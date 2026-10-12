@@ -8,10 +8,12 @@
 //   diamond ok 260 200 120 80 "Valid?"
 //   text note 40 160 "Notes go here" size=18
 //   arrow user -> login "signs in" dashed
+//   arrow ceo.bottom -> cto.top elbow
 //   line 40,300 -> 200,300
 //   pen 10,10 12,14 18,20
 //
-// Arrow and line ends are a shape id (the line follows the shape) or x,y.
+// Arrow and line ends are a shape id (the line follows the shape), a shape id
+// and side such as ceo.bottom, or x,y. "elbow" routes with right angles.
 
 export type ShapeKind = "box" | "ellipse" | "diamond" | "text";
 export type LinkKind = "arrow" | "line";
@@ -33,7 +35,10 @@ export interface Point {
   y: number;
 }
 
-export type End = { id: string } | Point;
+export type Side = "top" | "bottom" | "left" | "right";
+
+/** A shape (optionally pinned to one side) or a fixed point. */
+export type End = { id: string; side?: Side } | Point;
 
 export interface ShapeEl {
   type: "shape";
@@ -57,6 +62,8 @@ export interface LinkEl {
   label: string;
   /** Arrow heads: "end" (default for arrow), "both" or "none". */
   heads: "end" | "both" | "none";
+  /** Straight, or right angles between the shapes' sides. */
+  route: "straight" | "elbow";
   style: Style;
   line?: number;
 }
@@ -131,6 +138,7 @@ const isString = (t: string | undefined) => t !== undefined && t.startsWith('"')
 const isNumber = (t: string | undefined) => t !== undefined && /^-?\d+(\.\d+)?$/.test(t);
 const isPoint = (t: string | undefined) => t !== undefined && /^-?\d+(\.\d+)?,-?\d+(\.\d+)?$/.test(t);
 const isId = (t: string | undefined) => t !== undefined && /^[A-Za-z_][\w-]*$/.test(t);
+const SIDE_END = /^([A-Za-z_][\w-]*)\.(top|bottom|left|right)$/;
 
 function parsePoint(t: string): Point {
   const [x, y] = t.split(",").map(Number);
@@ -202,7 +210,12 @@ export function parseSketch(code: string): Sketch {
       const from = tokens.shift();
       const arrow = tokens.shift();
       const to = tokens.shift();
-      const end = (t: string | undefined): End | null => (isPoint(t) ? parsePoint(t!) : isId(t) ? { id: t! } : null);
+      const end = (t: string | undefined): End | null => {
+        if (isPoint(t)) return parsePoint(t!);
+        if (isId(t)) return { id: t! };
+        const m = t?.match(SIDE_END);
+        return m ? { id: m[1], side: m[2] as Side } : null;
+      };
       const a = end(from);
       const b = end(to);
       if (arrow !== "->" || !a || !b) {
@@ -210,14 +223,19 @@ export function parseSketch(code: string): Sketch {
       }
       const label = isString(tokens[0]) ? tokens.shift()!.slice(1) : "";
       let heads: LinkEl["heads"] = kind === "arrow" ? "end" : "none";
+      let route: LinkEl["route"] = "straight";
       const rest = tokens.filter((t) => {
         if (t === "both" || t === "none") {
           heads = t;
           return false;
         }
+        if (t === "elbow") {
+          route = "elbow";
+          return false;
+        }
         return true;
       });
-      elements.push({ type: "link", kind: kind as LinkKind, id, from: a, to: b, label, heads, style: parseStyle(rest, line), line });
+      elements.push({ type: "link", kind: kind as LinkKind, id, from: a, to: b, label, heads, route, style: parseStyle(rest, line), line });
       return;
     }
     if (kind === "pen") {
@@ -262,7 +280,7 @@ function styleText(style: Style): string {
   return parts.join(" ");
 }
 
-const endText = (e: End) => ("id" in e ? e.id : `${r(e.x)},${r(e.y)}`);
+const endText = (e: End) => ("id" in e ? (e.side ? `${e.id}.${e.side}` : e.id) : `${r(e.x)},${r(e.y)}`);
 
 export function serializeElement(el: SketchEl): string {
   const join = (...parts: string[]) => parts.filter(Boolean).join(" ");
@@ -276,7 +294,8 @@ export function serializeElement(el: SketchEl): string {
     }
     case "link": {
       const heads = el.kind === "arrow" ? (el.heads === "end" ? "" : el.heads) : el.heads === "none" ? "" : el.heads;
-      return join(el.kind, el.id ?? "", endText(el.from), "->", endText(el.to), el.label ? quote(el.label) : "", heads, styleText(el.style));
+      const route = el.route === "elbow" ? "elbow" : "";
+      return join(el.kind, el.id ?? "", endText(el.from), "->", endText(el.to), el.label ? quote(el.label) : "", heads, route, styleText(el.style));
     }
     case "pen":
       return join("pen", el.id ?? "", el.points.map((p) => `${r(p.x)},${r(p.y)}`).join(" "), styleText(el.style));

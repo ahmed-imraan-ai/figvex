@@ -726,8 +726,25 @@ body.is-resizing .stage {
   transform: translateX(-50%);
 }
 
-.sketch-tools[hidden] {
+.sketch-tools[hidden],
+.sketch-arrange[hidden] {
   display: none;
+}
+
+/* Align, distribute and line style for the current selection. */
+.sketch-arrange {
+  position: absolute;
+  top: 58px;
+  left: 50%;
+  z-index: 3;
+  display: flex;
+  gap: 2px;
+  padding: 3px;
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  background: var(--surface);
+  box-shadow: var(--shadow-pop);
+  transform: translateX(-50%);
 }
 
 .sketch-tool {
@@ -1130,6 +1147,10 @@ body.is-resizing .stage {
 
 .engine-tag[data-engine="sketch"] {
   color: var(--accent);
+}
+
+.engine-tag[data-engine="orgchart"] {
+  color: var(--syn-keyword);
 }
 
 .library-item .item-actions {

@@ -292,7 +292,39 @@ function sketchSource(ctx: CompletionContext): CompletionResult | null {
   };
 }
 
-const SOURCES = { plantuml: plantumlSource, mermaid: mermaidSource, graphviz: dotSource, echarts: chartSource, bpmn: bpmnSource, sketch: sketchSource } as const;
+const ORG_SETTINGS: Completion[] = [
+  snippetCompletion('title "${Company}"', { label: "title", detail: "chart title", type: "keyword" }),
+  snippetCompletion("direction ${right}", { label: "direction", detail: "down or right", type: "keyword" }),
+  { label: "compact", detail: "stack the bottom level", type: "keyword" },
+  { label: "counts", detail: "show team sizes", type: "keyword" },
+];
+
+function orgSource(ctx: CompletionContext): CompletionResult | null {
+  const doc = ctx.state.doc.toString();
+  const line = ctx.state.doc.lineAt(ctx.pos);
+  const before = line.text.slice(0, ctx.pos - line.from);
+  // Departments already used, inside [ ].
+  const dept = before.match(/\[([^\]]*)$/);
+  if (dept) {
+    const used = [...new Set([...doc.matchAll(/\[([^\]]+)\]/g)].map((m) => m[1].trim()))];
+    return { from: ctx.pos - dept[1].length, options: used.map((label) => ({ label, type: "constant", apply: `${label}]` })), validFor: /^[^\]]*$/ };
+  }
+  // People's names and ids after "..".
+  const dotted = before.match(/\.\.\s+([^"]*)$/);
+  if (dotted) {
+    const names = [...doc.matchAll(/^\s*\+?\s*([^:#[\n?]+?)\s*(?:#([A-Za-z_][\w-]*))?\s*(?::|$)/gm)]
+      .filter((m) => !/^(orgchart|title|direction|compact|counts)\b/.test(m[1]) && !m[1].includes(".."))
+      .map((m) => m[2] ?? m[1].trim());
+    return { from: ctx.pos - dotted[1].length, options: [...new Set(names)].map((label) => ({ label, type: "variable" })) };
+  }
+  const word = ctx.matchBefore(/\w*/);
+  if (!word || (word.from === word.to && !ctx.explicit)) return null;
+  const beforePeople = !/^\s*\+?\s*[^\s:#].*:/m.test(doc.slice(0, line.from));
+  if (/^\w*$/.test(before) && beforePeople) return { from: word.from, options: ORG_SETTINGS, validFor: /^\w*$/ };
+  return null;
+}
+
+const SOURCES = { plantuml: plantumlSource, mermaid: mermaidSource, graphviz: dotSource, echarts: chartSource, bpmn: bpmnSource, sketch: sketchSource, orgchart: orgSource } as const;
 
 export function completionSource(engine: Engine) {
   return SOURCES[engine];

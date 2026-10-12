@@ -1,13 +1,14 @@
 # Roadmap
 
-Figvex started with PlantUML and Mermaid, and now also draws Graphviz DOT, BPMN, data charts and freeform sketches. The plan is to add more kinds of diagram and chart behind the same editor, preview, export and sharing. The work is split into three phases. Items within a phase aren't in a fixed order.
+Figvex started with PlantUML and Mermaid, and now also draws Graphviz DOT, BPMN, org charts, data charts and freeform sketches. The plan is to add more kinds of diagram and chart behind the same editor, preview, export and sharing. The work is split into three phases. Items within a phase aren't in a fixed order.
 
 ## Done
 
 - **Graphviz.** DOT written directly, with every Graphviz layout engine, templates, syntax colouring and completions. It uses the Viz.js build that ships with PlantUML, so it added no dependency. PlantUML's `@startdot` blocks use it too.
 - **Data charts.** Apache ECharts (Apache 2.0), chosen over Plotly because it renders straight to an SVG string and bundles only the chart types used. Charts are ECharts options in JSON, with CSV data under a `---` line or opened from a `.csv` file.
 - **BPMN.** Our own renderer, written from the OMG BPMN 2.0 specification, so there's no watermark and no new dependency. It draws files from modelling tools with their saved positions, and lays out files without them using Graphviz, with pools and lanes as bands. Owning the renderer leaves the way open for visual editing.
-- **Freeform diagrams.** A sketch canvas built in-house rather than on Excalidraw, so there's no React and nothing extra to download. Boxes, ellipses, diamonds, text, arrows that stay attached to shapes, and a pen, in a clean or hand-drawn style. Sketches are stored as text, one element per line, so saving, sharing, export and undo work as for every other type. The canvas is also the start of visual editing.
+- **Freeform diagrams.** A sketch canvas built in-house rather than on Excalidraw, so there's no React and nothing extra to download. Boxes, ellipses, diamonds, text, arrows that stay attached to shapes, and a pen, in a clean or hand-drawn style. Sketches are stored as text, one element per line, so saving, sharing, export and undo work as for every other type. The canvas is also the start of visual editing. It has a connector tool for right-angle lines, connection points on each side of a shape, alignment guides, box-select, and align and distribute.
+- **Org charts.** Written as an indented list of people and laid out as a tidy tree by our own layout: departments with colours and a legend, assistants, vacant posts, dotted-line reporting, team sizes, a compact layout, top-down or left-to-right, and three card styles.
 
 ## How new types fit in
 

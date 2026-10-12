@@ -331,7 +331,48 @@ export const xmlLanguage = StreamLanguage.define<XmlState>({
   },
 });
 
-const SKETCH_KINDS = /^(sketch|box|ellipse|diamond|text|arrow|line|pen)\b/;
+/** Org charts: settings, then "Name #id: Title [Department]" lines. */
+export const orgLanguage = StreamLanguage.define<{ part: "name" | "title" | "done" }>({
+  name: "orgchart",
+  startState: () => ({ part: "name" }),
+  token(stream: StringStream, state) {
+    if (stream.sol()) {
+      state.part = "name";
+      if (stream.match(/^\s*#\s.*$/) || stream.match(/^\s*#$/)) return "comment";
+      if (stream.match(/^(orgchart|title|direction|compact|counts)\b/)) {
+        state.part = "done";
+        return "keyword";
+      }
+    }
+    if (stream.eatSpace()) return null;
+    if (stream.match(/^"[^"]*"?/)) return "string";
+    if (stream.match(/^\s#\s.*$/)) return "comment";
+    if (stream.match(/^(down|right)\b/) && state.part === "done") return "atom";
+    if (stream.match("..")) {
+      state.part = "name";
+      return "operator";
+    }
+    if (state.part === "name" && stream.match(/^\+/)) return "operator";
+    if (state.part === "name" && stream.match(/^\?/)) return "atom";
+    if (stream.match(/^#[A-Za-z_][\w-]*/)) return "macroName";
+    if (stream.match(/^\[[^\]]*\]?/)) return "annotation";
+    if (stream.eat(":")) {
+      state.part = "title";
+      return "punctuation";
+    }
+    if (state.part === "title") {
+      stream.match(/^[^[#]+/) || stream.next();
+      return "labelName";
+    }
+    stream.match(/^[^:[#.]+/) || stream.next();
+    return state.part === "name" ? "keyword" : null;
+  },
+  languageData: {
+    commentTokens: { line: "#" },
+  },
+});
+
+const SKETCH_KINDS =/^(sketch|box|ellipse|diamond|text|arrow|line|pen)\b/;
 
 /** The sketch format: element kind, id, numbers, "labels" and options. */
 export const sketchLanguage = StreamLanguage.define<{ first: boolean }>({

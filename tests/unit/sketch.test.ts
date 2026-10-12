@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { detectEngine } from "../../src/engines/detect";
-import { nextId, parseSketch, serializeSketch, SketchError, tokenize, type ShapeEl } from "../../src/engines/sketch/model";
-import { drawSketch, edgePoint, inkOn, linkEnds, shapeMap } from "../../src/engines/sketch/render";
+import { nextId, parseSketch, serializeSketch, SketchError, tokenize, type LinkEl, type ShapeEl } from "../../src/engines/sketch/model";
+import { drawSketch, edgePoint, inkOn, linkEnds, linkPath, shapeMap } from "../../src/engines/sketch/render";
+import { align, alignSnap, distribute, edgeSnap } from "../../src/engines/sketch/snap";
 import { TEMPLATES } from "../../src/templates";
 import { simplify } from "../../src/ui/sketch-canvas";
 
@@ -148,5 +149,68 @@ describe("templates and detection", () => {
   it.each(TEMPLATES.filter((t) => t.engine === "sketch").map((t) => [t.id, t] as const))("%s parses and draws", (_id, t) => {
     const svg = drawSketch(parseSketch(t.code), { dark: false, style: "hand-drawn" });
     expect(svg.startsWith("<svg")).toBe(true);
+  });
+});
+
+describe("sides and elbow connectors", () => {
+  it("parses and writes pinned sides and the elbow option", () => {
+    const sketch = parseSketch("sketch\nbox a 0 0 100 50\nbox b 0 200 100 50\narrow a.bottom -> b.top elbow");
+    expect(sketch.elements[2]).toMatchObject({ from: { id: "a", side: "bottom" }, to: { id: "b", side: "top" }, route: "elbow" });
+    expect(serializeSketch(sketch)).toContain("arrow a.bottom -> b.top elbow");
+    expect(errorOf("sketch\nbox a 0 0 9 9\narrow a.middle -> a").message).toMatch(/from -> to/);
+  });
+
+  it("routes an org chart line down, across and down", () => {
+    const sketch = parseSketch("sketch\nbox boss 100 0 100 50\nbox dev 0 200 100 50\narrow boss -> dev elbow");
+    const path = linkPath(sketch.elements[2] as LinkEl, shapeMap(sketch));
+    expect(path).toEqual([
+      { x: 150, y: 54 },
+      { x: 150, y: 125 },
+      { x: 50, y: 125 },
+      { x: 50, y: 196 },
+    ]);
+  });
+
+  it("goes straight when the boxes line up, and turns once between a bottom and a side", () => {
+    const aligned = parseSketch("sketch\nbox a 0 0 100 50\nbox b 0 200 100 50\narrow a -> b elbow");
+    expect(linkPath(aligned.elements[2] as LinkEl, shapeMap(aligned))).toHaveLength(2);
+    const corner = parseSketch("sketch\nbox a 0 0 100 50\nbox b 300 200 100 50\narrow a.bottom -> b.left elbow");
+    expect(linkPath(corner.elements[2] as LinkEl, shapeMap(corner))).toEqual([
+      { x: 50, y: 54 },
+      { x: 50, y: 225 },
+      { x: 296, y: 225 },
+    ]);
+  });
+});
+
+describe("snapping and arranging", () => {
+  const others = [{ x: 100, y: 100, w: 100, h: 50 }];
+
+  it("lines a moving box up with another's edge or centre", () => {
+    const left = alignSnap({ x: 104, y: 300, w: 60, h: 40 }, others, 6);
+    expect(left).toMatchObject({ dx: -4, dy: 0, guides: { x: [100], y: [] } });
+    const centre = alignSnap({ x: 400, y: 103, w: 60, h: 40 }, others, 6);
+    expect(centre.dy).toBe(2); // centres at 125
+    expect(alignSnap({ x: 130, y: 300, w: 60, h: 40 }, others, 6).guides.x).toEqual([]);
+  });
+
+  it("snaps a dragged edge", () => {
+    expect(edgeSnap(197, others, "x", 6)).toEqual({ value: 200, guide: 200 });
+    expect(edgeSnap(170, others, "x", 6)).toEqual({ value: 170 });
+  });
+
+  it("aligns and distributes boxes", () => {
+    const boxes = [
+      { x: 0, y: 0, w: 50, h: 20 },
+      { x: 100, y: 40, w: 30, h: 20 },
+      { x: 300, y: 10, w: 50, h: 20 },
+    ];
+    expect(align(boxes, "left").map((b) => b.x)).toEqual([0, 0, 0]);
+    expect(align(boxes, "right").map((b) => b.x + b.w)).toEqual([350, 350, 350]);
+    expect(align(boxes, "middle").map((b) => b.y + b.h / 2)).toEqual([30, 30, 30]);
+    const spread = distribute(boxes, "x");
+    expect(spread[1].x - (spread[0].x + spread[0].w)).toBeCloseTo(spread[2].x - (spread[1].x + spread[1].w));
+    expect(spread[0].x).toBe(0);
+    expect(spread[2].x).toBe(300);
   });
 });
