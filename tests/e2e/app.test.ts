@@ -231,6 +231,47 @@ describe.skipIf(!chrome || !built)("Figvex in the browser", () => {
     await page.waitForFunction(() => /ellipse ellipse1/.test(document.querySelector(".cm-content")!.textContent ?? ""));
   });
 
+  it("snaps connectors to sides, lines shapes up and arranges a selection", async () => {
+    await openDiagram("sketch", "Snap test", "sketch\nbox boss 300 60 160 70 \"Boss\"\nbox dev 200 260 140 70 \"Dev\"\nbox ops 520 300 140 70 \"Ops\"\n");
+    // Diagram coordinates to screen coordinates.
+    const map = await page.$eval("#sheet > svg", (svg) => {
+      const r = svg.getBoundingClientRect();
+      const vb = (svg as SVGSVGElement).viewBox.baseVal;
+      return { left: r.left, top: r.top, k: r.width / vb.width, vx: vb.x, vy: vb.y };
+    });
+    const at = (x: number, y: number) => ({ x: map.left + (x - map.vx) * map.k, y: map.top + (y - map.vy) * map.k });
+    const drag = async (a: { x: number; y: number }, b: { x: number; y: number }) => {
+      await page.mouse.move(a.x, a.y);
+      await page.mouse.down();
+      await page.mouse.move((a.x + b.x) / 2, (a.y + b.y) / 2, { steps: 5 });
+      await page.mouse.move(b.x, b.y, { steps: 5 });
+      await page.mouse.up();
+    };
+    const text = () => page.evaluate(() => document.querySelector(".cm-content")!.textContent ?? "");
+
+    // Connector from the boss's bottom point to the dev's top point.
+    await page.click('.sketch-tool[data-tool="connector"]');
+    await drag(at(380, 129), at(270, 261));
+    await page.waitForFunction(() => /arrow boss\.bottom -> dev\.top elbow/.test(document.querySelector(".cm-content")!.textContent ?? ""));
+
+    // E switches the selected connector to a straight line and back.
+    await page.keyboard.press("e");
+    await page.waitForFunction(() => /arrow boss\.bottom -> dev\.top(?! elbow)/.test(document.querySelector(".cm-content")!.textContent ?? ""));
+    await page.keyboard.press("e");
+    await page.waitForFunction(() => /dev\.top elbow/.test(document.querySelector(".cm-content")!.textContent ?? ""));
+
+    // Dragging ops near dev's row lines its top up with dev's (y 260).
+    await drag(at(590, 335), at(590, 299));
+    await page.waitForFunction(() => /box ops \d+ 260 /.test(document.querySelector(".cm-content")!.textContent ?? ""));
+
+    // Box-select dev and ops, then align their left edges.
+    await drag(at(150, 220), at(720, 420));
+    await page.waitForSelector(".sketch-arrange:not([hidden])");
+    await page.click('.sketch-arrange button[aria-label="Align left"]');
+    await page.waitForFunction(() => /box ops 200 /.test(document.querySelector(".cm-content")!.textContent ?? ""));
+    expect(await text()).toMatch(/box dev 200 /);
+  });
+
   it("hides the drawing tools for other languages", async () => {
     await openDiagram("plantuml", "No tools", "@startuml\nTools -> Hidden\n@enduml");
     expect(await page.$eval(".sketch-tools", (el) => (el as HTMLElement).hidden)).toBe(true);
