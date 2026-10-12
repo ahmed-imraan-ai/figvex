@@ -24,6 +24,7 @@ import { hasSharedDiagram, readSharedDiagram } from "./share";
 import { renderOptions, store, type Doc, type Settings } from "./store";
 import { WELCOME_CODE, type Template } from "./templates";
 import { buildExportPanel, downloadSource } from "./ui/export-panel";
+import { buildHelpMenu } from "./ui/about-dialog";
 import { openHelp } from "./ui/help-dialog";
 import { ICONS } from "./ui/icons";
 import { Library } from "./ui/library";
@@ -83,6 +84,7 @@ ui.btn.library.title = `Your diagrams (${modKey}+B)`;
 ui.btn.templates.title = `Templates (${modKey}+K)`;
 ui.btn.open.title = `Open a .puml or .mmd file (${modKey}+O)`;
 ui.btn.export.title = `Export (${modKey}+Shift+E)`;
+ui.btn.help.title = "Help and about";
 ui.btn.zoomIn.title = "Zoom in (+)";
 ui.btn.zoomOut.title = "Zoom out (−)";
 ui.btn.zoomFit.title = "Fit to view (0)";
@@ -506,7 +508,7 @@ const library = new Library(byId("library"), ui.btn.library, {
 ui.btn.library.addEventListener("click", () => library.toggle());
 ui.btn.templates.addEventListener("click", () => showTemplates());
 ui.btn.open.addEventListener("click", () => ui.fileInput.click());
-ui.btn.help.addEventListener("click", () => openHelp());
+ui.btn.help.addEventListener("click", () => togglePopover(ui.btn.help, "Help and about", buildHelpMenu));
 
 ui.btn.export.addEventListener("click", () => showExport());
 ui.btn.share.addEventListener("click", () => {
