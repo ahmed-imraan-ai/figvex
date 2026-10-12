@@ -179,7 +179,11 @@ The full plan is in [ROADMAP.md](ROADMAP.md). It has three phases:
 
 AI assistance is planned alongside these, through MCP only: people use their own assistant and subscription, such as Claude Code or Claude Desktop, and it works with Figvex through a local `figvex-mcp` server. There's no login; links and pairing codes connect the assistant to the user's diagrams. Figvex runs no AI service of its own.
 
-Ideas and pull requests are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md).
+Ideas and pull requests are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) and the [Code of Conduct](CODE_OF_CONDUCT.md).
+
+## AI use
+
+This project was built with the help of Claude, Anthropic's AI model, used through Claude Code. Claude was used to write and edit code, tests and documentation.
 
 ## Licence
 

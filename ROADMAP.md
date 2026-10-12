@@ -144,7 +144,7 @@ Measured and checked against Netlify's pricing page and docs (October 2026):
 - A first visit downloads about 1.9 MB compressed (PlantUML engine, Graphviz, app and fonts). Returning visitors load the engine from cache.
 - Functions get 1024 MB of memory and 60 seconds per request, which is enough for an MCP server rendering PlantUML.
 - Deploys use up the free plan fastest: 20 production deploys use all 300 credits. Deploy releases, not every commit.
-- Netlify's [Open Source plan](https://www.netlify.com/legal/open-source-policy/) gives 10,000 credits a month, free production deploys, and keeps sites up when credits run out. It needs an open-source licence, a Code of Conduct in the repository, a "This site is powered by Netlify" link, and a non-commercial project. Figvex meets the first; the other three are for us to add and decide.
+- Netlify's [Open Source plan](https://www.netlify.com/legal/open-source-policy/) gives 10,000 credits a month, free production deploys, and keeps sites up when credits run out. It needs an open-source licence (MIT), a Code of Conduct ([CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)), a "This site is powered by Netlify" link (in the status bar, on Netlify builds only) and a non-commercial project. Figvex meets all four.
 
 ## Other planned work
 
