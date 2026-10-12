@@ -1,4 +1,5 @@
 import type { Engine } from "../engines/types";
+import { chartTemplates } from "./charts";
 import { graphvizTemplates } from "./graphviz";
 import { mermaidTemplates } from "./mermaid";
 import { plantumlTemplates } from "./plantuml";
@@ -28,6 +29,7 @@ export const BLANK_CODE: Record<Engine, string> = {
   plantuml: "@startuml\n\n@enduml\n",
   mermaid: "flowchart TD\n    A --> B\n",
   graphviz: "digraph G {\n    a -> b\n}\n",
+  echarts: '{\n  "xAxis": { "type": "category" },\n  "yAxis": {},\n  "series": [{ "type": "bar" }]\n}\n---\nname,value\nA,3\nB,5\nC,4\n',
 };
 
 const blank: Template[] = [
@@ -55,9 +57,17 @@ const blank: Template[] = [
     summary: "A directed graph with one edge.",
     code: BLANK_CODE.graphviz,
   },
+  {
+    id: "blank-echarts",
+    engine: "echarts",
+    category: "Start from scratch",
+    title: "Blank chart",
+    summary: "A bar chart drawn from three rows of CSV.",
+    code: BLANK_CODE.echarts,
+  },
 ];
 
-export const TEMPLATES: Template[] = [...blank, ...plantumlTemplates, ...mermaidTemplates, ...graphvizTemplates].sort(
+export const TEMPLATES: Template[] = [...blank, ...plantumlTemplates, ...mermaidTemplates, ...graphvizTemplates, ...chartTemplates].sort(
   (a, b) => CATEGORIES.indexOf(a.category as never) - CATEGORIES.indexOf(b.category as never),
 );
 

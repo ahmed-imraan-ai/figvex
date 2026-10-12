@@ -1,5 +1,6 @@
 import type { Completion, CompletionContext, CompletionResult } from "@codemirror/autocomplete";
 import { snippetCompletion } from "@codemirror/autocomplete";
+import { SERIES_TYPES } from "../engines/chart";
 import { PLANTUML_THEMES } from "../engines/themes";
 import type { Engine } from "../engines/types";
 
@@ -163,7 +164,59 @@ function dotSource(ctx: CompletionContext): CompletionResult | null {
   };
 }
 
-const SOURCES = { plantuml: plantumlSource, mermaid: mermaidSource, graphviz: dotSource } as const;
+const CHART_STARTERS: Completion[] = [
+  snippetCompletion(
+    '{\n  "title": { "text": "${Title}" },\n  "xAxis": { "type": "category" },\n  "yAxis": {},\n  "series": [{ "type": "${bar}" }]\n}\n---\n${name},value\nA,3\nB,5\n',
+    { label: "{ bar chart", detail: "with CSV data", type: "keyword" },
+  ),
+  snippetCompletion('{\n  "series": [{ "type": "pie", "data": [\n    { "name": "${A}", "value": ${40} },\n    { "name": "${B}", "value": ${60} }\n  ] }]\n}\n', {
+    label: "{ pie chart",
+    type: "keyword",
+  }),
+];
+
+const CHART_KEYS: Completion[] = [
+  ["title", '"title": { "text": "${}" }'],
+  ["legend", '"legend": {}'],
+  ["xAxis", '"xAxis": { "type": "${category}" }'],
+  ["yAxis", '"yAxis": { "type": "${value}" }'],
+  ["series", '"series": [{ "type": "${bar}" }]'],
+  ["dataset", '"dataset": { "source": [${}] }'],
+  ["grid", '"grid": { "left": ${60}, "right": ${20} }'],
+  ["visualMap", '"visualMap": { "min": ${0}, "max": ${10} }'],
+  ["radar", '"radar": { "indicator": [${}] }'],
+  ["width", '"width": ${720}'],
+  ["height", '"height": ${440}'],
+  ["name", '"name": "${}"'],
+  ["data", '"data": [${}]'],
+  ["encode", '"encode": { "x": "${}", "y": "${}" }'],
+  ["label", '"label": { "show": true }'],
+  ["stack", '"stack": "${total}"'],
+  ["smooth", '"smooth": true'],
+  ["markLine", '"markLine": { "data": [{ "type": "${average}" }] }'],
+].map(([label, snippet]) => snippetCompletion(snippet, { label, type: "property" }));
+
+function chartSource(ctx: CompletionContext): CompletionResult | null {
+  const line = ctx.state.doc.lineAt(ctx.pos);
+  const before = line.text.slice(0, ctx.pos - line.from);
+  const type = before.match(/"type"\s*:\s*"(\w*)$/);
+  if (type) {
+    return {
+      from: ctx.pos - type[1].length,
+      options: SERIES_TYPES.map((label) => ({ label, type: "constant" })),
+      validFor: /^\w*$/,
+    };
+  }
+  if (!ctx.state.doc.toString().trim()) {
+    return ctx.explicit || ctx.matchBefore(/\{$/) ? { from: line.from, options: CHART_STARTERS } : null;
+  }
+  const word = ctx.matchBefore(/"?\w*/);
+  if (!word || (word.from === word.to && !ctx.explicit)) return null;
+  if (/(^|\n)\s*---\s*\n/.test(ctx.state.doc.sliceString(0, line.from))) return null; // in the CSV part
+  return { from: word.from, options: CHART_KEYS, validFor: /^"?\w*$/ };
+}
+
+const SOURCES = { plantuml: plantumlSource, mermaid: mermaidSource, graphviz: dotSource, echarts: chartSource } as const;
 
 export function completionSource(engine: Engine) {
   return SOURCES[engine];

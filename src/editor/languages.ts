@@ -1,4 +1,4 @@
-// Lightweight stream tokenizers for PlantUML, Mermaid and DOT. They only need to
+// Lightweight stream tokenizers for PlantUML, Mermaid, DOT and chart JSON. They only need to
 // be good enough for colouring; the engines do the real parsing.
 
 import { StreamLanguage, type StringStream } from "@codemirror/language";
@@ -201,6 +201,61 @@ export const dotLanguage = StreamLanguage.define<DotState>({
       state.afterEquals = true;
       return "punctuation";
     }
+    if (stream.match(/^[{}[\]]/)) return "bracket";
+    stream.next();
+    return null;
+  },
+  languageData: {
+    commentTokens: { line: "//", block: { open: "/*", close: "*/" } },
+  },
+});
+
+interface ChartState {
+  blockComment: boolean;
+  /** Past the --- line: the rest is CSV. */
+  csv: boolean;
+}
+
+/** JSON with comments for ECharts options, then CSV after a --- line. */
+export const chartLanguage = StreamLanguage.define<ChartState>({
+  name: "echarts",
+  startState: () => ({ blockComment: false, csv: false }),
+  token(stream: StringStream, state: ChartState) {
+    if (state.csv) {
+      if (stream.match(/^"(?:[^"]|"")*"?/)) return "string";
+      if (stream.match(/^-?\d+(\.\d+)?([eE][-+]?\d+)?(?=\s*(,|\t|$))/)) return "number";
+      if (stream.match(/^[,\t]/)) return "punctuation";
+      stream.match(/^[^,\t"]+/) || stream.next();
+      return null;
+    }
+    if (state.blockComment) {
+      if (stream.skipTo("*/")) {
+        stream.pos += 2;
+        state.blockComment = false;
+      } else {
+        stream.skipToEnd();
+      }
+      return "comment";
+    }
+    if (stream.sol() && stream.match(/^\s*---\s*$/)) {
+      state.csv = true;
+      return "meta";
+    }
+    if (stream.eatSpace()) return null;
+    if (stream.match("//")) {
+      stream.skipToEnd();
+      return "comment";
+    }
+    if (stream.match("/*")) {
+      state.blockComment = true;
+      return "comment";
+    }
+    if (stream.match(/^"(?:[^"\\]|\\.)*"?/)) {
+      if (stream.match(/^\s*:/, false)) return "macroName";
+      return /^"#[0-9a-fA-F]{3,8}"$/.test(stream.current()) ? "color" : "string";
+    }
+    if (stream.match(/^-?\d+(\.\d+)?([eE][-+]?\d+)?/)) return "number";
+    if (stream.match(/^(true|false|null)\b/)) return "atom";
     if (stream.match(/^[{}[\]]/)) return "bracket";
     stream.next();
     return null;

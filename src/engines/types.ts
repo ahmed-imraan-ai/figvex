@@ -1,6 +1,6 @@
-export type Engine = "plantuml" | "mermaid" | "graphviz";
+export type Engine = "plantuml" | "mermaid" | "graphviz" | "echarts";
 
-export const ENGINES: readonly Engine[] = ["plantuml", "mermaid", "graphviz"];
+export const ENGINES: readonly Engine[] = ["plantuml", "mermaid", "graphviz", "echarts"];
 
 export function isEngine(value: unknown): value is Engine {
   return ENGINES.includes(value as Engine);
@@ -18,9 +18,13 @@ export interface RenderOptions {
   look: "classic" | "handDrawn";
   /** Graphviz only: "plain" uses a sans-serif font, "default" keeps Graphviz's own. */
   graphvizStyle: GraphvizStyle;
+  /** Charts only: the colour palette. */
+  chartStyle: ChartStyle;
 }
 
 export type GraphvizStyle = "plain" | "default";
+
+export type ChartStyle = "default" | "colour-blind" | "greyscale";
 
 export type MermaidTheme = "default" | "neutral" | "base" | "forest" | "neo" | "redux" | "redux-color";
 
@@ -50,12 +54,14 @@ export const ENGINE_LABEL: Record<Engine, string> = {
   plantuml: "PlantUML",
   mermaid: "Mermaid",
   graphviz: "Graphviz",
+  echarts: "ECharts",
 };
 
 export const ENGINE_EXT: Record<Engine, string> = {
   plantuml: "puml",
   mermaid: "mmd",
   graphviz: "gv",
+  echarts: "echarts",
 };
 
 /** Short tag shown next to diagrams in lists. */
@@ -63,6 +69,7 @@ export const ENGINE_TAG: Record<Engine, string> = {
   plantuml: "puml",
   mermaid: "mmd",
   graphviz: "dot",
+  echarts: "chart",
 };
 
 /** File extensions recognised when opening a file. */
@@ -70,6 +77,7 @@ export const ENGINE_FILE_EXTS: Record<Engine, string[]> = {
   plantuml: ["puml", "plantuml", "pu", "iuml", "wsd"],
   mermaid: ["mmd", "mermaid"],
   graphviz: ["gv", "dot"],
+  echarts: ["echarts", "json", "jsonc"],
 };
 
 /** Info string for a Markdown code block. */
@@ -77,4 +85,5 @@ export const ENGINE_FENCE: Record<Engine, string> = {
   plantuml: "plantuml",
   mermaid: "mermaid",
   graphviz: "dot",
+  echarts: "echarts",
 };

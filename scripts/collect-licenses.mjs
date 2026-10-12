@@ -38,7 +38,12 @@ function readPackage(dir) {
       ? pkg.license
       : pkg.license?.type ?? pkg.licenses?.map((l) => l.type ?? l).join(" OR ") ?? "UNKNOWN";
   const repo = typeof pkg.repository === "string" ? pkg.repository : pkg.repository?.url;
-  const files = readdirSync(dir).filter((f) => /^(licen[cs]e|copying|notice)/i.test(f));
+  // Licence files, plus folders of them (ECharts keeps d3's licence in licenses/).
+  const files = readdirSync(dir, { withFileTypes: true })
+    .filter((e) => /^(licen[cs]e|copying|notice)/i.test(e.name))
+    .flatMap((e) =>
+      e.isDirectory() ? readdirSync(join(dir, e.name)).sort().map((f) => join(e.name, f)) : [e.name],
+    );
   const text = files.map((f) => readFileSync(join(dir, f), "utf8").trim()).join("\n\n");
   // A few packages omit the field but ship a plain MIT licence file.
   const inferred = license === "UNKNOWN" && /^\s*(The )?MIT License/i.test(text) ? "MIT" : license;

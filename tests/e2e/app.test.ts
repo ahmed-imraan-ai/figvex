@@ -140,6 +140,24 @@ describe.skipIf(!chrome || !built)("Figvex in the browser", () => {
     expect(await page.$eval("#status-cursor", (el) => el.textContent)).toMatch(/^Ln 4,/);
   });
 
+  it("reports chart JSON errors with a line number", async () => {
+    const result = await openDiagram("echarts", "Broken chart", '{\n  "series": [\n    { "type": "bar" }\n    { "type": "line" }\n  ]\n}');
+    expect(result.state).toBe("error");
+    expect(result.error).toContain("line 4");
+    expect(await page.$eval("#status-engine", (el) => el.textContent)).toMatch(/^ECharts \d/);
+  });
+
+  it("draws a chart from CSV and changes palette from the Style menu", async () => {
+    const code = '{ "xAxis": { "type": "category" }, "yAxis": {}, "series": [{ "type": "bar", "colorBy": "data" }] }\n---\nk,v\na,1\nb,2';
+    expect((await openDiagram("echarts", "Palette", code)).svg).toBe(true);
+    const fills = () => page.$$eval("#sheet path", (els) => els.map((e) => (e.getAttribute("fill") ?? "").toLowerCase()));
+    await page.select("#style-select", "colour-blind");
+    await page.waitForFunction(() => document.getElementById("status-render")!.dataset.state === "ok");
+    await page.waitForFunction(() => [...document.querySelectorAll("#sheet path")].some((e) => e.getAttribute("fill")?.toLowerCase() === "#0072b2"));
+    expect(await fills()).toContain("#0072b2");
+    await page.select("#style-select", "default");
+  });
+
   it("explains diagram types the browser engine lacks", async () => {
     const result = await openDiagram("plantuml", "Wireframe", "@startsalt\n{\n  Login | \"user\"\n}\n@endsalt");
     expect(result.error).toContain("Salt wireframes");
@@ -248,14 +266,35 @@ describe.skipIf(!chrome || !built)("Figvex in the browser", () => {
     expect(html).not.toContain("%SITE_URL%");
   });
 
-  it("fits the three-language switch on a phone screen", async () => {
+  it("collapses the library to a rail of recent diagrams instead of hiding it", async () => {
+    await openDiagram("plantuml", "Rail A", "@startuml\nA -> B\n@enduml");
+    await openDiagram("graphviz", "Rail B", "digraph { a -> b }");
+    expect(await page.$eval("#library", (el) => (el as HTMLElement).dataset.open)).toBe("false");
+    const rail = await page.$eval(".library-rail", (el) => el.getBoundingClientRect().width);
+    expect(rail).toBeGreaterThan(30);
+    const tiles = await page.$$eval(".rail-doc", (els) => els.map((e) => [e.textContent, e.getAttribute("aria-current")]));
+    expect(tiles[0]).toEqual(["RB", "true"]);
+    expect(tiles[1]).toEqual(["RA", "false"]);
+
+    await (await page.$$(".rail-doc"))[1].click();
+    await page.waitForFunction(() => (document.getElementById("doc-title") as HTMLInputElement).value === "Rail A");
+
+    await page.click("#btn-library");
+    expect(await page.$eval(".library-panel", (el) => el.getBoundingClientRect().width)).toBeGreaterThan(200);
+    await page.click(".library-head button[aria-label='Collapse']");
+    expect(await page.$eval("#library", (el) => (el as HTMLElement).dataset.open)).toBe("false");
+  });
+
+  it("names the diagram's language and fits the editor head on a phone screen", async () => {
+    await openDiagram("graphviz", "Label test", "digraph { a -> b }");
+    expect(await page.$eval("#engine-label", (el) => el.textContent)).toBe("Graphviz");
     await page.setViewport({ width: 375, height: 740 });
-    const fits = await page.evaluate(() => {
-      const sw = document.getElementById("engine-switch")!.getBoundingClientRect();
-      return { page: document.documentElement.scrollWidth <= innerWidth, switchRight: sw.right <= innerWidth };
-    });
+    const fits = await page.evaluate(() => ({
+      page: document.documentElement.scrollWidth <= innerWidth,
+      select: document.getElementById("style-select")!.getBoundingClientRect().width >= 100,
+    }));
     await page.setViewport({ width: 1400, height: 900 });
-    expect(fits).toEqual({ page: true, switchRight: true });
+    expect(fits).toEqual({ page: true, select: true });
   });
 
   it("throws no uncaught page errors", () => {

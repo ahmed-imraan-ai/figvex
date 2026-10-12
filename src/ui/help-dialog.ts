@@ -42,8 +42,10 @@ export function openHelp() {
         h("a", { href: DOCS.plantuml, target: "_blank", rel: "noopener" }, "PlantUML"),
         ", ",
         h("a", { href: DOCS.mermaid, target: "_blank", rel: "noopener" }, "Mermaid"),
-        " and ",
+        ", ",
         h("a", { href: DOCS.graphviz, target: "_blank", rel: "noopener" }, "Graphviz DOT"),
+        " and ",
+        h("a", { href: DOCS.echarts, target: "_blank", rel: "noopener" }, "ECharts options"),
         ".",
       ),
       h(
