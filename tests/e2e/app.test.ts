@@ -200,6 +200,33 @@ describe.skipIf(!chrome || !built)("Figvex in the browser", () => {
     expect(text).toContain("CC-BY 4.0");
   });
 
+  it("opens the About box from the help menu with GitHub and licence links", async () => {
+    await page.click("#btn-help");
+    await page.waitForSelector(".popover .help-menu");
+    const items = await page.$$eval(".popover .menu-list [role=menuitem]", (els) => els.map((e) => e.textContent?.trim()));
+    expect(items).toEqual(["Help and shortcuts", "About Figvex", "Source code on GitHub", "Report a problem"]);
+    const about = await page.$$(".popover .menu-list button");
+    await about[1].click();
+    await page.waitForSelector("dialog.about[open]");
+    const links = await page.$$eval("dialog.about a", (els) => els.map((e) => (e as HTMLAnchorElement).href));
+    expect(links).toContain("https://github.com/ahmed-imraan-ai/figvex");
+    expect(links).toContain("https://github.com/ahmed-imraan-ai/figvex/blob/main/LICENSE");
+    expect(links.some((l) => l.endsWith("/third-party-licenses.txt"))).toBe(true);
+    await page.keyboard.press("Escape");
+  });
+
+  it("serves SEO files and tags", async () => {
+    const robots = await (await fetch(`${BASE}robots.txt`)).text();
+    expect(robots).toContain("Sitemap:");
+    const sitemap = await (await fetch(`${BASE}sitemap.xml`)).text();
+    expect(sitemap).toContain("<urlset");
+    expect((await fetch(`${BASE}og-image.png`)).headers.get("content-type")).toContain("image/png");
+    const html = await (await fetch(BASE)).text();
+    expect(html).toContain('rel="canonical"');
+    expect(html).toContain('"@type": "WebApplication"');
+    expect(html).not.toContain("%SITE_URL%");
+  });
+
   it("throws no uncaught page errors", () => {
     expect(pageErrors).toEqual([]);
   });
