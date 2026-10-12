@@ -18,6 +18,18 @@ export interface PreviewCallbacks {
 
 export type SourceHint = { kind: "line"; line: number; name?: string } | { kind: "name"; name: string };
 
+/**
+ * An editing tool that gets first go at pointer input on the diagram, such as
+ * the sketch canvas. Points are in the diagram's own coordinates.
+ */
+export interface PreviewTool {
+  /** Return true to take this pointer; false lets the preview pan as usual. */
+  down(e: PointerEvent, at: { x: number; y: number }): boolean;
+  move(e: PointerEvent, at: { x: number; y: number }): void;
+  up(e: PointerEvent, at: { x: number; y: number }): void;
+  key?(e: KeyboardEvent): boolean;
+}
+
 export class Preview {
   private x = 0;
   private y = 0;
@@ -27,6 +39,9 @@ export class Preview {
   private pointers = new Map<number, { x: number; y: number }>();
   private drag: { x: number; y: number; moved: boolean; target: Element } | null = null;
   private pinch: { dist: number; scale: number } | null = null;
+  private viewBox = { x: 0, y: 0, w: 1, h: 1 };
+  private tool: PreviewTool | null = null;
+  private toolPointer: number | null = null;
 
   constructor(
     private stage: HTMLElement,
@@ -40,6 +55,7 @@ export class Preview {
     stage.addEventListener("pointerup", (e) => this.onPointerUp(e));
     stage.addEventListener("pointercancel", (e) => this.onPointerUp(e));
     stage.addEventListener("dblclick", (e) => {
+      if (this.tool) return; // tools see double-clicks as two pointer presses
       if ((e.target as Element).closest(".sheet")) return;
       this.fit();
     });
@@ -83,6 +99,8 @@ export class Preview {
     this.sheet.replaceChildren(document.importNode(svg, true));
     this.sheet.dataset.tone = background;
     this.size = { width, height };
+    const vb = svg.viewBox.baseVal;
+    this.viewBox = vb && vb.width > 0 ? { x: vb.x, y: vb.y, w: vb.width, h: vb.height } : { x: 0, y: 0, w: width, h: height };
     if (this.fitMode) this.fit();
     else this.apply();
   }
@@ -154,9 +172,50 @@ export class Preview {
     }
   }
 
+  /** The pannable area, for overlays such as the sketch label editor. */
+  get stageElement(): HTMLElement {
+    return this.stage;
+  }
+
+  /** Hand pointer input to an editing tool first, or back to panning with null. */
+  setTool(tool: PreviewTool | null) {
+    this.tool = tool;
+    this.toolPointer = null;
+  }
+
+  /** Diagram coordinates under a pointer. */
+  toDiagram(e: { clientX: number; clientY: number }): { x: number; y: number } {
+    const p = this.local(e);
+    const k = this.viewBox.w / (this.size.width || 1);
+    return { x: this.viewBox.x + ((p.x - this.x) / this.scale) * k, y: this.viewBox.y + ((p.y - this.y) / this.scale) * k };
+  }
+
+  /** Screen position (relative to the stage) and scale of a diagram point. */
+  toStage(x: number, y: number): { x: number; y: number; scale: number } {
+    const k = (this.size.width || 1) / this.viewBox.w;
+    return { x: this.x + (x - this.viewBox.x) * k * this.scale, y: this.y + (y - this.viewBox.y) * k * this.scale, scale: k * this.scale };
+  }
+
+  /** Stop re-fitting after each render, so edits don't move the view. */
+  hold() {
+    this.fitMode = false;
+  }
+
   private onPointerDown(e: PointerEvent) {
     if (e.button !== 0 || !this.hasDiagram) return;
     if ((e.target as Element).closest("a")) return;
+    if (this.tool && this.pointers.size === 0) {
+      // Focus first: the tool may open a text box that must keep focus. No
+      // focus ring for a mouse or touch press.
+      this.stage.focus({ preventScroll: true, focusVisible: false } as FocusOptions);
+      if (this.tool.down(e, this.toDiagram(e))) {
+        e.preventDefault(); // no mousedown, so focus stays where the tool put it
+        this.toolPointer = e.pointerId;
+        this.fitMode = false;
+        this.stage.setPointerCapture(e.pointerId);
+        return;
+      }
+    }
     this.stage.setPointerCapture(e.pointerId);
     this.pointers.set(e.pointerId, this.local(e));
     if (this.pointers.size === 1) {
@@ -170,6 +229,10 @@ export class Preview {
   }
 
   private onPointerMove(e: PointerEvent) {
+    if (this.tool && e.pointerId === this.toolPointer) {
+      this.tool.move(e, this.toDiagram(e));
+      return;
+    }
     if (!this.pointers.has(e.pointerId)) return;
     const p = this.local(e);
     this.pointers.set(e.pointerId, p);
@@ -194,6 +257,11 @@ export class Preview {
   }
 
   private onPointerUp(e: PointerEvent) {
+    if (this.tool && e.pointerId === this.toolPointer) {
+      this.toolPointer = null;
+      this.tool.up(e, this.toDiagram(e));
+      return;
+    }
     // Pointer capture retargets pointerup to the stage, so use the element
     // that was pressed.
     const clicked = this.drag && !this.drag.moved && this.pointers.size === 1 ? this.drag.target : null;
@@ -208,7 +276,12 @@ export class Preview {
   }
 
   private onKey(e: KeyboardEvent) {
-    if (e.target !== this.stage || e.ctrlKey || e.metaKey || e.altKey) return;
+    if (e.target !== this.stage) return;
+    if (this.tool?.key?.(e)) {
+      e.preventDefault();
+      return;
+    }
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
     const step = e.shiftKey ? 120 : 40;
     const actions: Record<string, () => void> = {
       "+": () => this.zoomBy(1.25),

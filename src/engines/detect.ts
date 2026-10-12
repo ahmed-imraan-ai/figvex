@@ -48,6 +48,7 @@ export function detectEngine(code: string): Engine | null {
       continue;
     }
     if (line.startsWith("@start")) return "plantuml";
+    if (line === "sketch") return "sketch";
     if (line.startsWith("%%")) continue; // Mermaid comment or %%{init}%% directive
     if (line.startsWith("'") || line.startsWith("/'")) return "plantuml";
     if (line.startsWith("//")) continue; // DOT comment
@@ -71,6 +72,7 @@ export function diagramKind(code: string, engine: Engine): string {
     if (!m) return "";
     return m[1] === "uml" ? "" : m[1];
   }
+  if (engine === "sketch") return "";
   if (engine === "bpmn") {
     if (/<(\w+:)?participant\b/.test(code)) return "collaboration";
     return /<(\w+:)?process\b/.test(code) ? "process" : "";

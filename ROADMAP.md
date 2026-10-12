@@ -1,12 +1,13 @@
 # Roadmap
 
-Figvex started with PlantUML and Mermaid, and now also draws Graphviz DOT, BPMN and data charts. The plan is to add more kinds of diagram and chart behind the same editor, preview, export and sharing. The work is split into three phases. Items within a phase aren't in a fixed order.
+Figvex started with PlantUML and Mermaid, and now also draws Graphviz DOT, BPMN, data charts and freeform sketches. The plan is to add more kinds of diagram and chart behind the same editor, preview, export and sharing. The work is split into three phases. Items within a phase aren't in a fixed order.
 
 ## Done
 
 - **Graphviz.** DOT written directly, with every Graphviz layout engine, templates, syntax colouring and completions. It uses the Viz.js build that ships with PlantUML, so it added no dependency. PlantUML's `@startdot` blocks use it too.
 - **Data charts.** Apache ECharts (Apache 2.0), chosen over Plotly because it renders straight to an SVG string and bundles only the chart types used. Charts are ECharts options in JSON, with CSV data under a `---` line or opened from a `.csv` file.
 - **BPMN.** Our own renderer, written from the OMG BPMN 2.0 specification, so there's no watermark and no new dependency. It draws files from modelling tools with their saved positions, and lays out files without them using Graphviz, with pools and lanes as bands. Owning the renderer leaves the way open for visual editing.
+- **Freeform diagrams.** A sketch canvas built in-house rather than on Excalidraw, so there's no React and nothing extra to download. Boxes, ellipses, diamonds, text, arrows that stay attached to shapes, and a pen, in a clean or hand-drawn style. Sketches are stored as text, one element per line, so saving, sharing, export and undo work as for every other type. The canvas is also the start of visual editing.
 
 ## How new types fit in
 
@@ -36,9 +37,8 @@ This is a project policy, not legal advice.
 
 ## Phase 1: next
 
-- **Freeform diagrams.** A drawing canvas for sketches that don't fit any language, saved next to text diagrams and exported the same way. Built on Excalidraw (MIT) or our own canvas. Not tldraw.
 - **Complex networking.** Topologies with device icons, subnets, VLANs and links, past what nwdiag and Mermaid's architecture diagrams can show.
-- **Visual editing.** Drag shapes in the preview and write the change back to the source, plus a canvas-first mode for people who'd rather not write code. This is the largest item, because each engine needs a mapping between shapes and source lines. Click-to-source is the first part of it and already works for PlantUML.
+- **Visual editing.** Drag shapes in the preview and write the change back to the source, plus a canvas-first mode for people who'd rather not write code. This is the largest item, because each engine needs a mapping between shapes and source lines. Two parts already work: click-to-source for PlantUML, Graphviz and BPMN, and the sketch canvas, which writes every drag back to its text. What's left is doing the same for the text languages.
 
 ## Phase 2
 
