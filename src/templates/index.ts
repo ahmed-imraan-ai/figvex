@@ -4,6 +4,7 @@ import { chartTemplates } from "./charts";
 import { graphvizTemplates } from "./graphviz";
 import { mermaidTemplates } from "./mermaid";
 import { plantumlTemplates } from "./plantuml";
+import { sketchTemplates } from "./sketch";
 
 export interface Template {
   id: string;
@@ -42,6 +43,7 @@ export const BLANK_CODE: Record<Engine, string> = {
   </process>
 </definitions>
 `,
+  sketch: "sketch\n",
   echarts: '{\n  "xAxis": { "type": "category" },\n  "yAxis": {},\n  "series": [{ "type": "bar" }]\n}\n---\nname,value\nA,3\nB,5\nC,4\n',
 };
 
@@ -86,9 +88,17 @@ const blank: Template[] = [
     summary: "A start event, one task and an end event, laid out automatically.",
     code: BLANK_CODE.bpmn,
   },
+  {
+    id: "blank-sketch",
+    engine: "sketch",
+    category: "Start from scratch",
+    title: "Blank sketch",
+    summary: "An empty canvas. Draw with the tools above the diagram.",
+    code: BLANK_CODE.sketch,
+  },
 ];
 
-export const TEMPLATES: Template[] = [...blank, ...plantumlTemplates, ...mermaidTemplates, ...graphvizTemplates, ...chartTemplates, ...bpmnTemplates].sort(
+export const TEMPLATES: Template[] = [...blank, ...plantumlTemplates, ...mermaidTemplates, ...graphvizTemplates, ...chartTemplates, ...bpmnTemplates, ...sketchTemplates].sort(
   (a, b) => CATEGORIES.indexOf(a.category as never) - CATEGORIES.indexOf(b.category as never),
 );
 

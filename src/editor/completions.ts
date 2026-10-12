@@ -262,7 +262,37 @@ function bpmnSource(ctx: CompletionContext): CompletionResult | null {
   };
 }
 
-const SOURCES = { plantuml: plantumlSource, mermaid: mermaidSource, graphviz: dotSource, echarts: chartSource, bpmn: bpmnSource } as const;
+const SKETCH_SNIPPETS: Completion[] = [
+  snippetCompletion('box ${id} ${40} ${40} ${160} ${80} "${Label}"', { label: "box", detail: "id x y width height", type: "keyword" }),
+  snippetCompletion('ellipse ${id} ${40} ${40} ${120} ${70} "${Label}"', { label: "ellipse", detail: "id x y width height", type: "keyword" }),
+  snippetCompletion('diamond ${id} ${40} ${40} ${120} ${80} "${Label}"', { label: "diamond", detail: "id x y width height", type: "keyword" }),
+  snippetCompletion('text ${id} ${40} ${40} "${Words}"', { label: "text", detail: "id x y", type: "keyword" }),
+  snippetCompletion('arrow ${from} -> ${to} "${}"', { label: "arrow", detail: "from -> to", type: "keyword" }),
+  snippetCompletion("line ${from} -> ${to}", { label: "line", detail: "from -> to", type: "keyword" }),
+];
+
+const SKETCH_OPTIONS = ["fill=", "stroke=", "width=", "size=", "dashed", "round", "bold", "both", "none"].map((label) => ({
+  label,
+  type: "property",
+}));
+
+function sketchSource(ctx: CompletionContext): CompletionResult | null {
+  const line = ctx.state.doc.lineAt(ctx.pos);
+  const before = line.text.slice(0, ctx.pos - line.from);
+  const word = ctx.matchBefore(/[\w=-]*/);
+  if (!word || (word.from === word.to && !ctx.explicit)) return null;
+  if (/^\s*[\w-]*$/.test(before)) return { from: word.from, options: SKETCH_SNIPPETS, validFor: /^\w*$/ };
+  // After the first word: option names, or the ids of shapes for arrow ends.
+  const ids = [...ctx.state.doc.toString().matchAll(/^\s*(?:box|ellipse|diamond|text)\s+([A-Za-z_][\w-]*)/gm)].map((m) => m[1]);
+  const isLink = /^\s*(arrow|line)\b/.test(before);
+  return {
+    from: word.from,
+    options: isLink ? [...ids.map((label) => ({ label, type: "variable" })), ...SKETCH_OPTIONS] : SKETCH_OPTIONS,
+    validFor: /^[\w=-]*$/,
+  };
+}
+
+const SOURCES = { plantuml: plantumlSource, mermaid: mermaidSource, graphviz: dotSource, echarts: chartSource, bpmn: bpmnSource, sketch: sketchSource } as const;
 
 export function completionSource(engine: Engine) {
   return SOURCES[engine];
