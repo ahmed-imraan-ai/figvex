@@ -1,10 +1,11 @@
 # Roadmap
 
-Figvex started with PlantUML and Mermaid, and now also draws Graphviz DOT. The plan is to add more kinds of diagram and chart behind the same editor, preview, export and sharing. The work is split into three phases. Items within a phase aren't in a fixed order.
+Figvex started with PlantUML and Mermaid, and now also draws Graphviz DOT and data charts. The plan is to add more kinds of diagram and chart behind the same editor, preview, export and sharing. The work is split into three phases. Items within a phase aren't in a fixed order.
 
 ## Done
 
 - **Graphviz.** DOT written directly, with every Graphviz layout engine, templates, syntax colouring and completions. It uses the Viz.js build that ships with PlantUML, so it added no dependency. PlantUML's `@startdot` blocks use it too.
+- **Data charts.** Apache ECharts (Apache 2.0), chosen over Plotly because it renders straight to an SVG string and bundles only the chart types used. Charts are ECharts options in JSON, with CSV data under a `---` line or opened from a `.csv` file.
 
 ## How new types fit in
 
@@ -34,7 +35,6 @@ This is a project policy, not legal advice.
 
 ## Phase 1: next
 
-- **Data charts with ECharts or Plotly.** One of the two, not both. ECharts is Apache 2.0 and Plotly is MIT. Charts would be written as a JSON spec, with CSV data pasted alongside or opened from a file.
 - **BPMN.** Process diagrams in standard BPMN 2.0 notation, without a watermark (see the licence policy below). Two routes: our own renderer written from the OMG BPMN 2.0 specification, or [bpmn-visualization](https://github.com/process-analytics/bpmn-visualization-js) (Apache 2.0, view only, no watermark). Not bpmn-js.
 - **Freeform diagrams.** A drawing canvas for sketches that don't fit any language, saved next to text diagrams and exported the same way. Built on Excalidraw (MIT) or our own canvas. Not tldraw.
 - **Complex networking.** Topologies with device icons, subnets, VLANs and links, past what nwdiag and Mermaid's architecture diagrams can show.
@@ -42,7 +42,7 @@ This is a project policy, not legal advice.
 
 ## Phase 2
 
-- **Statistical charts.** Histograms, box plots, scatter plots with trend lines and distributions, built on the phase 1 chart engine.
+- **Statistical charts.** Box plots and histograms computed from raw data rather than summaries, scatter plots with trend lines, and distributions, built on the chart engine.
 - **UI wireframes.** Salt once the PlantUML browser build includes it, and a wireframe mode with common controls.
 - **Network diagrams.** Physical and logical views for networking courses, built on the phase 1 networking work.
 - **Advanced UML.** The UML diagrams PlantUML and Mermaid cover poorly or not at all, such as composite structure, communication and interaction overview diagrams, and checks for common modelling mistakes.

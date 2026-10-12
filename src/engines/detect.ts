@@ -1,3 +1,4 @@
+import { SERIES_TYPES } from "./chart";
 import type { Engine } from "./types";
 
 const MERMAID_TYPES = [
@@ -51,6 +52,7 @@ export function detectEngine(code: string): Engine | null {
       inBlockComment = !line.includes("*/", 2);
       continue;
     }
+    if (line.startsWith("{")) return "echarts"; // a JSON chart option
     if (dotStart.test(line)) return "graphviz";
     if (mermaidStart.test(line)) return "mermaid";
     return null;
@@ -64,6 +66,10 @@ export function diagramKind(code: string, engine: Engine): string {
     const m = code.match(/@start(\w+)/);
     if (!m) return "";
     return m[1] === "uml" ? "" : m[1];
+  }
+  if (engine === "echarts") {
+    const types = [...code.matchAll(/"type"\s*:\s*"(\w+)"/g)].map((m) => m[1]);
+    return [...new Set(types.filter((t) => (SERIES_TYPES as readonly string[]).includes(t)))].join(", ");
   }
   if (engine === "graphviz") {
     const layout = code.match(/\blayout\s*=\s*"?(\w+)/)?.[1];

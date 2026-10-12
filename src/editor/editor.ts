@@ -19,7 +19,7 @@ import {
 import { tags as t } from "@lezer/highlight";
 import type { Engine } from "../engines/types";
 import { completionSource } from "./completions";
-import { dotLanguage, mermaidLanguage, plantumlLanguage } from "./languages";
+import { chartLanguage, dotLanguage, mermaidLanguage, plantumlLanguage } from "./languages";
 
 // Colours come from CSS variables so light and dark themes share one style.
 const highlight = HighlightStyle.define([
@@ -184,7 +184,7 @@ export class DiagramEditor {
         errorLineField,
         syntaxHighlighting(highlight),
         baseTheme,
-        placeholder("Write PlantUML, Mermaid or Graphviz here…"),
+        placeholder("Write PlantUML, Mermaid, Graphviz or a chart here…"),
         this.language.of(languageFor(this.engine)),
         this.completion.of(completionFor(this.engine)),
         this.fontSize.of(fontTheme(this.size)),
@@ -272,7 +272,7 @@ export class DiagramEditor {
   }
 }
 
-const LANGUAGES = { plantuml: plantumlLanguage, mermaid: mermaidLanguage, graphviz: dotLanguage } as const;
+const LANGUAGES = { plantuml: plantumlLanguage, mermaid: mermaidLanguage, graphviz: dotLanguage, echarts: chartLanguage } as const;
 
 function languageFor(engine: Engine) {
   return LANGUAGES[engine];
