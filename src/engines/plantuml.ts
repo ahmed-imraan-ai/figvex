@@ -11,6 +11,7 @@ import {
   PLANTUML_STDLIB_REMOTE,
 } from "../config";
 import { plantumlEncode } from "../lib/encode";
+import { loadVizScript, renderGraphviz } from "./graphviz";
 import type { RenderOptions, RenderResult } from "./types";
 
 interface PlantUmlModule {
@@ -41,7 +42,6 @@ const UNSUPPORTED: [RegExp, string][] = [
   [/^\s*@startfiles\b/m, "File trees"],
   [/^\s*@startchronology\b/m, "Chronology diagrams"],
   [/^\s*@startboard\b/m, "Board diagrams"],
-  [/^\s*@startdot\b/m, "Raw DOT graphs"],
   [/^\s*@startgit\b/m, "Git log diagrams"],
   [/^\s*@startwire\b/m, "Wire diagrams"],
   [/^\s*@starthcl\b/m, "HCL diagrams"],
@@ -64,7 +64,7 @@ export function loadPlantUml(): Promise<PlantUmlModule> {
   enginePromise ??= (async () => {
     installStdlibLoader();
     silenceEngineLogging();
-    await loadClassicScript(`${PLANTUML_ENGINE_BASE}viz-global.js`);
+    await loadVizScript();
     const url = new URL(`${PLANTUML_ENGINE_BASE}plantuml.js`, location.href).href;
     return (await import(/* @vite-ignore */ url)) as PlantUmlModule;
   })();
@@ -161,9 +161,27 @@ export function applyStyle(code: string, theme: string): { code: string; mapLine
   };
 }
 
+/**
+ * The DOT graph inside @startdot ... @enddot, and the 0-based line it starts
+ * on. PlantUML hands these straight to Graphviz, so we do the same.
+ */
+export function dotBlock(code: string): { source: string; offset: number } | null {
+  const lines = code.split(/\r\n|\r|\n/);
+  const start = lines.findIndex((l) => /^\s*@startdot\b/.test(l));
+  if (start < 0) return null;
+  const end = lines.findIndex((l, i) => i > start && /^\s*@enddot\b/.test(l));
+  return { source: lines.slice(start + 1, end < 0 ? undefined : end).join("\n"), offset: start + 1 };
+}
+
 export async function renderPlantUml(code: string, options: RenderOptions): Promise<RenderResult> {
   const started = performance.now();
   if (isEmptyDiagram(code)) return { ok: false, message: "", ms: 0 };
+
+  const dot = dotBlock(code);
+  if (dot) {
+    const result = await renderGraphviz(dot.source, options);
+    return result.ok ? result : { ...result, line: result.line && result.line + dot.offset };
+  }
 
   const styled = applyStyle(code, options.plantumlTheme);
   const finish = (result: RenderResult): RenderResult =>

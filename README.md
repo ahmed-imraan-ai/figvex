@@ -4,16 +4,16 @@
 
 **Live site: [figvex.sudo520.com](https://figvex.sudo520.com)**
 
-A live editor for PlantUML and Mermaid diagrams. Type on the left, the diagram redraws on the right. It runs in the browser, and your diagrams stay on your machine unless you share them or turn on the PlantUML server option.
+A live editor for PlantUML, Mermaid and Graphviz diagrams. Type on the left, the diagram redraws on the right. It runs in the browser, and your diagrams stay on your machine unless you share them or turn on the PlantUML server option.
 
-It was built for computer science students: UML for software engineering courses, ER diagrams for databases, state machines and automata for theory, Gantt charts for group projects.
+It was built for computer science students: UML for software engineering courses, ER diagrams for databases, state machines and automata for theory, trees and graphs for algorithms, Gantt charts for group projects.
 
 ![Figvex showing a class diagram](docs/screenshot.png)
 
 ## Features
 
-- Live preview for PlantUML and Mermaid, with the language picked up from the first line
-- 37 templates written around coursework: a library system class diagram, JWT login sequence, TCP state machine, DFA for multiples of 3, binary search, university ER schema, capstone Gantt plan and more
+- Live preview for PlantUML, Mermaid and Graphviz DOT, with the language picked up from the first line
+- 44 templates written around coursework: a library system class diagram, JWT login sequence, TCP state machine, DFA for multiples of 3, binary search tree, hash table, university ER schema, capstone Gantt plan and more
 - Export to SVG, PNG, JPG, WEBP and vector PDF, at 1× to 4× scale, with a solid or transparent background
 - Copy the image straight to the clipboard for pasting into a report or slides
 - Share links that carry the whole diagram in the URL, with no server involved
@@ -22,7 +22,7 @@ It was built for computer science students: UML for software engineering courses
 - Click a shape in the diagram to jump to the line that drew it
 - Errors point at the line, with a marker in the editor
 - Every diagram saved in the browser, with rename, duplicate, delete and undo
-- Open `.puml`, `.mmd` and Markdown files, or drag them onto the window
+- Open `.puml`, `.mmd`, `.gv`, `.dot` and Markdown files, or drag them onto the window
 - Light and dark themes for the app and for the diagrams, separately
 - Pan and zoom with mouse, trackpad or touch; works on phones as two tabs
 
@@ -31,6 +31,8 @@ It was built for computer science students: UML for software engineering courses
 PlantUML runs through [`@plantuml/core`](https://www.npmjs.com/package/@plantuml/core), the official build of PlantUML compiled to JavaScript with TeaVM. It is built from the same source as the Java release and carries the same version number. Graphviz layouts come from Viz.js. It needs neither Java nor a server.
 
 Mermaid runs through the [`mermaid`](https://www.npmjs.com/package/mermaid) package and is only downloaded the first time you open a Mermaid diagram.
+
+Graphviz DOT uses the same Viz.js file that PlantUML loads, so it adds nothing to the download. A DOT diagram on its own loads only that file, not the rest of PlantUML.
 
 The app itself is TypeScript, Vite and CodeMirror 6, with no UI framework.
 
@@ -42,18 +44,20 @@ The app itself is TypeScript, Vite and CodeMirror 6, with no UI framework.
 
 ## Supported diagrams
 
-| PlantUML | Mermaid |
-| --- | --- |
-| Sequence, use case, class, object, activity, component, deployment, state, timing | Flowchart, sequence, class, state, ER, user journey |
-| ER (crow's foot), JSON, YAML | Gantt, pie, quadrant, XY chart, Sankey |
-| Gantt, mind map, work breakdown | Git graph, mind map, timeline, Kanban |
-| Regex, EBNF, ArchiMate, C4 and the rest of the standard library | Packet, block, architecture, C4, requirement, radar, treemap and the newer types in Mermaid 12 |
+| PlantUML | Mermaid | Graphviz |
+| --- | --- | --- |
+| Sequence, use case, class, object, activity, component, deployment, state, timing | Flowchart, sequence, class, state, ER, user journey | Directed and undirected graphs, written in DOT |
+| ER (crow's foot), JSON, YAML | Gantt, pie, quadrant, XY chart, Sankey | Trees, automata, dependency graphs, record-based data structures |
+| Gantt, mind map, work breakdown | Git graph, mind map, timeline, Kanban | All Graphviz layouts: `dot`, `neato`, `fdp`, `sfdp`, `circo`, `twopi`, `osage`, `patchwork` |
+| Regex, EBNF, ArchiMate, C4 and the rest of the standard library | Packet, block, architecture, C4, requirement, radar, treemap and the newer types in Mermaid 12 | |
 
-The browser build of PlantUML doesn't include these yet: Salt wireframes, ditaa, math and LaTeX, nwdiag, Chen ER, `@startfiles`, `@startchronology`, `@startboard`, `@startdot`, `@startgit`, `@startwire`, `@starthcl`, and `!include` from a URL.
+PlantUML's `@startdot` blocks are drawn with Graphviz too.
+
+The browser build of PlantUML doesn't include these yet: Salt wireframes, ditaa, math and LaTeX, nwdiag, Chen ER, `@startfiles`, `@startchronology`, `@startboard`, `@startgit`, `@startwire`, `@starthcl`, and `!include` from a URL.
 
 When a diagram uses one of these, Figvex says so instead of showing a stack trace. In Settings you can turn on **Use server for missing types**. Only those diagrams are then sent to a PlantUML server to be drawn. The default is plantuml.com; you can point it at your own server (see Docker below).
 
-## Styling PlantUML
+## Styles
 
 PlantUML diagrams are drawn with the `plain` theme by default: black lines, white boxes, no fills. That suits printed reports.
 
@@ -67,6 +71,8 @@ Alice -> Bob : hello
 ```
 
 A `!theme` line in the diagram always wins over the menu. Mermaid has the same menu, with its own themes.
+
+For Graphviz the menu has two choices. **Plain** draws labels in a sans-serif font, and **Graphviz defaults** keeps Times, as the `dot` command does. Colours, fonts and shapes set in the DOT source always win.
 
 ## Run it locally
 
@@ -146,7 +152,7 @@ Set these as environment variables when building (in Netlify under **Site config
 ```
 src/
   main.ts             wiring: documents, rendering, toolbar, shortcuts
-  engines/            PlantUML and Mermaid adapters, language detection, themes
+  engines/            PlantUML, Mermaid and Graphviz adapters, language detection, themes
   editor/             CodeMirror setup, syntax colouring, autocomplete
   preview.ts          pan and zoom canvas, click-to-source
   export.ts           SVG, PNG, JPG, WEBP and PDF export
@@ -178,7 +184,7 @@ docker/               nginx config for the Docker image
 
 The full plan is in [ROADMAP.md](ROADMAP.md). It has three phases:
 
-1. Graphviz, data charts with ECharts or Plotly, BPMN, freeform diagrams, complex networking and visual editing.
+1. Data charts with ECharts or Plotly, BPMN, freeform diagrams, complex networking and visual editing.
 2. Statistical charts, UI wireframes, network diagrams, advanced UML, cloud infrastructure, complex data models and coursework tools such as truth tables, Karnaugh maps and automata.
 3. Advanced scientific and financial charts, geographic maps, CAD, 3D, electrical schematics, formal process models and interactive visual analytics.
 

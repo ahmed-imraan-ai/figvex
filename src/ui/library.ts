@@ -1,7 +1,9 @@
 // The "Your diagrams" drawer: every diagram saved in this browser.
 
+import { ENGINE_TAG } from "../engines/types";
 import { h, icon, modKey, relativeTime } from "../lib/dom";
 import { store, type Doc } from "../store";
+import { BLANK_CODE } from "../templates";
 import { ICONS } from "./icons";
 import { toast } from "./overlay";
 
@@ -90,7 +92,7 @@ export class Library {
         h(
           "span",
           { class: "meta" },
-          h("span", { class: "engine-tag", "data-engine": doc.engine }, doc.engine === "plantuml" ? "puml" : "mmd"),
+          h("span", { class: "engine-tag", "data-engine": doc.engine }, ENGINE_TAG[doc.engine]),
           relativeTime(doc.updated),
         ),
       ),
@@ -145,8 +147,7 @@ export class Library {
     const removed = store.remove(doc.id);
     if (!removed) return;
     if (!store.docs.length) {
-      const blank = doc.engine === "plantuml" ? "@startuml\n\n@enduml\n" : "flowchart TD\n    A --> B\n";
-      this.actions.onOpen(store.create({ title: "Untitled diagram", engine: doc.engine, code: blank }));
+      this.actions.onOpen(store.create({ title: "Untitled diagram", engine: doc.engine, code: BLANK_CODE[doc.engine] }));
     } else if (store.current) {
       this.actions.onOpen(store.current);
     }

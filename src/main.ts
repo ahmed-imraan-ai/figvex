@@ -5,24 +5,27 @@ import "@fontsource/ibm-plex-mono/400.css";
 import "@fontsource/ibm-plex-mono/500.css";
 import "./styles.css";
 
-import { APP_NAME, DEPLOY_LABEL, DOCS, ON_NETLIFY, MERMAID_VERSION, PLANTUML_VERSION, REPO_URL } from "./config";
+import { APP_NAME, DEPLOY_LABEL, DOCS, ENGINE_VERSION, ON_NETLIFY, REPO_URL } from "./config";
 import { DiagramEditor } from "./editor/editor";
 import {
   detectEngine,
   diagramKind,
+  ENGINE_FENCE,
+  ENGINE_FILE_EXTS,
   ENGINE_LABEL,
+  ENGINES,
   renderDiagram,
   type Engine,
   type RenderFailure,
   type RenderResult,
 } from "./engines";
 import { isPlantUmlLoaded, loadPlantUml } from "./engines/plantuml";
-import { MERMAID_STYLES, PLANTUML_STYLES, PLANTUML_THEMES } from "./engines/themes";
+import { GRAPHVIZ_STYLES, MERMAID_STYLES, PLANTUML_STYLES, PLANTUML_THEMES } from "./engines/themes";
 import { byId, debounce, h, icon, isMac, modKey } from "./lib/dom";
 import { Preview, type SourceHint } from "./preview";
 import { hasSharedDiagram, readSharedDiagram } from "./share";
 import { renderOptions, store, type Doc, type Settings } from "./store";
-import { WELCOME_CODE, type Template } from "./templates";
+import { BLANK_CODE, WELCOME_CODE, type Template } from "./templates";
 import { buildExportPanel, downloadSource } from "./ui/export-panel";
 import { buildHelpMenu } from "./ui/about-dialog";
 import { openHelp } from "./ui/help-dialog";
@@ -33,10 +36,7 @@ import { buildSettingsPanel } from "./ui/settings-panel";
 import { buildSharePanel } from "./ui/share-panel";
 import { openTemplates } from "./ui/templates-dialog";
 
-const BLANK: Record<Engine, string> = {
-  plantuml: "@startuml\n\n@enduml\n",
-  mermaid: "flowchart TD\n    A --> B\n",
-};
+const BLANK = BLANK_CODE;
 const DEFAULT_TITLE = "Untitled diagram";
 
 // ---------------------------------------------------------------------------
@@ -164,12 +164,12 @@ function updateEngineUi() {
 
 function updateStatusEngine() {
   const kind = diagramKind(editor.value, engine);
-  const version = engine === "plantuml" ? PLANTUML_VERSION : MERMAID_VERSION;
+  const version = ENGINE_VERSION[engine];
   ui.statusEngine.textContent = `${ENGINE_LABEL[engine]} ${version}${kind ? ` · ${kind}` : ""}`;
 }
 
-// The style picker lists PlantUML themes or Mermaid themes. A theme chosen
-// inside the diagram itself wins, and the picker says so.
+// The style picker lists the styles of the current engine. A PlantUML theme
+// chosen inside the diagram itself wins, and the picker says so.
 function fillStylePicker() {
   const select = ui.styleSelect;
   const option = (value: string, label: string) => h("option", { value }, label);
@@ -183,6 +183,10 @@ function fillStylePicker() {
     );
     select.value = own ? "__own" : store.settings.plantumlTheme;
     select.disabled = !!own;
+  } else if (engine === "graphviz") {
+    select.append(...GRAPHVIZ_STYLES.map((s) => option(s.value, s.label)));
+    select.value = store.settings.graphvizStyle;
+    select.disabled = false;
   } else {
     select.append(...MERMAID_STYLES.map((s) => option(s.value, s.label)));
     select.value = store.settings.mermaidTheme;
@@ -193,6 +197,7 @@ function fillStylePicker() {
 ui.styleSelect.addEventListener("change", () => {
   const value = ui.styleSelect.value;
   if (engine === "plantuml") store.setSettings({ plantumlTheme: value });
+  else if (engine === "graphviz") store.setSettings({ graphvizStyle: value as Settings["graphvizStyle"] });
   else store.setSettings({ mermaidTheme: value as Settings["mermaidTheme"] });
 });
 
@@ -475,11 +480,14 @@ function applySettings(force = false) {
   if (force || s.fontSize !== prev.fontSize) editor.setFontSize(s.fontSize);
   if (force || s.wrap !== prev.wrap) editor.setWrap(s.wrap);
   if (force || s.splitRatio !== prev.splitRatio) ui.workspace.style.setProperty("--split", `${s.splitRatio * 100}%`);
-  if (s.plantumlTheme !== prev.plantumlTheme || s.mermaidTheme !== prev.mermaidTheme) fillStylePicker();
-  const needsRender =
-    s.diagramTheme !== prev.diagramTheme ||
+  const styleChanged =
     s.plantumlTheme !== prev.plantumlTheme ||
     s.mermaidTheme !== prev.mermaidTheme ||
+    s.graphvizStyle !== prev.graphvizStyle;
+  if (styleChanged) fillStylePicker();
+  const needsRender =
+    s.diagramTheme !== prev.diagramTheme ||
+    styleChanged ||
     s.mermaidLook !== prev.mermaidLook ||
     s.serverFallback !== prev.serverFallback ||
     (s.theme !== prev.theme && s.diagramTheme === "match") ||
@@ -555,15 +563,15 @@ async function openFile(file: File) {
   }
   let text = await file.text();
   const ext = file.name.split(".").pop()?.toLowerCase() ?? "";
-  let eng: Engine | null = ext === "mmd" || ext === "mermaid" ? "mermaid" : ["puml", "plantuml", "pu", "iuml", "wsd"].includes(ext) ? "plantuml" : null;
+  let eng: Engine | null = ENGINES.find((e) => ENGINE_FILE_EXTS[e].includes(ext)) ?? null;
 
   if (ext === "md" || ext === "markdown") {
-    const block = text.match(/```(plantuml|puml|mermaid)\s*\n([\s\S]*?)```/);
+    const block = text.match(/```(plantuml|puml|mermaid|dot|graphviz)\s*\n([\s\S]*?)```/);
     if (!block) {
-      toast(`No plantuml or mermaid code block found in ${file.name}.`, { error: true });
+      toast(`No plantuml, mermaid or dot code block found in ${file.name}.`, { error: true });
       return;
     }
-    eng = block[1] === "mermaid" ? "mermaid" : "plantuml";
+    eng = ENGINES.find((e) => ENGINE_FENCE[e] === block[1]) ?? (block[1] === "graphviz" ? "graphviz" : "plantuml");
     text = block[2];
   }
   eng = detectEngine(text) ?? eng ?? engine;

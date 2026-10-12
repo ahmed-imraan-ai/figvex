@@ -15,6 +15,11 @@ const deployLabel =
 // URL is the site's main address, including a custom domain once one is set.
 const siteUrl = (process.env.VITE_SITE_URL || process.env.URL || "https://figvex.netlify.app").replace(/\/+$/, "");
 const appVersion = readVersion("./package.json");
+// Viz.js (bundled with @plantuml/core) records its Graphviz version in the script.
+const graphvizVersion =
+  readFileSync(new URL("./node_modules/@plantuml/core/viz-global.js", import.meta.url), "utf8").match(
+    /graphvizVersion="([\d.]+)"/,
+  )?.[1] ?? "";
 
 export default defineConfig({
   plugins: [
@@ -51,6 +56,7 @@ export default defineConfig({
     __APP_VERSION__: JSON.stringify(appVersion),
     __PLANTUML_VERSION__: JSON.stringify(readVersion("./node_modules/@plantuml/core/package.json")),
     __MERMAID_VERSION__: JSON.stringify(readVersion("./node_modules/mermaid/package.json")),
+    __GRAPHVIZ_VERSION__: JSON.stringify(graphvizVersion),
   },
   build: {
     target: "es2022",
