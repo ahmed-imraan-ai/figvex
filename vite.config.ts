@@ -57,6 +57,7 @@ export default defineConfig({
     __PLANTUML_VERSION__: JSON.stringify(readVersion("./node_modules/@plantuml/core/package.json")),
     __MERMAID_VERSION__: JSON.stringify(readVersion("./node_modules/mermaid/package.json")),
     __GRAPHVIZ_VERSION__: JSON.stringify(graphvizVersion),
+    __ECHARTS_VERSION__: JSON.stringify(readVersion("./node_modules/echarts/package.json")),
   },
   build: {
     target: "es2022",

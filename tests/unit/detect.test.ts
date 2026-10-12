@@ -36,6 +36,11 @@ describe("detectEngine", () => {
     expect(detectEngine("// notes\n/* more\nnotes */\nDiGraph {}")).toBe("graphviz");
   });
 
+  it("treats a JSON object as an ECharts chart", () => {
+    expect(detectEngine('{\n  "series": [{ "type": "bar" }]\n}')).toBe("echarts");
+    expect(detectEngine('// sales\n{ "series": [] }')).toBe("echarts");
+  });
+
   it("keeps Mermaid's graph keyword for Mermaid", () => {
     expect(detectEngine("graph TD\n A --> B")).toBe("mermaid");
     expect(detectEngine("graph\n A --> B")).toBe("mermaid");
@@ -59,6 +64,12 @@ describe("diagramKind", () => {
     expect(diagramKind("---\ntitle: x\n---\nsankey-beta\n", "mermaid")).toBe("sankey");
     expect(diagramKind("stateDiagram-v2\n", "mermaid")).toBe("stateDiagram");
     expect(diagramKind("flowchart TD", "mermaid")).toBe("flowchart");
+  });
+
+  it("lists the chart's series types", () => {
+    expect(diagramKind('{ "xAxis": { "type": "category" }, "series": [{ "type": "bar" }, { "type": "line" }, { "type": "bar" }] }', "echarts")).toBe(
+      "bar, line",
+    );
   });
 
   it("names the Graphviz graph type, or the layout engine when one is set", () => {

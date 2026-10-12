@@ -1,4 +1,4 @@
-import type { GraphvizStyle, MermaidTheme } from "./types";
+import type { ChartStyle, GraphvizStyle, MermaidTheme } from "./types";
 
 /** Themes bundled with PlantUML (themes.js), minus "plain" and "_none_". */
 export const PLANTUML_THEMES = `amiga aws-orange black-knight bluegray blueprint carbon-gray cerulean
@@ -26,4 +26,10 @@ export const MERMAID_STYLES: { value: MermaidTheme; label: string }[] = [
 export const GRAPHVIZ_STYLES: { value: GraphvizStyle; label: string }[] = [
   { value: "plain", label: "Plain" },
   { value: "default", label: "Graphviz defaults" },
+];
+
+export const CHART_STYLES: { value: ChartStyle; label: string }[] = [
+  { value: "default", label: "Default" },
+  { value: "colour-blind", label: "Colour-blind safe" },
+  { value: "greyscale", label: "Greyscale" },
 ];
