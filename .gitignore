@@ -1,0 +1,13 @@
+node_modules/
+dist/
+.DS_Store
+*.log
+.env
+.env.local
+
+# Generated at install/build time
+public/vendor/
+
+# Local PlantUML jar (not needed by the app)
+*.jar
+public/third-party-licenses.txt

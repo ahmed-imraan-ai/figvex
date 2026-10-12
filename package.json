@@ -1,0 +1,47 @@
+{
+  "name": "figvex",
+  "version": "0.1.0",
+  "private": true,
+  "description": "A live editor for PlantUML and Mermaid diagrams that runs entirely in the browser.",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "dev": "node scripts/copy-plantuml.mjs && vite",
+    "build": "node scripts/copy-plantuml.mjs && node scripts/fetch-stdlib.mjs && node scripts/collect-licenses.mjs && tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "stdlib": "node scripts/fetch-stdlib.mjs",
+    "postinstall": "node scripts/copy-plantuml.mjs",
+    "test:watch": "vitest",
+    "test:e2e": "vitest run --config vitest.e2e.config.ts",
+    "licenses": "node scripts/collect-licenses.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@codemirror/autocomplete": "^6.20.3",
+    "@codemirror/commands": "^6.11.1",
+    "@codemirror/language": "^6.13.1",
+    "@codemirror/search": "^6.7.2",
+    "@codemirror/state": "^6.7.6",
+    "@codemirror/view": "^6.43.14",
+    "@fontsource/ibm-plex-mono": "^5.3.0",
+    "@fontsource/ibm-plex-sans": "^5.3.0",
+    "@lezer/highlight": "^1.2.5",
+    "@plantuml/core": "1.2026.8",
+    "dompurify": "^3.4.16",
+    "jspdf": "^4.2.1",
+    "mermaid": "^12.1.0",
+    "svg2pdf.js": "^2.8.1"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.5",
+    "happy-dom": "^21.0.1",
+    "puppeteer-core": "^25.13.0",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.4",
+    "vitest": "^5.0.4"
+  }
+}

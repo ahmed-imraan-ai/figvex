@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Figvex: PlantUML and Mermaid editor</title>
+    <meta name="description" content="Write PlantUML and Mermaid diagrams and watch them render as you type. Runs in your browser; nothing is uploaded." />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="theme-color" content="#f5f3ee" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#161615" media="(prefers-color-scheme: dark)" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <meta property="og:title" content="Figvex" />
+    <meta property="og:description" content="A live editor for PlantUML and Mermaid diagrams that runs in your browser." />
+    <script>
+      // Apply the saved theme before first paint to avoid a flash.
+      try {
+        var s = JSON.parse(localStorage.getItem("figvex.settings.v1") || "{}");
+        if (s.theme === "light" || s.theme === "dark") document.documentElement.dataset.theme = s.theme;
+      } catch (e) {}
+    </script>
+  </head>
+  <body>
+    <div class="app" id="app">
+      <header class="topbar">
+        <button class="icon-btn" id="btn-library" type="button" aria-label="Your diagrams" aria-expanded="false" aria-controls="library"></button>
+        <a class="brand" href="./" aria-label="Figvex">
+          <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M5 19C6.5 8 17.5 16 19 5" class="brand-curve" />
+            <rect x="2.6" y="16.6" width="4.8" height="4.8" class="brand-anchor" />
+            <rect x="16.6" y="2.6" width="4.8" height="4.8" class="brand-anchor" />
+          </svg>
+          <span class="brand-name">figvex</span>
+        </a>
+        <span class="topbar-sep" aria-hidden="true"></span>
+        <label class="doc-title">
+          <span class="visually-hidden">Diagram name</span>
+          <input id="doc-title" type="text" spellcheck="false" autocomplete="off" maxlength="120" />
+        </label>
+        <span class="save-state" id="save-state" aria-live="polite"></span>
+
+        <div class="topbar-spacer"></div>
+
+        <nav class="topbar-actions" aria-label="Diagram actions">
+          <button class="btn" id="btn-templates" type="button"><span class="btn-label">Templates</span></button>
+          <button class="btn" id="btn-open" type="button"><span class="btn-label">Open</span></button>
+          <button class="btn" id="btn-share" type="button" aria-haspopup="dialog"><span class="btn-label">Share</span></button>
+          <button class="btn btn-ink" id="btn-export" type="button" aria-haspopup="dialog"><span class="btn-label">Export</span></button>
+          <span class="topbar-sep" aria-hidden="true"></span>
+          <button class="icon-btn" id="btn-settings" type="button" aria-label="Settings" aria-haspopup="dialog"></button>
+          <button class="icon-btn" id="btn-help" type="button" aria-label="Help and shortcuts"></button>
+          <a class="icon-btn" id="link-repo" target="_blank" rel="noopener" aria-label="Source code on GitHub" hidden></a>
+        </nav>
+      </header>
+
+      <div class="mobile-tabs" role="tablist" aria-label="View">
+        <button role="tab" id="tab-code" aria-selected="true" type="button">Code</button>
+        <button role="tab" id="tab-diagram" aria-selected="false" type="button">Diagram</button>
+      </div>
+
+      <div class="workspace" id="workspace" data-view="code">
+        <aside class="library" id="library" aria-label="Your diagrams" hidden></aside>
+
+        <section class="pane pane-editor" aria-label="Source">
+          <div class="pane-head">
+            <div class="segmented" id="engine-switch" role="radiogroup" aria-label="Diagram language">
+              <button type="button" role="radio" data-engine="plantuml">PlantUML</button>
+              <button type="button" role="radio" data-engine="mermaid">Mermaid</button>
+            </div>
+            <label class="style-picker" title="How diagrams are coloured. A !theme line in your diagram takes priority.">
+              <span>Style</span>
+              <select id="style-select" class="field"></select>
+            </label>
+            <div class="topbar-spacer"></div>
+            <a class="text-link" id="link-syntax" target="_blank" rel="noopener">Syntax reference</a>
+          </div>
+          <div class="editor-host" id="editor"></div>
+        </section>
+
+        <div class="splitter" id="splitter" role="separator" aria-orientation="vertical" aria-label="Resize panes" tabindex="0"></div>
+
+        <section class="pane pane-preview" aria-label="Diagram preview">
+          <div class="stage" id="stage" tabindex="0" aria-label="Diagram. Drag to pan, Ctrl and scroll to zoom.">
+            <div class="canvas" id="canvas"><div class="sheet" id="sheet"></div></div>
+          </div>
+          <div class="preview-message" id="preview-message" hidden></div>
+          <div class="error-card" id="error-card" role="status" hidden></div>
+          <div class="zoombar" role="group" aria-label="Zoom">
+            <button class="icon-btn" id="zoom-out" type="button" aria-label="Zoom out"></button>
+            <button class="zoom-level" id="zoom-level" type="button" title="Actual size (1)">100%</button>
+            <button class="icon-btn" id="zoom-in" type="button" aria-label="Zoom in"></button>
+            <span class="zoombar-sep" aria-hidden="true"></span>
+            <button class="icon-btn" id="zoom-fit" type="button" aria-label="Fit to view (0)"></button>
+          </div>
+        </section>
+      </div>
+
+      <footer class="statusbar" id="statusbar">
+        <span class="status-item" id="status-engine"></span>
+        <span class="status-item status-render" id="status-render"></span>
+        <span class="topbar-spacer"></span>
+        <span class="status-item" id="status-cursor"></span>
+      </footer>
+    </div>
+
+    <input type="file" id="file-input" accept=".puml,.plantuml,.pu,.iuml,.wsd,.mmd,.mermaid,.txt,.md" hidden />
+    <div class="drop-overlay" id="drop-overlay" hidden><p>Drop a .puml or .mmd file to open it</p></div>
+    <div class="toast-host" id="toasts" aria-live="polite"></div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

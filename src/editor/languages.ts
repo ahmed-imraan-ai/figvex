@@ -1,0 +1,140 @@
+// Lightweight stream tokenizers for PlantUML and Mermaid. They only need to
+// be good enough for colouring; the engines do the real parsing.
+
+import { StreamLanguage, type StringStream } from "@codemirror/language";
+
+const PLANTUML_KEYWORDS = new Set(
+  `
+  actor participant boundary control entity database collections queue usecase
+  class interface abstract enum annotation struct exception metaclass stereotype protocol
+  package namespace node component rectangle cloud frame folder artifact card file storage stack hexagon
+  agent person label circle diamond port portin portout
+  state object map json diamond
+  start stop end kill detach if then else elseif endif while endwhile repeat backward
+  fork again split merge switch case endswitch endfork endsplit partition
+  note ref over of on left right top bottom as is
+  alt opt loop par break critical group else end
+  activate deactivate destroy create return autonumber autoactivate
+  title header footer legend endlegend caption center
+  skinparam hide show remove restore scale skin newpage box together allowmixing
+  mainframe top bottom to direction
+  project starts ends lasts requires happens at and day days week weeks
+  robust concise clock binary highlight
+  link links
+  `.trim().split(/\s+/),
+);
+
+const MERMAID_KEYWORDS = new Set(
+  `
+  subgraph end direction TB TD BT RL LR
+  participant actor as loop alt else opt par and rect note over left right of
+  activate deactivate autonumber critical break box
+  class classDef style linkStyle click callback call href namespace
+  state title section dateFormat axisFormat tickInterval excludes includes todayMarker weekday
+  commit branch checkout merge cherry-pick id tag type
+  x-axis y-axis quadrant-1 quadrant-2 quadrant-3 quadrant-4 line bar
+  accTitle accDescr root columns space
+  `.trim().split(/\s+/),
+);
+
+const MERMAID_TYPES =
+  /^(flowchart|graph|sequenceDiagram|classDiagram(-v2)?|stateDiagram(-v2)?|erDiagram|journey|gantt|pie|quadrantChart|requirementDiagram|gitGraph|C4\w+|mindmap|timeline|zenuml|sankey(-beta)?|xychart(-beta)?|block(-beta)?|packet(-beta)?|kanban|architecture(-beta)?|radar(-beta)?|treemap(-beta)?|venn(-beta)?|ishikawa(-beta)?|wardley(-beta)?|railroad|usecase|swimlanes|treeView|info)\b/;
+
+interface State {
+  blockComment: boolean;
+  afterColon: boolean;
+}
+
+const startState = (): State => ({ blockComment: false, afterColon: false });
+
+export const plantumlLanguage = StreamLanguage.define<State>({
+  name: "plantuml",
+  startState,
+  token(stream: StringStream, state: State) {
+    if (stream.sol()) state.afterColon = false;
+
+    if (state.blockComment) {
+      if (stream.skipTo("'/")) {
+        stream.pos += 2;
+        state.blockComment = false;
+      } else {
+        stream.skipToEnd();
+      }
+      return "comment";
+    }
+    if (stream.eatSpace()) return null;
+
+    if (state.afterColon) {
+      stream.skipToEnd();
+      return "labelName";
+    }
+    if (stream.match("/'")) {
+      state.blockComment = true;
+      return "comment";
+    }
+    if (stream.peek() === "'") {
+      stream.skipToEnd();
+      return "comment";
+    }
+    if (stream.match(/^@(start|end)\w+/)) return "meta";
+    if (stream.match(/^!\w+/)) return "macroName";
+    if (stream.match(/^<<[^>]*>>/)) return "annotation";
+    if (stream.match(/^<[\w/.\-]+>/)) return "string";
+    if (stream.match(/^"(?:[^"\\]|\\.)*"?/)) return "string";
+    if (stream.match(/^#[0-9a-fA-F]{3,8}\b/) || stream.match(/^#[A-Za-z]+/)) return "color";
+    if (stream.match(/^\[\*\]/)) return "atom";
+    if (stream.match(/^(<\|?|<<|\*|o|\+|\\\\|\/\/|\}|\^)?[-.=~]+(\[[^\]]*\])?((up|down|left|right|u|d|l|r)[-.=~]*)?(\|?>|>>|\*|o|\+|\\\\|\/\/|\{|x|\^)?(?=[\s\w"(\[:]|$)/)) {
+      return "operator";
+    }
+    if (stream.match(/^-?\d+(\.\d+)?/)) return "number";
+    if (stream.match(/^\$?[A-Za-z_][\w]*/)) {
+      const word = stream.current();
+      return PLANTUML_KEYWORDS.has(word.toLowerCase()) ? "keyword" : null;
+    }
+    if (stream.eat(":")) {
+      state.afterColon = true;
+      return "punctuation";
+    }
+    if (stream.match(/^[{}()[\]]/)) return "bracket";
+    stream.next();
+    return null;
+  },
+  languageData: {
+    commentTokens: { line: "'", block: { open: "/'", close: "'/" } },
+  },
+});
+
+export const mermaidLanguage = StreamLanguage.define<State>({
+  name: "mermaid",
+  startState,
+  token(stream: StringStream) {
+    if (stream.eatSpace()) return null;
+    if (stream.match(/^%%\{.*\}%%/)) return "meta";
+    if (stream.match("%%")) {
+      stream.skipToEnd();
+      return "comment";
+    }
+    if (stream.sol() && stream.match(/^---\s*$/)) return "meta";
+    if (stream.match(MERMAID_TYPES)) return "meta";
+    if (stream.match(/^"(?:[^"\\]|\\.)*"?/)) return "string";
+    if (stream.match(/^\|[^|]*\|/)) return "string";
+    if (stream.match(/^:::\w+/)) return "annotation";
+    if (stream.match(/^#[0-9a-fA-F]{3,8}\b/)) return "color";
+    if (stream.match(/^\[\*\]/)) return "atom";
+    if (stream.match(/^(<<|<|x|o)?(-{2,}|={2,}|\.{1,}-|-\.+-?|~{3})(>>|>|x|o|\))?/) ||
+        stream.match(/^-[->x)]+/) || stream.match(/^[|}][|o]--[o|][|{]/) || stream.match(/^[|}][|o]\.\.[o|][|{]/)) {
+      return "operator";
+    }
+    if (stream.match(/^-?\d+(\.\d+)?%?/)) return "number";
+    if (stream.match(/^[A-Za-z_][\w-]*/)) {
+      const word = stream.current();
+      return MERMAID_KEYWORDS.has(word) ? "keyword" : null;
+    }
+    if (stream.match(/^[{}()[\]>]/)) return "bracket";
+    stream.next();
+    return null;
+  },
+  languageData: {
+    commentTokens: { line: "%%" },
+  },
+});

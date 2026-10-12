@@ -1,0 +1,10 @@
+# Keep LF line endings in the repository and in every working copy,
+# matching .editorconfig and the Linux Docker build.
+* text=auto eol=lf
+
+# Binary files: never touch.
+*.png binary
+*.jpg binary
+*.ico binary
+*.woff2 binary
+*.jar binary
