@@ -5,7 +5,9 @@ export const ON_NETLIFY = __ON_NETLIFY__;
 export const PLANTUML_VERSION = __PLANTUML_VERSION__;
 export const MERMAID_VERSION = __MERMAID_VERSION__;
 
-export const REPO_URL = import.meta.env.VITE_REPO_URL ?? "";
+/** Set VITE_REPO_URL to an empty string to hide the GitHub links. */
+export const REPO_URL = (import.meta.env.VITE_REPO_URL ?? "https://github.com/ahmed-imraan-ai/figvex").replace(/\/+$/, "");
+export const ISSUES_URL = REPO_URL ? `${REPO_URL}/issues` : "";
 
 const base = import.meta.env.BASE_URL;
 

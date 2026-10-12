@@ -22,7 +22,7 @@ If PlantUML itself draws something wrong, check whether the Java release does th
 | `staging` | `staging--<site>.netlify.app` | Testing a release on Netlify before it goes live. |
 | `main` | the live site | Releases only. |
 
-Changes move one way: `dev` to `staging` to `main`. Don't commit to `staging` or `main` directly.
+Changes move one way: `dev` to `staging` to `main`. `main` and `staging` are protected: they only accept pull requests, CI (`test` and `docker`) has to pass, and force-pushes and deletions are blocked. This applies to admins too. Commit directly to `dev` or to a feature branch.
 
 ```sh
 # Work
@@ -32,13 +32,18 @@ git switch -c my-change        # optional feature branch
 git switch dev && git merge my-change && git push
 
 # Send to staging for testing
-git switch staging && git merge --ff-only dev && git push
+gh pr create --base staging --head dev --title "chore(release): promote dev to staging"
+gh pr merge --merge            # after CI passes
 
 # Release after staging looks right
-git switch main && git merge --ff-only staging && git push
+gh pr create --base main --head staging --title "chore(release): promote staging to main"
+gh pr merge --merge
+
+# Bring dev up to date with the release
+git switch dev && git pull && git merge origin/main && git push
 ```
 
-`--ff-only` refuses the merge if the branch has commits the one below it doesn't, which keeps the three branches in a straight line. Each push to `main` is a production deploy and costs Netlify credits, so release in batches. The staging site shows a STAGING label in the header and asks search engines not to index it.
+Use **Create a merge commit** for these pull requests. Each merge into `main` is a production deploy and costs Netlify credits, so release in batches. The staging site shows a STAGING label in the header and asks search engines not to index it.
 
 CI runs the type check, unit tests, build, browser tests and Docker build on every push to these branches and on pull requests into `staging` and `main`.
 

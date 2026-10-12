@@ -1,4 +1,4 @@
-import { APP_NAME, APP_VERSION, DOCS, MERMAID_VERSION, PLANTUML_VERSION, REPO_URL } from "../config";
+import { DOCS } from "../config";
 import { h, modKey } from "../lib/dom";
 import { modal } from "./overlay";
 
@@ -49,18 +49,6 @@ export function openHelp() {
         {},
         "Your diagrams are saved in this browser only. Download the source file to keep a copy or move it to another computer.",
       ),
-    ),
-    h(
-      "p",
-      { class: "about" },
-      `${APP_NAME} ${APP_VERSION} · PlantUML ${PLANTUML_VERSION} · Mermaid ${MERMAID_VERSION} · MIT licence · `,
-      h(
-        "a",
-        { href: `${import.meta.env.BASE_URL}third-party-licenses.txt`, target: "_blank", rel: "noopener" },
-        "Third-party licences",
-      ),
-      REPO_URL ? " · " : "",
-      REPO_URL ? h("a", { href: REPO_URL, target: "_blank", rel: "noopener" }, "Source code") : "",
     ),
   );
 

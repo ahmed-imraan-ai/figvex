@@ -11,6 +11,11 @@ const context = process.env.CONTEXT;
 const deployLabel =
   context && context !== "production" ? (context === "branch-deploy" ? (process.env.BRANCH ?? "branch") : "preview") : "";
 
+// Public address for the canonical URL, social cards and sitemap. Netlify's
+// URL is the site's main address, including a custom domain once one is set.
+const siteUrl = (process.env.VITE_SITE_URL || process.env.URL || "https://figvex.netlify.app").replace(/\/+$/, "");
+const appVersion = readVersion("./package.json");
+
 export default defineConfig({
   plugins: [
     {
@@ -18,12 +23,32 @@ export default defineConfig({
       transformIndexHtml: (html) =>
         deployLabel ? html.replace("</head>", '    <meta name="robots" content="noindex, nofollow" />\n  </head>') : html,
     },
+    {
+      name: "figvex-seo",
+      transformIndexHtml: (html) => html.replaceAll("%SITE_URL%", siteUrl).replaceAll("%APP_VERSION%", appVersion),
+      generateBundle() {
+        this.emitFile({
+          type: "asset",
+          fileName: "robots.txt",
+          source: `User-agent: *\nAllow: /\n\nSitemap: ${siteUrl}/sitemap.xml\n`,
+        });
+        this.emitFile({
+          type: "asset",
+          fileName: "sitemap.xml",
+          source:
+            '<?xml version="1.0" encoding="UTF-8"?>\n' +
+            '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' +
+            `  <url>\n    <loc>${siteUrl}/</loc>\n    <lastmod>${new Date().toISOString().slice(0, 10)}</lastmod>\n  </url>\n` +
+            "</urlset>\n",
+        });
+      },
+    },
   ],
   define: {
     __DEPLOY_LABEL__: JSON.stringify(deployLabel),
     // Netlify's Open Source plan asks for a "powered by Netlify" link.
     __ON_NETLIFY__: JSON.stringify(process.env.NETLIFY === "true"),
-    __APP_VERSION__: JSON.stringify(readVersion("./package.json")),
+    __APP_VERSION__: JSON.stringify(appVersion),
     __PLANTUML_VERSION__: JSON.stringify(readVersion("./node_modules/@plantuml/core/package.json")),
     __MERMAID_VERSION__: JSON.stringify(readVersion("./node_modules/mermaid/package.json")),
   },

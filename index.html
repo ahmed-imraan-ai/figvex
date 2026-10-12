@@ -3,14 +3,46 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <title>Figvex: PlantUML and Mermaid editor</title>
-    <meta name="description" content="Write PlantUML and Mermaid diagrams and watch them render as you type. Runs in your browser; nothing is uploaded." />
+    <title>Figvex: free online PlantUML and Mermaid editor</title>
+    <meta name="description" content="Free online editor for PlantUML and Mermaid. Write UML, sequence, class, ER and Gantt diagrams and see them render as you type. Runs in your browser." />
+    <link rel="canonical" href="%SITE_URL%/" />
     <meta name="color-scheme" content="light dark" />
     <meta name="theme-color" content="#f5f3ee" media="(prefers-color-scheme: light)" />
     <meta name="theme-color" content="#161615" media="(prefers-color-scheme: dark)" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-    <meta property="og:title" content="Figvex" />
-    <meta property="og:description" content="A live editor for PlantUML and Mermaid diagrams that runs in your browser." />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Figvex" />
+    <meta property="og:title" content="Figvex: free online PlantUML and Mermaid editor" />
+    <meta property="og:description" content="Write PlantUML and Mermaid diagrams and see them render as you type. Free, open source, and runs in your browser." />
+    <meta property="og:url" content="%SITE_URL%/" />
+    <meta property="og:image" content="%SITE_URL%/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Figvex editor showing PlantUML code next to the class diagram it draws" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Figvex: free online PlantUML and Mermaid editor" />
+    <meta name="twitter:description" content="Write PlantUML and Mermaid diagrams and see them render as you type. Free, open source, and runs in your browser." />
+    <meta name="twitter:image" content="%SITE_URL%/og-image.png" />
+
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "Figvex",
+        "url": "%SITE_URL%/",
+        "description": "Free online editor for PlantUML and Mermaid diagrams. Diagrams render as you type, in the browser.",
+        "applicationCategory": "DesignApplication",
+        "operatingSystem": "Any",
+        "browserRequirements": "Requires JavaScript",
+        "softwareVersion": "%APP_VERSION%",
+        "isAccessibleForFree": true,
+        "license": "https://opensource.org/licenses/MIT",
+        "image": "%SITE_URL%/og-image.png",
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+      }
+    </script>
     <script>
       // Apply the saved theme before first paint to avoid a flash.
       try {
@@ -20,6 +52,13 @@
     </script>
   </head>
   <body>
+    <h1 class="visually-hidden">Figvex: free online PlantUML and Mermaid editor</h1>
+    <noscript>
+      <p class="noscript">
+        Figvex is a free online editor for PlantUML and Mermaid diagrams. It draws diagrams in your browser as you type, so it needs JavaScript.
+        Turn JavaScript on to use it, or see the source code on GitHub: https://github.com/ahmed-imraan-ai/figvex
+      </p>
+    </noscript>
     <div class="app" id="app">
       <header class="topbar">
         <button class="icon-btn" id="btn-library" type="button" aria-label="Your diagrams" aria-expanded="false" aria-controls="library"></button>
@@ -48,7 +87,7 @@
           <button class="btn btn-ink" id="btn-export" type="button" aria-haspopup="dialog"><span class="btn-label">Export</span></button>
           <span class="topbar-sep" aria-hidden="true"></span>
           <button class="icon-btn" id="btn-settings" type="button" aria-label="Settings" aria-haspopup="dialog"></button>
-          <button class="icon-btn" id="btn-help" type="button" aria-label="Help and shortcuts"></button>
+          <button class="icon-btn" id="btn-help" type="button" aria-label="Help and about" aria-haspopup="menu" aria-expanded="false"></button>
           <a class="icon-btn" id="link-repo" target="_blank" rel="noopener" aria-label="Source code on GitHub" hidden></a>
         </nav>
       </header>
