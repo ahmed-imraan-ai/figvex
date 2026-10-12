@@ -1,7 +1,7 @@
 // Share links carry the whole diagram in the URL fragment, compressed. The
 // fragment never reaches the server, so links work on any static host.
 
-import type { Engine } from "./engines/types";
+import { ENGINE_FENCE, isEngine, type Engine } from "./engines/types";
 import { deflateRaw, fromBase64Url, inflateRaw, toBase64Url } from "./lib/encode";
 
 const PREFIX = "#u1:";
@@ -32,7 +32,7 @@ export async function readSharedDiagram(hash = location.hash): Promise<SharedDia
     const data = JSON.parse(new TextDecoder().decode(bytes)) as { e?: string; t?: string; c?: string };
     if (typeof data.c !== "string") return null;
     return {
-      engine: data.e === "mermaid" ? "mermaid" : "plantuml",
+      engine: isEngine(data.e) ? data.e : "plantuml",
       title: typeof data.t === "string" && data.t.trim() ? data.t.slice(0, 120) : "Shared diagram",
       code: data.c,
     };
@@ -42,5 +42,5 @@ export async function readSharedDiagram(hash = location.hash): Promise<SharedDia
 }
 
 export function markdownBlock(engine: Engine, code: string): string {
-  return "```" + engine + "\n" + code.replace(/\s+$/, "") + "\n```\n";
+  return "```" + ENGINE_FENCE[engine] + "\n" + code.replace(/\s+$/, "") + "\n```\n";
 }

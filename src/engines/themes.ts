@@ -1,4 +1,4 @@
-import type { MermaidTheme } from "./types";
+import type { GraphvizStyle, MermaidTheme } from "./types";
 
 /** Themes bundled with PlantUML (themes.js), minus "plain" and "_none_". */
 export const PLANTUML_THEMES = `amiga aws-orange black-knight bluegray blueprint carbon-gray cerulean
@@ -21,4 +21,9 @@ export const MERMAID_STYLES: { value: MermaidTheme; label: string }[] = [
   { value: "neo", label: "Neo" },
   { value: "redux", label: "Redux" },
   { value: "redux-color", label: "Redux colour" },
+];
+
+export const GRAPHVIZ_STYLES: { value: GraphvizStyle; label: string }[] = [
+  { value: "plain", label: "Plain" },
+  { value: "default", label: "Graphviz defaults" },
 ];

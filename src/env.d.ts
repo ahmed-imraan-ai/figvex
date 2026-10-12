@@ -7,6 +7,8 @@ declare const __DEPLOY_LABEL__: string;
 declare const __ON_NETLIFY__: boolean;
 declare const __PLANTUML_VERSION__: string;
 declare const __MERMAID_VERSION__: string;
+/** Graphviz inside the Viz.js build that ships with PlantUML. */
+declare const __GRAPHVIZ_VERSION__: string;
 
 interface ImportMetaEnv {
   /** Source repository for the GitHub links. Defaults to the Figvex repo; set to "" to hide them. */

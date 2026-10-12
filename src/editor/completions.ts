@@ -99,6 +99,72 @@ function mermaidSource(ctx: CompletionContext): CompletionResult | null {
   };
 }
 
+const DOT_GRAPHS: Completion[] = [
+  snippetCompletion("digraph ${G} {\n  ${a} -> ${b}\n}", { label: "digraph", detail: "directed graph", type: "keyword" }),
+  snippetCompletion("graph ${G} {\n  ${a} -- ${b}\n}", { label: "graph", detail: "undirected graph", type: "keyword" }),
+];
+
+const DOT_SNIPPETS: Completion[] = [
+  snippetCompletion("subgraph cluster_${name} {\n  label=\"${Label}\"\n  ${}\n}", { label: "subgraph", detail: "cluster", type: "keyword" }),
+  snippetCompletion("node [${shape=box}]", { label: "node", detail: "default node attributes", type: "keyword" }),
+  snippetCompletion("edge [${color=gray}]", { label: "edge", detail: "default edge attributes", type: "keyword" }),
+  snippetCompletion("rankdir=${LR}", { label: "rankdir", detail: "layout direction", type: "property" }),
+  snippetCompletion("{ rank=same; ${a}; ${b} }", { label: "rank=same", detail: "same row", type: "keyword" }),
+];
+
+/** Common attributes and, where the set is small, their values. */
+const DOT_ATTRIBUTES: Record<string, string[]> = {
+  label: [], xlabel: [], color: [], fillcolor: [], fontcolor: [], fontname: [], fontsize: [], penwidth: [],
+  width: [], height: [], fixedsize: ["true", "false", "shape"], group: [], tooltip: [], URL: [], weight: [],
+  shape: `box ellipse circle doublecircle point plaintext plain none record Mrecord diamond square triangle
+    invtriangle house invhouse hexagon octagon parallelogram trapezium cylinder note tab folder box3d component
+    underline star`.split(/\s+/),
+  style: "filled rounded dashed dotted bold solid invis striped wedged".split(" "),
+  rankdir: ["TB", "LR", "BT", "RL"],
+  rank: ["same", "min", "max", "source", "sink"],
+  layout: ["dot", "neato", "fdp", "sfdp", "circo", "twopi", "osage", "patchwork"],
+  splines: ["true", "false", "ortho", "polyline", "curved", "line", "none"],
+  arrowhead: "normal inv dot odot none empty diamond ediamond open halfopen box obox crow tee vee".split(" "),
+  arrowtail: "normal inv dot odot none empty diamond ediamond open halfopen box obox crow tee vee".split(" "),
+  dir: ["forward", "back", "both", "none"],
+  constraint: ["true", "false"],
+  compound: ["true", "false"],
+  concentrate: ["true", "false"],
+  overlap: ["false", "true", "scale", "prism"],
+  labelloc: ["t", "b", "c"],
+  labeljust: ["l", "r", "c"],
+  nodesep: [], ranksep: [], bgcolor: [], lhead: [], ltail: [], headlabel: [], taillabel: [],
+};
+
+const DOT_ATTRIBUTE_NAMES: Completion[] = Object.keys(DOT_ATTRIBUTES).map((label) => ({ label, type: "property" }));
+
+function dotSource(ctx: CompletionContext): CompletionResult | null {
+  const line = ctx.state.doc.lineAt(ctx.pos);
+  const before = line.text.slice(0, ctx.pos - line.from);
+
+  const value = before.match(/\b(\w+)\s*=\s*"?([\w-]*)$/);
+  if (value && DOT_ATTRIBUTES[value[1]]?.length) {
+    return {
+      from: ctx.pos - value[2].length,
+      options: DOT_ATTRIBUTES[value[1]].map((label) => ({ label, type: "constant" })),
+      validFor: /^[\w-]*$/,
+    };
+  }
+  const word = ctx.matchBefore(/\w+/);
+  if (!word || (word.from === word.to && !ctx.explicit)) return null;
+  const inBrackets = before.lastIndexOf("[") > before.lastIndexOf("]");
+  if (inBrackets) return { from: word.from, options: DOT_ATTRIBUTE_NAMES, validFor: /^\w*$/ };
+  const text = ctx.state.doc.toString();
+  const beforeGraph = !/^\s*(strict\s+)?(di)?graph\b/im.test(text.slice(0, line.from));
+  return {
+    from: word.from,
+    options: beforeGraph ? DOT_GRAPHS : [...DOT_SNIPPETS, ...DOT_ATTRIBUTE_NAMES],
+    validFor: /^\w*$/,
+  };
+}
+
+const SOURCES = { plantuml: plantumlSource, mermaid: mermaidSource, graphviz: dotSource } as const;
+
 export function completionSource(engine: Engine) {
-  return engine === "plantuml" ? plantumlSource : mermaidSource;
+  return SOURCES[engine];
 }

@@ -10,6 +10,11 @@ describe("share links", () => {
     expect(await readSharedDiagram(url.hash)).toEqual(diagram);
   });
 
+  it("round-trips Graphviz diagrams", async () => {
+    const diagram = { engine: "graphviz" as const, title: "Tree", code: "digraph { a -> b }" };
+    expect(await readSharedDiagram(new URL(await shareUrl(diagram)).hash)).toEqual(diagram);
+  });
+
   it("keeps large diagrams reasonably short", async () => {
     const code = "@startuml\n" + "Alice -> Bob : message number\n".repeat(400) + "@enduml";
     const url = await shareUrl({ engine: "plantuml", title: "Big", code });
@@ -34,5 +39,6 @@ describe("markdownBlock", () => {
   it("wraps code in a fence named after the engine", () => {
     expect(markdownBlock("plantuml", "@startuml\nA -> B\n@enduml\n\n")).toBe("```plantuml\n@startuml\nA -> B\n@enduml\n```\n");
     expect(markdownBlock("mermaid", "flowchart TD")).toBe("```mermaid\nflowchart TD\n```\n");
+    expect(markdownBlock("graphviz", "digraph { a -> b }")).toBe("```dot\ndigraph { a -> b }\n```\n");
   });
 });

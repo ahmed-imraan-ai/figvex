@@ -1,6 +1,6 @@
 import DOMPurify from "dompurify";
 import { renderDiagram } from "../engines";
-import { ENGINE_LABEL } from "../engines/types";
+import { ENGINE_LABEL, ENGINE_TAG } from "../engines/types";
 import { debounce, h } from "../lib/dom";
 import { renderOptions } from "../store";
 import { CATEGORIES, TEMPLATES, type Template } from "../templates";
@@ -109,7 +109,7 @@ export function openTemplates(onPick: (template: Template, mode: TemplateMode) =
                 ondblclick: () => pick("new"),
               },
               h("span", {}, t.title),
-              h("span", { class: "engine-tag", "data-engine": t.engine }, t.engine === "plantuml" ? "puml" : "mmd"),
+              h("span", { class: "engine-tag", "data-engine": t.engine }, ENGINE_TAG[t.engine]),
             ),
           ),
         );

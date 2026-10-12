@@ -3,8 +3,8 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <title>Figvex: free online PlantUML and Mermaid editor</title>
-    <meta name="description" content="Free online editor for PlantUML and Mermaid. Write UML, sequence, class, ER and Gantt diagrams and see them render as you type. Runs in your browser." />
+    <title>Figvex: free online PlantUML, Mermaid and Graphviz editor</title>
+    <meta name="description" content="Free online editor for PlantUML, Mermaid and Graphviz. Write UML, sequence, class, ER, Gantt and DOT diagrams and see them render as you type. Runs in your browser." />
     <link rel="canonical" href="%SITE_URL%/" />
     <meta name="color-scheme" content="light dark" />
     <meta name="theme-color" content="#f5f3ee" media="(prefers-color-scheme: light)" />
@@ -14,16 +14,16 @@
 
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Figvex" />
-    <meta property="og:title" content="Figvex: free online PlantUML and Mermaid editor" />
-    <meta property="og:description" content="Write PlantUML and Mermaid diagrams and see them render as you type. Free, open source, and runs in your browser." />
+    <meta property="og:title" content="Figvex: free online PlantUML, Mermaid and Graphviz editor" />
+    <meta property="og:description" content="Write PlantUML, Mermaid and Graphviz diagrams and see them render as you type. Free, open source, and runs in your browser." />
     <meta property="og:url" content="%SITE_URL%/" />
     <meta property="og:image" content="%SITE_URL%/og-image.png" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
     <meta property="og:image:alt" content="Figvex editor showing PlantUML code next to the class diagram it draws" />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Figvex: free online PlantUML and Mermaid editor" />
-    <meta name="twitter:description" content="Write PlantUML and Mermaid diagrams and see them render as you type. Free, open source, and runs in your browser." />
+    <meta name="twitter:title" content="Figvex: free online PlantUML, Mermaid and Graphviz editor" />
+    <meta name="twitter:description" content="Write PlantUML, Mermaid and Graphviz diagrams and see them render as you type. Free, open source, and runs in your browser." />
     <meta name="twitter:image" content="%SITE_URL%/og-image.png" />
 
     <script type="application/ld+json">
@@ -32,7 +32,7 @@
         "@type": "WebApplication",
         "name": "Figvex",
         "url": "%SITE_URL%/",
-        "description": "Free online editor for PlantUML and Mermaid diagrams. Diagrams render as you type, in the browser.",
+        "description": "Free online editor for PlantUML, Mermaid and Graphviz diagrams. Diagrams render as you type, in the browser.",
         "applicationCategory": "DesignApplication",
         "operatingSystem": "Any",
         "browserRequirements": "Requires JavaScript",
@@ -52,10 +52,10 @@
     </script>
   </head>
   <body>
-    <h1 class="visually-hidden">Figvex: free online PlantUML and Mermaid editor</h1>
+    <h1 class="visually-hidden">Figvex: free online PlantUML, Mermaid and Graphviz editor</h1>
     <noscript>
       <p class="noscript">
-        Figvex is a free online editor for PlantUML and Mermaid diagrams. It draws diagrams in your browser as you type, so it needs JavaScript.
+        Figvex is a free online editor for PlantUML, Mermaid and Graphviz diagrams. It draws diagrams in your browser as you type, so it needs JavaScript.
         Turn JavaScript on to use it, or see the source code on GitHub: https://github.com/ahmed-imraan-ai/figvex
       </p>
     </noscript>
@@ -105,10 +105,11 @@
             <div class="segmented" id="engine-switch" role="radiogroup" aria-label="Diagram language">
               <button type="button" role="radio" data-engine="plantuml">PlantUML</button>
               <button type="button" role="radio" data-engine="mermaid">Mermaid</button>
+              <button type="button" role="radio" data-engine="graphviz">Graphviz</button>
             </div>
             <label class="style-picker" title="How diagrams are coloured. A !theme line in your diagram takes priority.">
               <span>Style</span>
-              <select id="style-select" class="field"></select>
+              <select id="style-select" class="field" aria-label="Diagram style"></select>
             </label>
             <div class="topbar-spacer"></div>
             <a class="text-link" id="link-syntax" target="_blank" rel="noopener">Syntax reference</a>
@@ -143,8 +144,8 @@
       </footer>
     </div>
 
-    <input type="file" id="file-input" accept=".puml,.plantuml,.pu,.iuml,.wsd,.mmd,.mermaid,.txt,.md" hidden />
-    <div class="drop-overlay" id="drop-overlay" hidden><p>Drop a .puml or .mmd file to open it</p></div>
+    <input type="file" id="file-input" accept=".puml,.plantuml,.pu,.iuml,.wsd,.mmd,.mermaid,.gv,.dot,.txt,.md" hidden />
+    <div class="drop-overlay" id="drop-overlay" hidden><p>Drop a .puml, .mmd or .gv file to open it</p></div>
     <div class="toast-host" id="toasts" aria-live="polite"></div>
     <script type="module" src="/src/main.ts"></script>
   </body>

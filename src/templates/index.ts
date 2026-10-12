@@ -1,4 +1,5 @@
 import type { Engine } from "../engines/types";
+import { graphvizTemplates } from "./graphviz";
 import { mermaidTemplates } from "./mermaid";
 import { plantumlTemplates } from "./plantuml";
 
@@ -22,6 +23,13 @@ export const CATEGORIES = [
   "Charts",
 ] as const;
 
+/** What a new, empty diagram starts with in each language. */
+export const BLANK_CODE: Record<Engine, string> = {
+  plantuml: "@startuml\n\n@enduml\n",
+  mermaid: "flowchart TD\n    A --> B\n",
+  graphviz: "digraph G {\n    a -> b\n}\n",
+};
+
 const blank: Template[] = [
   {
     id: "blank-plantuml",
@@ -29,7 +37,7 @@ const blank: Template[] = [
     category: "Start from scratch",
     title: "Blank PlantUML",
     summary: "An empty @startuml block.",
-    code: "@startuml\n\n@enduml\n",
+    code: BLANK_CODE.plantuml,
   },
   {
     id: "blank-mermaid",
@@ -37,11 +45,19 @@ const blank: Template[] = [
     category: "Start from scratch",
     title: "Blank Mermaid",
     summary: "An empty flowchart.",
-    code: "flowchart TD\n    A --> B\n",
+    code: BLANK_CODE.mermaid,
+  },
+  {
+    id: "blank-graphviz",
+    engine: "graphviz",
+    category: "Start from scratch",
+    title: "Blank Graphviz",
+    summary: "A directed graph with one edge.",
+    code: BLANK_CODE.graphviz,
   },
 ];
 
-export const TEMPLATES: Template[] = [...blank, ...plantumlTemplates, ...mermaidTemplates].sort(
+export const TEMPLATES: Template[] = [...blank, ...plantumlTemplates, ...mermaidTemplates, ...graphvizTemplates].sort(
   (a, b) => CATEGORIES.indexOf(a.category as never) - CATEGORIES.indexOf(b.category as never),
 );
 

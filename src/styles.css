@@ -976,6 +976,10 @@ body.is-resizing .stage {
   color: var(--syn-string);
 }
 
+.engine-tag[data-engine="graphviz"] {
+  color: var(--syn-macro);
+}
+
 .library-item .item-actions {
   display: flex;
   padding-right: 4px;
@@ -1597,6 +1601,22 @@ dialog.modal.about {
 
   .pane-head .text-link {
     display: none;
+  }
+
+  /* Three language buttons leave little room: drop the "Style" word and let
+     the picker take what's left. */
+  .style-picker {
+    flex: 1 1 0;
+  }
+
+  .style-picker > span {
+    display: none;
+  }
+
+  .style-picker select {
+    width: 100%;
+    min-width: 0;
+    max-width: none;
   }
 
   .templates {

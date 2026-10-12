@@ -1,7 +1,7 @@
 // Diagrams and settings live in localStorage. Every access is guarded: private
 // windows and blocked storage must still give a working (if forgetful) app.
 
-import type { Engine, MermaidTheme, RenderOptions } from "./engines/types";
+import { isEngine, type Engine, type GraphvizStyle, type MermaidTheme, type RenderOptions } from "./engines/types";
 
 export interface Doc {
   id: string;
@@ -18,6 +18,7 @@ export interface Settings {
   plantumlTheme: string;
   mermaidTheme: MermaidTheme;
   mermaidLook: "classic" | "handDrawn";
+  graphvizStyle: GraphvizStyle;
   fontSize: number;
   wrap: boolean;
   liveRender: boolean;
@@ -31,6 +32,7 @@ export const DEFAULT_SETTINGS: Settings = {
   plantumlTheme: "plain",
   mermaidTheme: "default",
   mermaidLook: "classic",
+  graphvizStyle: "plain",
   fontSize: 14,
   wrap: false,
   liveRender: true,
@@ -76,7 +78,9 @@ class Store {
   private listeners = new Set<Listener>();
 
   constructor() {
-    this.docs = read<Doc[]>(KEY_DOCS, []).filter((d) => d && typeof d.code === "string");
+    this.docs = read<Doc[]>(KEY_DOCS, [])
+      .filter((d) => d && typeof d.code === "string")
+      .map((d) => (isEngine(d.engine) ? d : { ...d, engine: "plantuml" }));
     this.settings = { ...DEFAULT_SETTINGS, ...read<Partial<Settings>>(KEY_SETTINGS, {}) };
     this.currentId = read<string>(KEY_CURRENT, "");
   }
@@ -165,5 +169,6 @@ export function renderOptions(dark: boolean): RenderOptions {
     serverFallback: s.serverFallback,
     mermaidTheme: s.mermaidTheme,
     look: s.mermaidLook,
+    graphvizStyle: s.graphvizStyle,
   };
 }

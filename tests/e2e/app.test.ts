@@ -119,6 +119,27 @@ describe.skipIf(!chrome || !built)("Figvex in the browser", () => {
     expect(result.error).toMatch(/line \d/i);
   });
 
+  it("reports Graphviz syntax errors with a line number", async () => {
+    const result = await openDiagram("graphviz", "Broken dot", "digraph G {\n  a -> b\n  b -> \n}");
+    expect(result.state).toBe("error");
+    expect(result.error).toContain("line 4");
+    expect(await page.$eval("#status-engine", (el) => el.textContent)).toMatch(/^Graphviz \d/);
+  });
+
+  it("draws PlantUML @startdot blocks with Graphviz", async () => {
+    const result = await openDiagram("plantuml", "Dot in PlantUML", "@startdot\ndigraph { a -> b }\n@enddot");
+    expect(result.error).toBeNull();
+    expect(result.svg).toBe(true);
+    expect(await page.$$eval("#sheet g.node", (els) => els.length)).toBe(2);
+  });
+
+  it("jumps to a Graphviz node's line when it is clicked", async () => {
+    await openDiagram("graphviz", "Dot click", "digraph G {\n  first -> second\n\n  third [shape=box]\n}");
+    const box = await (await page.$("#sheet g.node:last-of-type polygon"))!.boundingBox();
+    await page.mouse.click(box!.x + box!.width / 2, box!.y + box!.height / 2);
+    expect(await page.$eval("#status-cursor", (el) => el.textContent)).toMatch(/^Ln 4,/);
+  });
+
   it("explains diagram types the browser engine lacks", async () => {
     const result = await openDiagram("plantuml", "Wireframe", "@startsalt\n{\n  Login | \"user\"\n}\n@endsalt");
     expect(result.error).toContain("Salt wireframes");
@@ -225,6 +246,16 @@ describe.skipIf(!chrome || !built)("Figvex in the browser", () => {
     expect(html).toContain('rel="canonical"');
     expect(html).toContain('"@type": "WebApplication"');
     expect(html).not.toContain("%SITE_URL%");
+  });
+
+  it("fits the three-language switch on a phone screen", async () => {
+    await page.setViewport({ width: 375, height: 740 });
+    const fits = await page.evaluate(() => {
+      const sw = document.getElementById("engine-switch")!.getBoundingClientRect();
+      return { page: document.documentElement.scrollWidth <= innerWidth, switchRight: sw.right <= innerWidth };
+    });
+    await page.setViewport({ width: 1400, height: 900 });
+    expect(fits).toEqual({ page: true, switchRight: true });
   });
 
   it("throws no uncaught page errors", () => {
