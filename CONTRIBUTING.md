@@ -12,6 +12,86 @@ Open an issue with:
 
 If PlantUML itself draws something wrong, check whether the Java release does the same. If it does, the bug belongs in [plantuml/plantuml](https://github.com/plantuml/plantuml/issues). Mermaid bugs go to [mermaid-js/mermaid](https://github.com/mermaid-js/mermaid/issues).
 
+## Branches and releases
+
+| Branch | Deployed to | Used for |
+| --- | --- | --- |
+| `dev` | nowhere | Day-to-day work. Feature branches start here and merge back here. |
+| `staging` | `staging--<site>.netlify.app` | Testing a release on Netlify before it goes live. |
+| `main` | the live site | Releases only. |
+
+Changes move one way: `dev` to `staging` to `main`. Don't commit to `staging` or `main` directly.
+
+```sh
+# Work
+git switch dev
+git switch -c my-change        # optional feature branch
+# ...commit...
+git switch dev && git merge my-change && git push
+
+# Send to staging for testing
+git switch staging && git merge --ff-only dev && git push
+
+# Release after staging looks right
+git switch main && git merge --ff-only staging && git push
+```
+
+`--ff-only` refuses the merge if the branch has commits the one below it doesn't, which keeps the three branches in a straight line. Each push to `main` is a production deploy and costs Netlify credits, so release in batches. The staging site shows a STAGING label in the header and asks search engines not to index it.
+
+CI runs the type check, unit tests, build, browser tests and Docker build on every push to these branches and on pull requests into `staging` and `main`.
+
+## Commit messages
+
+Commits follow [Conventional Commits 1.0.0](https://www.conventionalcommits.org/en/v1.0.0/):
+
+```
+<type>(<scope>): <description>
+
+[optional body]
+
+[optional footer(s)]
+```
+
+**Types**
+
+| Type | Use for |
+| --- | --- |
+| `feat` | A new feature |
+| `fix` | A bug fix |
+| `docs` | Documentation only |
+| `style` | Formatting with no change in behaviour |
+| `refactor` | Code changes that neither fix a bug nor add a feature |
+| `perf` | Performance improvements |
+| `test` | Adding or fixing tests |
+| `build` | Build scripts, dependencies, Docker |
+| `ci` | GitHub Actions and other CI configuration |
+| `chore` | Maintenance that fits none of the above |
+| `revert` | Reverting an earlier commit |
+
+**Scopes** are optional and name the part of Figvex that changed: `editor`, `preview`, `plantuml`, `mermaid`, `export`, `share`, `templates`, `library`, `ui`, `store`, `deps`, `docker`, `netlify`.
+
+**Rules**
+
+- Write the description in the imperative and in lower case, with no full stop: "add PNG scale option", not "Added PNG scale options."
+- Keep the first line under 72 characters. Use the body to explain why, when that isn't obvious.
+- Mark a breaking change with `!` before the colon, a `BREAKING CHANGE:` footer, or both. For Figvex that means anything that breaks saved diagrams, share links or the documented configuration.
+- Reference issues in the footer: `Fixes #12`.
+
+**Examples**
+
+```
+feat(export): add WEBP export
+fix(plantuml): map error lines correctly when a style is applied
+docs: explain the staging branch in CONTRIBUTING
+build(deps): update @plantuml/core to 1.2026.9
+ci: run browser tests on pull requests into staging
+feat(share)!: compress share links with a new format
+
+BREAKING CHANGE: links created before this release no longer open.
+```
+
+Pull request titles follow the same format, since they often become the merge commit message.
+
 ## Setting up
 
 ```sh

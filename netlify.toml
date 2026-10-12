@@ -1,3 +1,10 @@
+# Branches: dev (not deployed) -> staging (branch deploy) -> main (live).
+# Set in the Netlify UI (Project configuration > Developer settings >
+# Continuous deployment > Branches and deploy contexts), not here:
+#   Production branch: main
+#   Branch deploys: "Let me add individual branches" -> staging
+# Non-production builds get a header label and a noindex tag (vite.config.ts).
+
 [build]
   command = "npm run build"
   publish = "dist"
