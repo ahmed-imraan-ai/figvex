@@ -102,7 +102,7 @@
 
         <section class="pane pane-editor" aria-label="Source">
           <div class="pane-head">
-            <span class="engine-tag engine-label" id="engine-label" title="Language of this diagram, picked up from its first line"></span>
+            <span id="language-picker"></span>
             <label class="style-picker" title="How diagrams are coloured. A !theme line in your diagram takes priority.">
               <span>Style</span>
               <select id="style-select" class="field" aria-label="Diagram style"></select>
@@ -140,7 +140,7 @@
       </footer>
     </div>
 
-    <input type="file" id="file-input" accept=".puml,.plantuml,.pu,.iuml,.wsd,.mmd,.mermaid,.gv,.dot,.echarts,.json,.jsonc,.bpmn,.bpmn2,.xml,.sketch,.org,.orgchart,.txt,.csv,.tsv,.md" hidden />
+    <input type="file" id="file-input" accept=".puml,.plantuml,.pu,.iuml,.wsd,.mmd,.mermaid,.gv,.dot,.echarts,.json,.jsonc,.bpmn,.bpmn2,.xml,.sketch,.org,.orgchart,.network,.net,.txt,.csv,.tsv,.md" hidden />
     <div class="drop-overlay" id="drop-overlay" hidden><p>Drop a .puml, .mmd, .gv, .bpmn or .csv file to open it</p></div>
     <div class="toast-host" id="toasts" aria-live="polite"></div>
     <script type="module" src="/src/main.ts"></script>

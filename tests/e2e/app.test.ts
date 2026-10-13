@@ -45,7 +45,7 @@ async function openDiagram(engine: string, title: string, code: string) {
   });
   await page.evaluate((hash) => (location.hash = hash), shareHash(engine, title, code));
   await page.waitForFunction(
-    () => ["ok", "error", "idle"].includes(document.getElementById("status-render")!.dataset.state ?? ""),
+    () => ["ok", "warn", "error", "idle"].includes(document.getElementById("status-render")!.dataset.state ?? ""),
     { timeout: 60_000 },
   );
   return page.evaluate(() => ({
@@ -95,7 +95,8 @@ describe.skipIf(!chrome || !built)("Figvex in the browser", () => {
   it.each(drawable.map((t) => [t.id, t] as const))("renders the %s template", async (_id, t) => {
     const result = await openDiagram(t.engine, t.title, t.code);
     expect(result.error).toBeNull();
-    expect(result.state).toBe("ok");
+    // The subnetting exercise has a mistake in it on purpose.
+    expect(result.state).toBe(t.id === "net-subnetting" ? "warn" : "ok");
     expect(result.svg).toBe(true);
   });
 
@@ -278,9 +279,33 @@ describe.skipIf(!chrome || !built)("Figvex in the browser", () => {
     expect(broken.error).toContain('"Nobody"');
     const ok = await openDiagram("orgchart", "Org click", "orgchart\nJane: CEO [Exec]\n  Ravi: CTO\n  Mia: CFO\n");
     expect(ok.error).toBeNull();
-    expect(await page.$eval("#engine-label", (el) => el.textContent)).toBe("Org chart");
+    expect(await page.$eval("#lang-input", (el) => (el as HTMLInputElement).value)).toBe("Org chart");
     const box = await (await page.$('#sheet [data-qualified-name="Mia"] rect'))!.boundingBox();
     await page.mouse.click(box!.x + box!.width / 2, box!.y + box!.height / 2);
+    expect(await page.$eval("#status-cursor", (el) => el.textContent)).toMatch(/^Ln 4,/);
+  });
+
+  it("draws a network, marks address warnings and jumps to a device", async () => {
+    const broken = await openDiagram("network", "Broken net", "network\nrouter r1 10.0.0.300\n");
+    expect(broken.error).toContain("line 2");
+    expect(broken.error).toContain("300 is more than 255");
+
+    const code = 'network\nrouter gw "Gateway"\nzone lan "LAN" 10.9.0.0/24\n  switch netsw 10.9.0.2\n  pc wrongpc 10.8.0.5\ngw -- netsw\nnetsw -- wrongpc\n';
+    const ok = await openDiagram("network", "Net warnings", code);
+    expect(ok.error).toBeNull();
+    expect(ok.state).toBe("warn");
+    expect(ok.status).toMatch(/1 warning$/);
+    expect(await page.$eval("#lang-input", (el) => (el as HTMLInputElement).value)).toBe("Network");
+    const marker = await page.$eval(".cm-warnMarker", (el) => (el as HTMLElement).title);
+    expect(marker).toContain("10.8.0.5 isn't in LAN");
+
+    // The status bar takes you to the warning.
+    await page.click("#status-render");
+    expect(await page.$eval("#status-cursor", (el) => el.textContent)).toMatch(/^Ln 5,/);
+
+    // Clicking a device selects its line.
+    const icon = await (await page.$('#sheet [data-qualified-name="netsw"] rect'))!.boundingBox();
+    await page.mouse.click(icon!.x + icon!.width / 2, icon!.y + icon!.height / 2);
     expect(await page.$eval("#status-cursor", (el) => el.textContent)).toMatch(/^Ln 4,/);
   });
 
@@ -418,7 +443,7 @@ describe.skipIf(!chrome || !built)("Figvex in the browser", () => {
 
   it("names the diagram's language and fits the editor head on a phone screen", async () => {
     await openDiagram("graphviz", "Label test", "digraph { a -> b }");
-    expect(await page.$eval("#engine-label", (el) => el.textContent)).toBe("Graphviz");
+    expect(await page.$eval("#lang-input", (el) => (el as HTMLInputElement).value)).toBe("Graphviz");
     await page.setViewport({ width: 375, height: 740 });
     const fits = await page.evaluate(() => ({
       page: document.documentElement.scrollWidth <= innerWidth,
@@ -426,6 +451,36 @@ describe.skipIf(!chrome || !built)("Figvex in the browser", () => {
     }));
     await page.setViewport({ width: 1400, height: 900 });
     expect(fits).toEqual({ page: true, select: true });
+  });
+
+  it("changes language from the picker without overwriting a diagram", async () => {
+    await openDiagram("mermaid", "Picker real", "flowchart LR\n  pickerA --> pickerB\n");
+    const title = () => page.$eval("#doc-title", (el) => (el as HTMLInputElement).value);
+    const lang = () => page.$eval("#lang-input", (el) => (el as HTMLInputElement).value);
+    const pick = async (query: string) => {
+      await page.click("#lang-input");
+      await page.keyboard.type(query);
+      await page.keyboard.press("Enter");
+    };
+
+    // Real content: a new diagram is started and the old one is kept.
+    await pick("dot");
+    await page.waitForFunction(() => (document.getElementById("lang-input") as HTMLInputElement).value === "Graphviz");
+    expect(await title()).not.toBe("Picker real");
+    expect(await page.$eval("#toasts", (el) => el.textContent)).toContain('"Picker real" is still in your library');
+    const fresh = await title();
+
+    // Starter code: the language changes in place.
+    await pick("csv");
+    await page.waitForFunction(() => (document.getElementById("lang-input") as HTMLInputElement).value === "ECharts");
+    expect(await title()).toBe(fresh);
+    expect(await page.evaluate(() => document.querySelector(".cm-content")!.textContent)).toMatch(/^\{/);
+
+    // Escape leaves things as they were.
+    await page.click("#lang-input");
+    await page.keyboard.type("bpmn");
+    await page.keyboard.press("Escape");
+    expect(await lang()).toBe("ECharts");
   });
 
   it("throws no uncaught page errors", () => {

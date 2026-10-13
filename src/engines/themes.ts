@@ -1,4 +1,4 @@
-import type { BpmnStyle, ChartStyle, OrgStyle, SketchStyle, GraphvizStyle, MermaidTheme } from "./types";
+import type { BpmnStyle, ChartStyle, NetStyle, OrgStyle, SketchStyle, GraphvizStyle, MermaidTheme } from "./types";
 
 /** Themes bundled with PlantUML (themes.js), minus "plain" and "_none_". */
 export const PLANTUML_THEMES = `amiga aws-orange black-knight bluegray blueprint carbon-gray cerulean
@@ -48,4 +48,10 @@ export const ORG_STYLES: { value: OrgStyle; label: string }[] = [
   { value: "cards", label: "Cards" },
   { value: "minimal", label: "Minimal" },
   { value: "bold", label: "Bold" },
+];
+
+export const NET_STYLES: { value: NetStyle; label: string }[] = [
+  { value: "tiles", label: "Colour tiles" },
+  { value: "outline", label: "Outline" },
+  { value: "mono", label: "Greyscale" },
 ];

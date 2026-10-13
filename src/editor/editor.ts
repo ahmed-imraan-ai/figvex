@@ -19,7 +19,7 @@ import {
 import { tags as t } from "@lezer/highlight";
 import type { Engine } from "../engines/types";
 import { completionSource } from "./completions";
-import { chartLanguage, dotLanguage, mermaidLanguage, orgLanguage, plantumlLanguage, sketchLanguage, xmlLanguage } from "./languages";
+import { chartLanguage, dotLanguage, mermaidLanguage, networkLanguage, orgLanguage, plantumlLanguage, sketchLanguage, xmlLanguage } from "./languages";
 
 // Colours come from CSS variables so light and dark themes share one style.
 const highlight = HighlightStyle.define([
@@ -59,6 +59,15 @@ const baseTheme = EditorView.theme({
   ".cm-selectionMatch": { backgroundColor: "var(--match)" },
   ".cm-placeholder": { color: "var(--ink-3)" },
   ".cm-errorLine": { backgroundColor: "var(--error-line)" },
+  ".cm-warnLine": { backgroundColor: "var(--warn-line)" },
+  ".cm-warnMarker": {
+    width: "6px",
+    height: "6px",
+    borderRadius: "50%",
+    backgroundColor: "var(--warn)",
+    margin: "8px 0 0 2px",
+    cursor: "help",
+  },
   ".cm-errorGutter": { width: "10px" },
   ".cm-errorMarker": {
     width: "6px",
@@ -135,14 +144,68 @@ const errorLineField = StateField.define<{ line: number | null; deco: Decoration
   provide: (f) => EditorView.decorations.from(f, (v) => v.deco),
 });
 
+// Warnings: things the engine drew anyway but thinks are wrong, such as an
+// address outside its subnet. An amber dot whose tooltip says what's up.
+export interface LineWarning {
+  line: number;
+  message: string;
+}
+
+const setWarnings = StateEffect.define<LineWarning[]>();
+
+class WarnMarker extends GutterMarker {
+  constructor(readonly message: string) {
+    super();
+  }
+  eq(other: WarnMarker) {
+    return other.message === this.message;
+  }
+  toDOM() {
+    const el = document.createElement("div");
+    el.className = "cm-warnMarker";
+    el.title = this.message;
+    return el;
+  }
+}
+
+const warningField = StateField.define<DecorationSet>({
+  create: () => Decoration.none,
+  update(deco, tr) {
+    for (const e of tr.effects) {
+      if (!e.is(setWarnings)) continue;
+      // One decoration per line, carrying every message for it.
+      const byLine = new Map<number, string[]>();
+      for (const w of e.value) {
+        if (w.line < 1 || w.line > tr.state.doc.lines) continue;
+        byLine.set(w.line, [...(byLine.get(w.line) ?? []), w.message]);
+      }
+      return Decoration.set(
+        [...byLine]
+          .sort((a, b) => a[0] - b[0])
+          .map(([line, messages]) => {
+            const message = messages.join("\n");
+            return Decoration.line({ class: "cm-warnLine", attributes: { title: message }, message }).range(tr.state.doc.line(line).from);
+          }),
+      );
+    }
+    return tr.docChanged ? deco.map(tr.changes) : deco;
+  },
+  provide: (f) => EditorView.decorations.from(f),
+});
+
 const errorGutter = gutter({
   class: "cm-errorGutter",
   lineMarker(view, line) {
     const err = view.state.field(errorLineField).line;
-    if (err == null || err > view.state.doc.lines) return null;
-    return view.state.doc.line(err).from === line.from ? errorMarker : null;
+    if (err != null && err <= view.state.doc.lines && view.state.doc.line(err).from === line.from) return errorMarker;
+    let message: string | undefined;
+    view.state.field(warningField).between(line.from, line.from, (from, _to, d) => {
+      if (from === line.from) message = d.spec.message as string;
+    });
+    return message ? new WarnMarker(message) : null;
   },
-  lineMarkerChange: (update) => update.transactions.some((tr) => tr.effects.some((e) => e.is(setErrorLine)) || tr.docChanged),
+  lineMarkerChange: (update) =>
+    update.transactions.some((tr) => tr.effects.some((e) => e.is(setErrorLine) || e.is(setWarnings)) || tr.docChanged),
 });
 
 export interface EditorCallbacks {
@@ -182,6 +245,7 @@ export class DiagramEditor {
         highlightSelectionMatches(),
         search({ top: true }),
         errorLineField,
+        warningField,
         syntaxHighlighting(highlight),
         baseTheme,
         placeholder("Write a diagram here, or pick a template…"),
@@ -286,6 +350,11 @@ export class DiagramEditor {
     this.view.dispatch({ effects: setErrorLine.of(valid) });
   }
 
+  setWarnings(list: LineWarning[]) {
+    if (!list.length && this.view.state.field(warningField).size === 0) return;
+    this.view.dispatch({ effects: setWarnings.of(list) });
+  }
+
   goToLine(line: number, select = true) {
     const doc = this.view.state.doc;
     const target = doc.line(Math.max(1, Math.min(line, doc.lines)));
@@ -301,7 +370,7 @@ export class DiagramEditor {
   }
 }
 
-const LANGUAGES = { plantuml: plantumlLanguage, mermaid: mermaidLanguage, graphviz: dotLanguage, echarts: chartLanguage, bpmn: xmlLanguage, sketch: sketchLanguage, orgchart: orgLanguage } as const;
+const LANGUAGES = { plantuml: plantumlLanguage, mermaid: mermaidLanguage, graphviz: dotLanguage, echarts: chartLanguage, bpmn: xmlLanguage, sketch: sketchLanguage, orgchart: orgLanguage, network: networkLanguage } as const;
 
 function languageFor(engine: Engine) {
   return LANGUAGES[engine];

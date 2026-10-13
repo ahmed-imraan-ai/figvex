@@ -29,6 +29,8 @@
   --selection: rgba(194, 65, 12, 0.16);
   --match: rgba(194, 65, 12, 0.12);
   --error-line: rgba(180, 35, 24, 0.07);
+  --warn: #b7791f;
+  --warn-line: rgba(183, 121, 31, 0.08);
   --shadow-sheet: 0 1px 2px rgba(40, 35, 20, 0.06), 0 6px 24px rgba(40, 35, 20, 0.07);
   --shadow-pop: 0 2px 4px rgba(40, 35, 20, 0.06), 0 12px 32px rgba(40, 35, 20, 0.14);
 
@@ -71,6 +73,8 @@
     --selection: rgba(240, 122, 74, 0.25);
     --match: rgba(240, 122, 74, 0.18);
     --error-line: rgba(249, 112, 102, 0.1);
+    --warn: #e8b04a;
+    --warn-line: rgba(232, 176, 74, 0.09);
     --shadow-sheet: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 28px rgba(0, 0, 0, 0.35);
     --shadow-pop: 0 2px 4px rgba(0, 0, 0, 0.3), 0 14px 36px rgba(0, 0, 0, 0.5);
     --syn-keyword: #e9a06f;
@@ -108,6 +112,8 @@
   --selection: rgba(240, 122, 74, 0.25);
   --match: rgba(240, 122, 74, 0.18);
   --error-line: rgba(249, 112, 102, 0.1);
+  --warn: #e8b04a;
+  --warn-line: rgba(232, 176, 74, 0.09);
   --shadow-sheet: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 28px rgba(0, 0, 0, 0.35);
   --shadow-pop: 0 2px 4px rgba(0, 0, 0, 0.3), 0 14px 36px rgba(0, 0, 0, 0.5);
   --syn-keyword: #e9a06f;
@@ -545,13 +551,85 @@ kbd {
   background: var(--editor-bg);
 }
 
-/* Names the diagram's language. It follows the first line, so it isn't a
-   control; colours come from .engine-tag. */
-.engine-label {
+/* Language picker: a search box with a list of languages under it. */
+.lang-picker {
+  position: relative;
   flex: none;
-  padding: 2px 8px;
-  border: 1px solid var(--rule);
+}
+
+.lang-input {
+  width: 116px;
+  height: 26px;
+  padding: 0 22px 0 8px;
+  font-size: 12.5px;
+  font-weight: 500;
+  cursor: pointer;
+  background-image: linear-gradient(45deg, transparent 50%, var(--ink-3) 50%), linear-gradient(135deg, var(--ink-3) 50%, transparent 50%);
+  background-position: right 11px center, right 7px center;
+  background-size: 4px 4px;
+  background-repeat: no-repeat;
+}
+
+.lang-input:focus {
+  cursor: text;
+}
+
+.lang-list {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  z-index: 40;
+  width: 300px;
+  max-width: calc(100vw - 24px);
+  max-height: 340px;
+  margin: 0;
+  padding: 4px;
+  overflow-y: auto;
+  list-style: none;
+  border: 1px solid var(--rule-strong);
+  border-radius: 6px;
+  background: var(--surface);
+  box-shadow: var(--shadow-pop);
+}
+
+.lang-list li[role="option"] {
+  display: grid;
+  grid-template-columns: 52px 1fr;
+  column-gap: 8px;
+  padding: 6px 8px;
   border-radius: 4px;
+  cursor: pointer;
+}
+
+.lang-list li[aria-selected="true"] {
+  background: var(--selection);
+}
+
+.lang-list li[aria-current="true"] .lang-name::after {
+  content: " (current)";
+  color: var(--ink-3);
+  font-weight: 400;
+}
+
+.lang-list .engine-tag {
+  grid-row: span 2;
+  align-self: center;
+}
+
+.lang-name {
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.lang-blurb {
+  color: var(--ink-3);
+  font-size: 12px;
+}
+
+.lang-none {
+  padding: 8px;
+  color: var(--ink-3);
+  font-size: 12.5px;
 }
 
 .pane-head .text-link {
@@ -665,6 +743,15 @@ body.is-resizing .stage {
 
 .status-render[data-state="error"] {
   color: var(--danger);
+}
+
+.status-render[data-state="warn"] {
+  color: var(--warn);
+  cursor: pointer;
+}
+
+.status-render[data-state="warn"]:hover {
+  text-decoration: underline;
 }
 
 .status-render[data-state="busy"]::before {
@@ -1151,6 +1238,10 @@ body.is-resizing .stage {
 
 .engine-tag[data-engine="orgchart"] {
   color: var(--syn-keyword);
+}
+
+.engine-tag[data-engine="network"] {
+  color: var(--syn-macro);
 }
 
 .library-item .item-actions {

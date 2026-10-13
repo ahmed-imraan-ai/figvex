@@ -6,7 +6,7 @@ import "@fontsource/ibm-plex-mono/500.css";
 import "./styles.css";
 
 import { APP_NAME, DEPLOY_LABEL, DOCS, ENGINE_VERSION, ON_NETLIFY, REPO_URL } from "./config";
-import { DiagramEditor } from "./editor/editor";
+import { DiagramEditor, type LineWarning } from "./editor/editor";
 import {
   detectEngine,
   diagramKind,
@@ -20,7 +20,7 @@ import {
   type RenderResult,
 } from "./engines";
 import { isPlantUmlLoaded, loadPlantUml } from "./engines/plantuml";
-import { BPMN_STYLES, CHART_STYLES, ORG_STYLES, SKETCH_STYLES, GRAPHVIZ_STYLES, MERMAID_STYLES, PLANTUML_STYLES, PLANTUML_THEMES } from "./engines/themes";
+import { BPMN_STYLES, CHART_STYLES, NET_STYLES, ORG_STYLES, SKETCH_STYLES, GRAPHVIZ_STYLES, MERMAID_STYLES, PLANTUML_STYLES, PLANTUML_THEMES } from "./engines/themes";
 import { byId, debounce, h, icon, isMac, modKey } from "./lib/dom";
 import { Preview, type SourceHint } from "./preview";
 import { hasSharedDiagram, readSharedDiagram } from "./share";
@@ -34,6 +34,7 @@ import { Library } from "./ui/library";
 import { closePopover, toast, togglePopover } from "./ui/overlay";
 import { buildSettingsPanel } from "./ui/settings-panel";
 import { buildSharePanel } from "./ui/share-panel";
+import { LanguagePicker } from "./ui/language-picker";
 import { SketchCanvas } from "./ui/sketch-canvas";
 import { openTemplates } from "./ui/templates-dialog";
 
@@ -47,7 +48,7 @@ const ui = {
   workspace: byId("workspace"),
   titleInput: byId<HTMLInputElement>("doc-title"),
   saveState: byId("save-state"),
-  engineLabel: byId("engine-label"),
+  languageHost: byId("language-picker"),
   styleSelect: byId<HTMLSelectElement>("style-select"),
   syntaxLink: byId<HTMLAnchorElement>("link-syntax"),
   previewPane: document.querySelector<HTMLElement>(".pane-preview")!,
@@ -161,10 +162,7 @@ function updateTitle() {
 }
 
 function updateEngineUi() {
-  // The language is chosen when a diagram is created and follows the first
-  // line after that, so the head only names it.
-  ui.engineLabel.textContent = ENGINE_LABEL[engine];
-  ui.engineLabel.dataset.engine = engine;
+  languagePicker.set(engine);
   editor.setEngine(engine);
   if (engine === "sketch") sketch.activate();
   else sketch.deactivate();
@@ -173,6 +171,26 @@ function updateEngineUi() {
   ui.syntaxLink.textContent = `${ENGINE_LABEL[engine]} syntax`;
   updateStatusEngine();
 }
+
+// Picking a language swaps the starter code when the diagram has nothing of
+// its own yet. Otherwise the code would no longer match the language, so a
+// new diagram is started and the current one stays in the library.
+const languagePicker = new LanguagePicker((next) => {
+  const code = editor.value.trim();
+  const starter = !code || Object.values(BLANK_CODE).some((b) => b.trim() === code);
+  if (starter) {
+    engine = next;
+    store.update(doc.id, { engine });
+    updateEngineUi();
+    editor.replace(BLANK_CODE[next]);
+  } else {
+    const previous = doc.title;
+    createDoc(DEFAULT_TITLE, next, BLANK_CODE[next]);
+    toast(`Started a new ${ENGINE_LABEL[next]} diagram. "${previous}" is still in your library.`);
+  }
+  editor.focus();
+});
+ui.languageHost.replaceWith(languagePicker.element);
 
 function updateStatusEngine() {
   const kind = diagramKind(editor.value, engine);
@@ -215,6 +233,10 @@ function fillStylePicker() {
     select.append(...ORG_STYLES.map((s) => option(s.value, s.label)));
     select.value = store.settings.orgStyle;
     select.disabled = false;
+  } else if (engine === "network") {
+    select.append(...NET_STYLES.map((s) => option(s.value, s.label)));
+    select.value = store.settings.netStyle;
+    select.disabled = false;
   } else {
     select.append(...MERMAID_STYLES.map((s) => option(s.value, s.label)));
     select.value = store.settings.mermaidTheme;
@@ -230,6 +252,7 @@ ui.styleSelect.addEventListener("change", () => {
   else if (engine === "bpmn") store.setSettings({ bpmnStyle: value as Settings["bpmnStyle"] });
   else if (engine === "sketch") store.setSettings({ sketchStyle: value as Settings["sketchStyle"] });
   else if (engine === "orgchart") store.setSettings({ orgStyle: value as Settings["orgStyle"] });
+  else if (engine === "network") store.setSettings({ netStyle: value as Settings["netStyle"] });
   else store.setSettings({ mermaidTheme: value as Settings["mermaidTheme"] });
 });
 
@@ -370,8 +393,17 @@ async function renderNow() {
     lastGood = { svg: result.svg, tone };
     hideError();
     const where = result.remote ? " on plantuml.com" : "";
-    setRenderStatus(`Drawn${where} in ${formatMs(result.ms)}`, "ok");
+    warnings = (result.warnings ?? []).map((w) => ({ ...w, line: mapLine(w.line) }));
+    editor.setWarnings(warnings);
+    if (warnings.length) {
+      const count = warnings.length === 1 ? "1 warning" : `${warnings.length} warnings`;
+      setRenderStatus(`Drawn in ${formatMs(result.ms)}, ${count}`, "warn", warnings.map((w) => `Line ${w.line}: ${w.message}`).join("\n"));
+    } else {
+      setRenderStatus(`Drawn${where} in ${formatMs(result.ms)}`, "ok");
+    }
   } else {
+    warnings = [];
+    editor.setWarnings([]);
     showError(result);
   }
 }
@@ -380,10 +412,19 @@ function formatMs(ms: number) {
   return ms < 1000 ? `${Math.max(1, Math.round(ms))} ms` : `${(ms / 1000).toFixed(1)} s`;
 }
 
-function setRenderStatus(text: string, state: "idle" | "busy" | "ok" | "error") {
+function setRenderStatus(text: string, state: "idle" | "busy" | "ok" | "warn" | "error", title = "") {
   ui.statusRender.textContent = text;
   ui.statusRender.dataset.state = state;
+  ui.statusRender.title = title;
 }
+
+/** Warnings from the last drawing, by editor line. */
+let warnings: LineWarning[] = [];
+
+// Clicking "2 warnings" goes to the first one.
+ui.statusRender.addEventListener("click", () => {
+  if (ui.statusRender.dataset.state === "warn" && warnings.length) editor.goToLine(warnings[0].line);
+});
 
 function showMessage(title: string, detail: string, spinner = false) {
   ui.previewMessage.replaceChildren(
@@ -494,7 +535,8 @@ function applySettings(force = false) {
     s.chartStyle !== prev.chartStyle ||
     s.bpmnStyle !== prev.bpmnStyle ||
     s.sketchStyle !== prev.sketchStyle ||
-    s.orgStyle !== prev.orgStyle;
+    s.orgStyle !== prev.orgStyle ||
+    s.netStyle !== prev.netStyle;
   if (styleChanged) fillStylePicker();
   const needsRender =
     s.diagramTheme !== prev.diagramTheme ||
@@ -577,9 +619,9 @@ async function openFile(file: File) {
   let eng: Engine | null = ENGINES.find((e) => ENGINE_FILE_EXTS[e].includes(ext)) ?? null;
 
   if (ext === "md" || ext === "markdown") {
-    const block = text.match(/```(plantuml|puml|mermaid|dot|graphviz|echarts|bpmn|orgchart)\s*\n([\s\S]*?)```/);
+    const block = text.match(/```(plantuml|puml|mermaid|dot|graphviz|echarts|bpmn|orgchart|network)\s*\n([\s\S]*?)```/);
     if (!block) {
-      toast(`No plantuml, mermaid, dot, echarts, bpmn or orgchart code block found in ${file.name}.`, { error: true });
+      toast(`No plantuml, mermaid, dot, echarts, bpmn, orgchart or network code block found in ${file.name}.`, { error: true });
       return;
     }
     eng = ENGINES.find((e) => ENGINE_FENCE[e] === block[1]) ?? (block[1] === "graphviz" ? "graphviz" : "plantuml");
