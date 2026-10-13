@@ -15,6 +15,22 @@ const deployLabel =
 // URL is the site's main address, including a custom domain once one is set.
 const siteUrl = (process.env.VITE_SITE_URL || process.env.URL || "https://figvex.netlify.app").replace(/\/+$/, "");
 const appVersion = readVersion("./package.json");
+
+// Google Analytics, for production builds that set VITE_GA_ID (netlify.toml
+// does for the live site). Staging, local and Docker builds leave it out.
+const gaId = context === "production" ? (process.env.VITE_GA_ID ?? "").trim() : "";
+if (gaId && !/^G-[A-Z0-9]+$/.test(gaId)) throw new Error(`VITE_GA_ID "${gaId}" isn't a Google Analytics ID (G-...).`);
+// Share links carry the whole diagram after the "#", so the page address
+// is sent without it.
+const gaTag = `    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=${gaId}"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', '${gaId}', { page_location: location.origin + location.pathname + location.search });
+    </script>
+`;
 // Viz.js (bundled with @plantuml/core) records its Graphviz version in the script.
 const graphvizVersion =
   readFileSync(new URL("./node_modules/@plantuml/core/viz-global.js", import.meta.url), "utf8").match(
@@ -27,6 +43,10 @@ export default defineConfig({
       name: "figvex-deploy-context",
       transformIndexHtml: (html) =>
         deployLabel ? html.replace("</head>", '    <meta name="robots" content="noindex, nofollow" />\n  </head>') : html,
+    },
+    {
+      name: "figvex-analytics",
+      transformIndexHtml: (html) => (gaId ? html.replace('<meta charset="utf-8" />\n', `<meta charset="utf-8" />\n${gaTag}`) : html),
     },
     {
       name: "figvex-seo",

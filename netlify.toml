@@ -30,3 +30,7 @@
     X-Content-Type-Options = "nosniff"
     Referrer-Policy = "strict-origin-when-cross-origin"
     Permissions-Policy = "camera=(), microphone=(), geolocation=()"
+
+# Google Analytics on the live site only (see vite.config.ts).
+[context.production.environment]
+  VITE_GA_ID = "G-8WV71RQX7X"
