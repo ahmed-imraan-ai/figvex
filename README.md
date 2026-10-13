@@ -24,7 +24,7 @@ It was built for computer science students: UML for software engineering courses
 - Click a shape in the diagram to jump to the line that drew it
 - Errors point at the line, with a marker in the editor
 - Every diagram saved in the browser, with rename, duplicate, delete and undo; collapsed, the list stays as a narrow rail of recent diagrams
-- Pick the language when you create a diagram; after that it follows the first line, shown as a label above the editor
+- A language picker above the editor that you can type into to search; changing the language of a diagram with real content starts a new one, so nothing is overwritten
 - Open `.puml`, `.mmd`, `.gv`, `.dot`, `.bpmn`, `.sketch`, `.org`, chart and Markdown files, or drag them onto the window; a `.csv` file opens as a bar chart of its columns
 - Light and dark themes for the app and for the diagrams, separately
 - Pan and zoom with mouse, trackpad or touch; works on phones as two tabs

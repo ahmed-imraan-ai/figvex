@@ -545,13 +545,85 @@ kbd {
   background: var(--editor-bg);
 }
 
-/* Names the diagram's language. It follows the first line, so it isn't a
-   control; colours come from .engine-tag. */
-.engine-label {
+/* Language picker: a search box with a list of languages under it. */
+.lang-picker {
+  position: relative;
   flex: none;
-  padding: 2px 8px;
-  border: 1px solid var(--rule);
+}
+
+.lang-input {
+  width: 116px;
+  height: 26px;
+  padding: 0 22px 0 8px;
+  font-size: 12.5px;
+  font-weight: 500;
+  cursor: pointer;
+  background-image: linear-gradient(45deg, transparent 50%, var(--ink-3) 50%), linear-gradient(135deg, var(--ink-3) 50%, transparent 50%);
+  background-position: right 11px center, right 7px center;
+  background-size: 4px 4px;
+  background-repeat: no-repeat;
+}
+
+.lang-input:focus {
+  cursor: text;
+}
+
+.lang-list {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  z-index: 40;
+  width: 300px;
+  max-width: calc(100vw - 24px);
+  max-height: 340px;
+  margin: 0;
+  padding: 4px;
+  overflow-y: auto;
+  list-style: none;
+  border: 1px solid var(--rule-strong);
+  border-radius: 6px;
+  background: var(--surface);
+  box-shadow: var(--shadow-pop);
+}
+
+.lang-list li[role="option"] {
+  display: grid;
+  grid-template-columns: 52px 1fr;
+  column-gap: 8px;
+  padding: 6px 8px;
   border-radius: 4px;
+  cursor: pointer;
+}
+
+.lang-list li[aria-selected="true"] {
+  background: var(--selection);
+}
+
+.lang-list li[aria-current="true"] .lang-name::after {
+  content: " (current)";
+  color: var(--ink-3);
+  font-weight: 400;
+}
+
+.lang-list .engine-tag {
+  grid-row: span 2;
+  align-self: center;
+}
+
+.lang-name {
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.lang-blurb {
+  color: var(--ink-3);
+  font-size: 12px;
+}
+
+.lang-none {
+  padding: 8px;
+  color: var(--ink-3);
+  font-size: 12.5px;
 }
 
 .pane-head .text-link {
