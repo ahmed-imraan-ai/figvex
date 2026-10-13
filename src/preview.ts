@@ -13,7 +13,7 @@ const FIT_PADDING = 40;
 export interface PreviewCallbacks {
   onZoom(scale: number): void;
   /** Clicked a diagram element; `hint` describes what was clicked. */
-  onPick(hint: SourceHint): void;
+  onPick(hint: SourceHint, target: Element): void;
 }
 
 export type SourceHint = { kind: "line"; line: number; name?: string } | { kind: "name"; name: string };
@@ -281,7 +281,7 @@ export class Preview {
     this.drag = null;
     if (clicked && e.type === "pointerup") {
       const hint = sourceHint(clicked);
-      if (hint) this.callbacks.onPick(hint);
+      if (hint) this.callbacks.onPick(hint, clicked);
     }
   }
 

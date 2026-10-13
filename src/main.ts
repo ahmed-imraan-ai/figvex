@@ -36,6 +36,7 @@ import { buildSettingsPanel } from "./ui/settings-panel";
 import { buildSharePanel } from "./ui/share-panel";
 import { BpmnCanvas } from "./ui/bpmn-canvas";
 import { LanguagePicker } from "./ui/language-picker";
+import { PreviewEditor } from "./ui/preview-editor";
 import { SketchCanvas } from "./ui/sketch-canvas";
 import { openTemplates } from "./ui/templates-dialog";
 
@@ -118,7 +119,10 @@ const editor = new DiagramEditor(byId("editor"), {
 
 const preview = new Preview(byId("stage"), byId("canvas"), byId("sheet"), {
   onZoom: (scale) => (ui.zoomLevel.textContent = `${Math.round(scale * 100)}%`),
-  onPick: (hint) => revealInCode(hint),
+  onPick: (hint, target) => {
+    // Org charts, networks, Graphviz and Mermaid flowcharts can be edited from here.
+    if (!previewEditor.click(target)) revealInCode(hint);
+  },
 });
 
 // Drawing tools over the preview, for sketches only.
@@ -128,6 +132,18 @@ const sketch = new SketchCanvas({
   editor,
   look: () => ({ dark: diagramTone() === "dark", style: store.settings.sketchStyle }),
   show: (svg) => preview.show(svg, diagramTone()),
+});
+
+// Renaming, adding and removing from the diagram for text languages.
+const previewEditor = new PreviewEditor({
+  preview,
+  editor,
+  engine: () => engine,
+  reveal: (target) => {
+    const hint = sourceHint(target);
+    if (hint) revealInCode(hint, false);
+  },
+  notify: (message) => toast(message),
 });
 
 // Dragging shapes in BPMN diagrams.
@@ -166,6 +182,7 @@ function openDoc(next: Doc) {
   updateTitle();
   updateEngineUi();
   lastGood = null;
+  previewEditor.clear();
   preview.clear();
   hideError();
   ui.saveState.textContent = "";
@@ -409,6 +426,7 @@ async function renderNow() {
       return;
     }
     lastGood = { svg: result.svg, tone };
+    previewEditor.refresh();
     hideError();
     const where = result.remote ? " on plantuml.com" : "";
     warnings = (result.warnings ?? []).map((w) => ({ ...w, line: mapLine(w.line) }));
