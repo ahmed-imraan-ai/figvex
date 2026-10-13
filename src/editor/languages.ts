@@ -2,6 +2,7 @@
 // be good enough for colouring; the engines do the real parsing.
 
 import { StreamLanguage, type StringStream } from "@codemirror/language";
+import { DEVICE_KINDS } from "../engines/network/model";
 
 const PLANTUML_KEYWORDS = new Set(
   `
@@ -366,6 +367,44 @@ export const orgLanguage = StreamLanguage.define<{ part: "name" | "title" | "don
     }
     stream.match(/^[^:[#.]+/) || stream.next();
     return state.part === "name" ? "keyword" : null;
+  },
+  languageData: {
+    commentTokens: { line: "#" },
+  },
+});
+
+const NET_KINDS = new RegExp(`^(${DEVICE_KINDS.join("|")})\\b`);
+
+/** Network diagrams: device and zone lines, links, addresses and VLANs. */
+export const networkLanguage = StreamLanguage.define<{ first: boolean }>({
+  name: "network",
+  startState: () => ({ first: true }),
+  token(stream: StringStream, state) {
+    if (stream.sol()) state.first = true;
+    if (stream.eatSpace()) return null;
+    if (stream.peek() === "#" && (stream.sol() || /\s/.test(stream.string.charAt(stream.pos - 1)))) {
+      stream.skipToEnd();
+      return "comment";
+    }
+    if (state.first) {
+      state.first = false;
+      if (stream.match(/^(network|title|direction|lines|checks|zone)\b/)) return "keyword";
+      if (stream.match(NET_KINDS)) return "typeName";
+    }
+    if (stream.match(/^"(?:[^"\\]|\\.)*"?/)) return "string";
+    if (stream.match(/^(--|==|\.\.|~~)/)) return "operator";
+    if (stream.match(/^\d+(\.\d+){3}(\/\d+)?/) || stream.match(/^[0-9a-fA-F]*:[0-9a-fA-F]*:[0-9a-fA-F:.]*(\/\d+)?/)) return "number";
+    if (stream.match(/^vlan\b/)) {
+      stream.eatSpace();
+      stream.match(/^[\d,\s]+/);
+      return "macroName";
+    }
+    if (stream.match(/^x\d+\b/)) return "number";
+    if (stream.match(/^(down|right|straight|curved|square|on|off)\b/)) return "atom";
+    if (stream.match(/^:[^\s,"]+/)) return "attributeName";
+    if (stream.match(/^[A-Za-z_][\w-]*/)) return "labelName";
+    stream.next();
+    return null;
   },
   languageData: {
     commentTokens: { line: "#" },

@@ -1,6 +1,7 @@
 import type { Completion, CompletionContext, CompletionResult } from "@codemirror/autocomplete";
 import { snippetCompletion } from "@codemirror/autocomplete";
 import { SERIES_TYPES } from "../engines/chart";
+import { DEVICE_KINDS, KIND_LABEL } from "../engines/network/model";
 import { PLANTUML_THEMES } from "../engines/themes";
 import type { Engine } from "../engines/types";
 
@@ -324,7 +325,68 @@ function orgSource(ctx: CompletionContext): CompletionResult | null {
   return null;
 }
 
-const SOURCES = { plantuml: plantumlSource, mermaid: mermaidSource, graphviz: dotSource, echarts: chartSource, bpmn: bpmnSource, sketch: sketchSource, orgchart: orgSource } as const;
+const NET_STARTERS: Completion[] = [
+  ...DEVICE_KINDS.map((kind) =>
+    kind === "internet" || kind === "cloud"
+      ? { label: kind, detail: KIND_LABEL[kind], type: "class" }
+      : snippetCompletion(`${kind} \${${kind}1} "\${${KIND_LABEL[kind]}}"`, { label: kind, detail: KIND_LABEL[kind], type: "class" }),
+  ),
+  snippetCompletion('zone ${lan} "${Office LAN}" ${192.168.1.0/24} vlan ${10}', { label: "zone", detail: "subnet, VLAN or site", type: "keyword" }),
+];
+
+const NET_SETTINGS: Completion[] = [
+  snippetCompletion('title "${Network}"', { label: "title", detail: "diagram title", type: "keyword" }),
+  snippetCompletion("direction ${right}", { label: "direction", detail: "down or right", type: "keyword" }),
+  snippetCompletion("lines ${square}", { label: "lines", detail: "straight, curved or square", type: "keyword" }),
+  snippetCompletion("checks ${off}", { label: "checks", detail: "address checks on or off", type: "keyword" }),
+];
+
+const NET_LINKS: Completion[] = [
+  { label: "--", detail: "cable", type: "operator" },
+  { label: "==", detail: "trunk or fibre", type: "operator" },
+  { label: "..", detail: "VPN or tunnel", type: "operator" },
+  { label: "~~", detail: "wireless", type: "operator" },
+];
+
+function networkSource(ctx: CompletionContext): CompletionResult | null {
+  const doc = ctx.state.doc.toString();
+  const line = ctx.state.doc.lineAt(ctx.pos);
+  const before = line.text.slice(0, ctx.pos - line.from);
+  const kinds = DEVICE_KINDS.join("|");
+  const ids = [...doc.matchAll(new RegExp(`^\\s*(?:${kinds})\\s+([A-Za-z_][\\w-]*)`, "gm"))].map((m) => m[1]);
+  for (const k of ["internet", "cloud"]) if (new RegExp(`^\\s*${k}\\b(?!\\s+[A-Za-z_])`, "m").test(doc)) ids.push(k);
+  const devices = [...new Set(ids)].map((label) => ({ label, type: "variable" }));
+
+  // After a link operator or a comma: the devices to link to.
+  if (/(--|==|\.\.|~~)\s*([\w-]+(:\S*)?\s*,\s*)*[\w-]*$/.test(before)) {
+    const word = ctx.matchBefore(/[\w-]*/);
+    return word ? { from: word.from, options: devices, validFor: /^[\w-]*$/ } : null;
+  }
+  // After a device name at the start of a line: the link types.
+  const op = before.match(/^\s*[A-Za-z_][\w-]*(:\S*)?\s+([-=.~]*)$/);
+  if (op && ids.includes(before.trim().split(/[\s:]/)[0])) {
+    return { from: ctx.pos - op[2].length, options: NET_LINKS, validFor: /^[-=.~]*$/ };
+  }
+  const word = ctx.matchBefore(/\w*/);
+  if (!word || (word.from === word.to && !ctx.explicit)) return null;
+  if (/^\s*\w*$/.test(before)) {
+    const top = /^\w*$/.test(before);
+    return { from: word.from, options: [...NET_STARTERS, ...devices, ...(top ? NET_SETTINGS : [])], validFor: /^\w*$/ };
+  }
+  if (/^\s*(zone|[a-z]+\s+[\w-]+)\b/.test(before)) return { from: word.from, options: [snippetCompletion("vlan ${10}", { label: "vlan", type: "keyword" })], validFor: /^\w*$/ };
+  return null;
+}
+
+const SOURCES = {
+  plantuml: plantumlSource,
+  mermaid: mermaidSource,
+  graphviz: dotSource,
+  echarts: chartSource,
+  bpmn: bpmnSource,
+  sketch: sketchSource,
+  orgchart: orgSource,
+  network: networkSource,
+} as const;
 
 export function completionSource(engine: Engine) {
   return SOURCES[engine];

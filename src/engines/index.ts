@@ -1,6 +1,7 @@
 import { renderBpmn } from "./bpmn";
 import { renderChart } from "./chart";
 import { renderGraphviz } from "./graphviz";
+import { renderNetwork } from "./network";
 import { renderOrgChart } from "./orgchart";
 import { renderSketch } from "./sketch";
 import { renderMermaid } from "./mermaid";
@@ -18,6 +19,7 @@ const RENDERERS: Record<Engine, (code: string, options: RenderOptions) => Promis
   bpmn: renderBpmn,
   sketch: renderSketch,
   orgchart: renderOrgChart,
+  network: renderNetwork,
 };
 
 export function renderDiagram(engine: Engine, code: string, options: RenderOptions): Promise<RenderResult> {

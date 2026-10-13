@@ -1,6 +1,6 @@
-export type Engine = "plantuml" | "mermaid" | "graphviz" | "echarts" | "bpmn" | "sketch" | "orgchart";
+export type Engine = "plantuml" | "mermaid" | "graphviz" | "echarts" | "bpmn" | "sketch" | "orgchart" | "network";
 
-export const ENGINES: readonly Engine[] = ["plantuml", "mermaid", "graphviz", "echarts", "bpmn", "sketch", "orgchart"];
+export const ENGINES: readonly Engine[] = ["plantuml", "mermaid", "graphviz", "echarts", "bpmn", "sketch", "orgchart", "network"];
 
 export function isEngine(value: unknown): value is Engine {
   return ENGINES.includes(value as Engine);
@@ -26,6 +26,8 @@ export interface RenderOptions {
   sketchStyle: SketchStyle;
   /** Org charts only: card design. */
   orgStyle: OrgStyle;
+  /** Network diagrams only: icon design. */
+  netStyle: NetStyle;
 }
 
 export type GraphvizStyle = "plain" | "default";
@@ -38,6 +40,8 @@ export type SketchStyle = "clean" | "hand-drawn";
 
 export type OrgStyle = "cards" | "minimal" | "bold";
 
+export type NetStyle = "tiles" | "outline" | "mono";
+
 export type MermaidTheme = "default" | "neutral" | "base" | "forest" | "neo" | "redux" | "redux-color";
 
 export interface RenderSuccess {
@@ -48,6 +52,8 @@ export interface RenderSuccess {
   remote?: boolean;
   /** Maps a line in the rendered text to the editor, when they differ. */
   mapLine?: (line: number) => number;
+  /** Things worth a look that didn't stop the drawing, by editor line. */
+  warnings?: { message: string; line: number }[];
 }
 
 export interface RenderFailure {
@@ -70,6 +76,7 @@ export const ENGINE_LABEL: Record<Engine, string> = {
   bpmn: "BPMN",
   sketch: "Sketch",
   orgchart: "Org chart",
+  network: "Network",
 };
 
 export const ENGINE_EXT: Record<Engine, string> = {
@@ -80,6 +87,7 @@ export const ENGINE_EXT: Record<Engine, string> = {
   bpmn: "bpmn",
   sketch: "sketch",
   orgchart: "org",
+  network: "network",
 };
 
 /** Short tag shown next to diagrams in lists. */
@@ -91,6 +99,7 @@ export const ENGINE_TAG: Record<Engine, string> = {
   bpmn: "bpmn",
   sketch: "sketch",
   orgchart: "org",
+  network: "net",
 };
 
 /** File extensions recognised when opening a file. */
@@ -102,6 +111,7 @@ export const ENGINE_FILE_EXTS: Record<Engine, string[]> = {
   bpmn: ["bpmn", "bpmn2"],
   sketch: ["sketch"],
   orgchart: ["org", "orgchart"],
+  network: ["network", "net"],
 };
 
 /** Info string for a Markdown code block. */
@@ -113,4 +123,5 @@ export const ENGINE_FENCE: Record<Engine, string> = {
   bpmn: "bpmn",
   sketch: "sketch",
   orgchart: "orgchart",
+  network: "network",
 };
