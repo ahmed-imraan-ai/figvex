@@ -5,7 +5,8 @@ import "@fontsource/ibm-plex-mono/400.css";
 import "@fontsource/ibm-plex-mono/500.css";
 import "./styles.css";
 
-import { APP_NAME, DEPLOY_LABEL, DOCS, ENGINE_VERSION, ON_NETLIFY, REPO_URL } from "./config";
+import { applyAnalytics } from "./analytics";
+import { APP_NAME, DEPLOY_LABEL, DOCS, ENGINE_VERSION, GA_ID, ON_NETLIFY, REPO_URL } from "./config";
 import { DiagramEditor, type LineWarning } from "./editor/editor";
 import {
   detectEngine,
@@ -32,6 +33,7 @@ import { openHelp } from "./ui/help-dialog";
 import { ICONS } from "./ui/icons";
 import { Library } from "./ui/library";
 import { closePopover, toast, togglePopover } from "./ui/overlay";
+import { showConsentBanner } from "./ui/consent-banner";
 import { buildSettingsPanel } from "./ui/settings-panel";
 import { buildSharePanel } from "./ui/share-panel";
 import { BpmnCanvas } from "./ui/bpmn-canvas";
@@ -564,6 +566,7 @@ function applySettings(force = false) {
   if (force || s.fontSize !== prev.fontSize) editor.setFontSize(s.fontSize);
   if (force || s.wrap !== prev.wrap) editor.setWrap(s.wrap);
   if (force || s.splitRatio !== prev.splitRatio) ui.workspace.style.setProperty("--split", `${s.splitRatio * 100}%`);
+  if (force || s.analytics !== prev.analytics) applyAnalytics(GA_ID, s.analytics);
   const styleChanged =
     s.plantumlTheme !== prev.plantumlTheme ||
     s.mermaidTheme !== prev.mermaidTheme ||
@@ -826,6 +829,7 @@ async function importSharedLink(): Promise<boolean> {
 
 async function start() {
   applySettings(true);
+  if (GA_ID && store.settings.analytics === "ask") showConsentBanner();
   // Start downloading PlantUML right away; most visitors will need it.
   loadPlantUml().catch(() => undefined);
 

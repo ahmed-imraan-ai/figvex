@@ -46,7 +46,7 @@ The app itself is TypeScript, Vite and CodeMirror 6, with no UI framework.
 
 - The page and its scripts, from wherever you host it.
 - PlantUML standard library bundles (C4, AWS icons and so on) when a diagram uses `!include <...>`. Bundles with a permissive licence (C4, ArchiMate, DomainStory) are served from your own site. The rest come from `plantuml.github.io` unless you change `VITE_PLANTUML_STDLIB_URL`; see [LICENSES.md](LICENSES.md#plantuml-standard-library).
-- On the live site only, Google Analytics page views. The page address is sent without the part after `#`, where share links keep the diagram, so diagram contents aren't sent. Other builds leave it out.
+- On the live site only, Google Analytics page views, and only if you allow them. A banner asks on your first visit, and you can change the answer under Settings → Privacy. Until you allow it, the Google tag isn't loaded and no cookies are set. The page address is sent without the part after `#`, where share links keep the diagram, so diagram contents aren't sent. Other builds leave it out.
 - Nothing else, unless you turn on the PlantUML server option (below) or copy a plantuml.com image link.
 
 ## Supported diagrams
@@ -335,7 +335,7 @@ Set these as environment variables when building (in Netlify under **Site config
 | --- | --- | --- |
 | `VITE_REPO_URL` | `https://github.com/ahmed-imraan-ai/figvex` | GitHub links in the header, the help menu and the About box. Set it to an empty string to hide them |
 | `VITE_SITE_URL` | Netlify's `URL`, else `https://figvex.netlify.app` | Public address used for the canonical link, social preview cards, `robots.txt` and `sitemap.xml` |
-| `VITE_GA_ID` | none | Google Analytics ID (`G-...`). Used only in Netlify production builds; `netlify.toml` sets the live site's |
+| `VITE_GA_ID` | none | Google Analytics ID (`G-...`). Used only in Netlify production builds, and loaded only after the visitor allows it; `netlify.toml` sets the live site's |
 | `VITE_PLANTUML_SERVER` | `https://www.plantuml.com/plantuml` | Server for diagram types the browser engine lacks, and for copied image links |
 | `VITE_PLANTUML_STDLIB_URL` | `https://plantuml.github.io/plantuml/js-plantuml/` | Where stdlib bundles not shipped with the site come from |
 | `PLANTUML_STDLIB_SOURCE` | same as above | Where `scripts/fetch-stdlib.mjs` downloads bundles from during the build |
@@ -351,6 +351,7 @@ src/
   export.ts           SVG, PNG, JPG, WEBP and PDF export
   share.ts            share links
   store.ts            diagrams and settings in localStorage
+  analytics.ts        Google Analytics, loaded only after the visitor allows it
   templates/          the template gallery
   ui/                 popovers, dialogs, library drawer
 scripts/              engine copy and stdlib download, run at install and build

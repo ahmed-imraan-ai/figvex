@@ -1757,6 +1757,35 @@ dialog.modal.about {
   }
 }
 
+.consent {
+  position: fixed;
+  left: 16px;
+  bottom: calc(var(--status-h) + 14px);
+  z-index: 90;
+  display: grid;
+  gap: 12px;
+  width: min(420px, calc(100vw - 32px));
+  padding: 14px 16px;
+  border: 1px solid var(--rule-strong);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: var(--shadow-pop);
+  font-size: 13px;
+  line-height: 1.5;
+  animation: toast-in 0.16s ease-out;
+}
+
+.consent p {
+  margin: 0;
+}
+
+.consent-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
 .drop-overlay {
   position: fixed;
   inset: 8px;

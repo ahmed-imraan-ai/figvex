@@ -28,6 +28,8 @@ export interface Settings {
   wrap: boolean;
   liveRender: boolean;
   serverFallback: boolean;
+  /** Google Analytics: "ask" until the visitor answers the banner. */
+  analytics: "ask" | "on" | "off";
   splitRatio: number;
 }
 
@@ -47,6 +49,7 @@ export const DEFAULT_SETTINGS: Settings = {
   wrap: false,
   liveRender: true,
   serverFallback: false,
+  analytics: "ask",
   splitRatio: 0.42,
 };
 
