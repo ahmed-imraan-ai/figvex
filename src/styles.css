@@ -1910,3 +1910,8 @@ dialog.modal.about {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* BPMN: shapes can be dragged; pools by their name band, lanes not at all. */
+.pane-preview[data-bpmn-edit] .stage [data-element-id]:not([data-kind="lane"]):not([data-kind="participant"]) {
+  cursor: move;
+}
