@@ -3,6 +3,7 @@ import { bpmnTemplates } from "./bpmn";
 import { chartTemplates } from "./charts";
 import { graphvizTemplates } from "./graphviz";
 import { mermaidTemplates } from "./mermaid";
+import { networkTemplates } from "./network";
 import { orgchartTemplates } from "./orgchart";
 import { plantumlTemplates } from "./plantuml";
 import { sketchTemplates } from "./sketch";
@@ -47,6 +48,16 @@ export const BLANK_CODE: Record<Engine, string> = {
 `,
   sketch: "sketch\n",
   orgchart: "orgchart\nJane Smith: Chief Executive\n  Ravi Patel: Head of Engineering\n  Mia Chen: Head of Finance\n",
+  network: `network
+internet
+router r1 "Router" 192.168.1.1
+zone lan "Office LAN" 192.168.1.0/24
+  switch sw1 "Switch" 192.168.1.2
+  pc pc1 "PC" 192.168.1.10
+internet -- r1
+r1 -- sw1
+sw1 -- pc1
+`,
   echarts: '{\n  "xAxis": { "type": "category" },\n  "yAxis": {},\n  "series": [{ "type": "bar" }]\n}\n---\nname,value\nA,3\nB,5\nC,4\n',
 };
 
@@ -107,9 +118,17 @@ const blank: Template[] = [
     summary: "A manager and two reports. Indent a line to put someone under the line above.",
     code: BLANK_CODE.orgchart,
   },
+  {
+    id: "blank-network",
+    engine: "network",
+    category: "Start from scratch",
+    title: "Blank network",
+    summary: "A router, a switch and a PC on one subnet. Indent devices under a zone to put them in it.",
+    code: BLANK_CODE.network,
+  },
 ];
 
-export const TEMPLATES: Template[] = [...blank, ...plantumlTemplates, ...mermaidTemplates, ...graphvizTemplates, ...chartTemplates, ...bpmnTemplates, ...sketchTemplates, ...orgchartTemplates].sort(
+export const TEMPLATES: Template[] = [...blank, ...plantumlTemplates, ...mermaidTemplates, ...graphvizTemplates, ...chartTemplates, ...bpmnTemplates, ...sketchTemplates, ...orgchartTemplates, ...networkTemplates].sort(
   (a, b) => CATEGORIES.indexOf(a.category as never) - CATEGORIES.indexOf(b.category as never),
 );
 

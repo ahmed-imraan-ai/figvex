@@ -8,14 +8,15 @@ A live editor for PlantUML, Mermaid, Graphviz and BPMN diagrams, org charts, dat
 
 It was built for computer science students: UML for software engineering courses, ER diagrams for databases, state machines and automata for theory, trees and graphs for algorithms, Gantt charts for group projects, and charts of results for lab reports.
 
-![Figvex showing a class diagram](docs/screenshot.png)
+![Figvex showing a network diagram of a small office](docs/screenshot.png)
 
 ## Features
 
 - Live preview for PlantUML, Mermaid, Graphviz DOT, BPMN 2.0 and ECharts data charts, with the language picked up from the first line
+- Network diagrams with device icons, subnets, VLANs, ports and link types, and checks that catch address mistakes as you type
 - Org charts from an indented list of people, with departments, assistants, vacancies, dotted lines and three card styles
 - A sketch canvas for freeform diagrams: boxes, arrows that stay attached, text and pen, in a clean or hand-drawn style
-- 62 templates written around coursework: a library system class diagram, JWT login sequence, TCP state machine, DFA for multiples of 3, binary search tree, hash table, confusion matrix, sorting benchmark, library loan process, login wireframe, society committee org chart, university ER schema, capstone Gantt plan and more
+- 68 templates written around coursework: a library system class diagram, JWT login sequence, TCP state machine, DFA for multiples of 3, binary search tree, hash table, confusion matrix, sorting benchmark, library loan process, login wireframe, society committee org chart, subnetting exercise, university ER schema, capstone Gantt plan and more
 - Export to SVG, PNG, JPG, WEBP and vector PDF, at 1× to 4× scale, with a solid or transparent background
 - Copy the image straight to the clipboard for pasting into a report or slides
 - Share links that carry the whole diagram in the URL, with no server involved
@@ -25,7 +26,7 @@ It was built for computer science students: UML for software engineering courses
 - Errors point at the line, with a marker in the editor
 - Every diagram saved in the browser, with rename, duplicate, delete and undo; collapsed, the list stays as a narrow rail of recent diagrams
 - A language picker above the editor that you can type into to search; changing the language of a diagram with real content starts a new one, so nothing is overwritten
-- Open `.puml`, `.mmd`, `.gv`, `.dot`, `.bpmn`, `.sketch`, `.org`, chart and Markdown files, or drag them onto the window; a `.csv` file opens as a bar chart of its columns
+- Open `.puml`, `.mmd`, `.gv`, `.dot`, `.bpmn`, `.sketch`, `.org`, `.network`, chart and Markdown files, or drag them onto the window; a `.csv` file opens as a bar chart of its columns
 - Light and dark themes for the app and for the diagrams, separately
 - Pan and zoom with mouse, trackpad or touch; works on phones as two tabs
 
@@ -150,6 +151,55 @@ ana .. mia "budget"
 
 The Style menu has **Cards** (initials and a department colour strip), **Minimal** (black and white, for printing) and **Bold** (department-coloured headers). Department colours come with a legend, and clicking a person jumps to their line. For a chart you want to arrange by hand instead, use a sketch with the Connector tool.
 
+## Networks
+
+Write devices, zones and links, and Figvex lays out the network with device icons. Indenting devices under a `zone` line puts them in it. A zone can be a subnet, a VLAN or a whole site, and zones can sit inside each other.
+
+```
+network
+title "Small office"
+internet
+firewall fw "Firewall" 203.0.113.2/30
+zone dmz "DMZ" 172.16.0.0/24 vlan 30
+  server web "Web server" 172.16.0.10
+zone office "Office" 10.10.0.0/16
+  switch core "Core switch" 10.10.0.2
+  zone staff "Staff" 10.10.10.0/24 vlan 10
+    pc desks "Desk PCs" x12
+    printer prn "Printer" 10.10.10.5
+internet -- fw "WAN"
+fw:eth1 -- web
+fw:eth2 == core:ge0/1 "trunk" vlan 10, 20
+core -- desks, prn
+```
+
+| Write | For |
+| --- | --- |
+| `type name "Label" addresses` | A device. Types: `internet`, `cloud`, `router`, `firewall`, `switch`, `lb`, `ap`, `server`, `vm`, `database`, `storage`, `pc`, `laptop`, `phone`, `printer`, `camera`, `iot`, `user` |
+| `"Note"`, `vlan 20`, `x12` | After a device: a second line of text, its access VLAN, or a count drawn as a stack |
+| `zone name "Label" 10.0.0.0/24 vlan 10` | A zone. The subnet and VLAN are optional; a zone with neither is drawn dashed, as a site |
+| `a -- b` | A cable. `==` is a trunk or fibre link, `..` a VPN or tunnel, `~~` wireless |
+| `a -- b, c, d` | Several links from one device |
+| `a:ge0/1 -- b:eth0` | Port names at either end |
+| `"label" vlan 10, 20` | After a link: a label and the VLANs it carries |
+| `title "…"` | A heading above the diagram |
+| `direction right` | Left to right instead of top down |
+| `lines curved` | `straight` (default), `curved` around devices, or `square` for right-angled lines |
+| `checks off` | Turn off the address checks |
+| `# comment` | A comment |
+
+Addresses can be IPv4 or IPv6, with or without a prefix. Figvex checks them as you type and marks anything that looks wrong in the editor margin, on the device and in the status bar. Clicking the warning count goes to the first one. It checks for:
+
+- an address outside its zone's subnet
+- the same address on two devices
+- a subnet's network or broadcast address used by a device
+- a zone subnet with host bits set, such as `10.0.0.5/24`
+- zone subnets that overlap, or a zone's subnet outside the zone around it
+- the same VLAN on two zones at one site, or a device on a different VLAN from its zone
+- devices that aren't linked to anything
+
+The checks don't stop the drawing. The Style menu has **Colour tiles**, **Outline** and **Greyscale**. Clicking a device, link or zone jumps to its line.
+
 ## Charts
 
 A chart is an [ECharts option](https://echarts.apache.org/en/option.html) written as JSON. Comments and trailing commas are allowed. Data can go in the JSON, or as CSV under a line of three dashes, where it becomes the chart's dataset:
@@ -269,7 +319,7 @@ Set these as environment variables when building (in Netlify under **Site config
 ```
 src/
   main.ts             wiring: documents, rendering, toolbar, shortcuts
-  engines/            PlantUML, Mermaid, Graphviz, ECharts, BPMN, sketch and org chart engines, language detection, themes
+  engines/            PlantUML, Mermaid, Graphviz, ECharts, BPMN, sketch, org chart and network engines, language detection, themes
   editor/             CodeMirror setup, syntax colouring, autocomplete
   preview.ts          pan and zoom canvas, click-to-source
   export.ts           SVG, PNG, JPG, WEBP and PDF export

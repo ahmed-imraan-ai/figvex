@@ -13,6 +13,7 @@ const ABOUT: Record<Engine, { blurb: string; words: string }> = {
   bpmn: { blurb: "Business processes, pools and lanes", words: "process workflow camunda swimlane" },
   sketch: { blurb: "Draw boxes and arrows by hand", words: "draw whiteboard freeform canvas pen" },
   orgchart: { blurb: "People and who they report to", words: "organisation organization team people hierarchy staff" },
+  network: { blurb: "Devices, subnets, VLANs and links", words: "lan wan ip subnet vlan router switch firewall topology infrastructure" },
 };
 
 function matches(engine: Engine, query: string): number {
