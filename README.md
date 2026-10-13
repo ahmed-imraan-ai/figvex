@@ -4,7 +4,7 @@
 
 **Live site: [figvex.sudo520.com](https://figvex.sudo520.com)**
 
-A live editor for PlantUML, Mermaid, Graphviz and BPMN diagrams, org charts, data charts and freeform sketches. Type on the left, the diagram redraws on the right. It runs in the browser, and your diagrams stay on your machine unless you share them or turn on the PlantUML server option.
+A live editor for PlantUML, Mermaid, Graphviz and BPMN diagrams, network diagrams, org charts, data charts and freeform sketches. Type on the left, the diagram redraws on the right. It runs in the browser, and your diagrams stay on your machine unless you share them or turn on the PlantUML server option.
 
 It was built for computer science students: UML for software engineering courses, ER diagrams for databases, state machines and automata for theory, trees and graphs for algorithms, Gantt charts for group projects, and charts of results for lab reports.
 
