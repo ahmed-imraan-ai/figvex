@@ -22,7 +22,7 @@ It was built for computer science students: UML for software engineering courses
 - Share links that carry the whole diagram in the URL, with no server involved
 - Copy as a Markdown code block, or as a plantuml.com image link for a README
 - Plain black-and-white PlantUML by default, with PlantUML's own colours and its 40 bundled themes one click away
-- Click a shape in the diagram to jump to the line that drew it
+- Click a shape in the diagram to jump to the line that drew it; rename, add and remove from the diagram for org charts and networks, rename for Graphviz and Mermaid flowcharts, and drag BPMN shapes
 - Errors point at the line, with a marker in the editor
 - Every diagram saved in the browser, with rename, duplicate, delete and undo; collapsed, the list stays as a narrow rail of recent diagrams
 - A language picker above the editor that you can type into to search; changing the language of a diagram with real content starts a new one, so nothing is overwritten
@@ -64,6 +64,21 @@ The browser build of PlantUML doesn't include these yet: Salt wireframes, ditaa,
 
 When a diagram uses one of these, Figvex says so instead of showing a stack trace. In Settings you can turn on **Use server for missing types**. Only those diagrams are then sent to a PlantUML server to be drawn. The default is plantuml.com; you can point it at your own server (see Docker below).
 
+## Editing from the diagram
+
+You can change a diagram without touching the text. Every change is written into the text, so undo, saving and sharing work as for typing.
+
+| Language | In the diagram |
+| --- | --- |
+| BPMN | Drag shapes (see [BPMN](#bpmn)) |
+| Sketch | Draw, move, resize and connect shapes (see [Sketches](#sketches)) |
+| Org chart | Rename a person, add a report under them, or remove them (their team moves up to their manager) |
+| Network | Rename a device, zone or link; add a device linked to the selected one, in the same zone; remove a device with its links, or a single link |
+| Graphviz | Rename a node (sets its `label`) |
+| Mermaid flowchart | Rename a node (the text in its brackets) |
+
+Click an item to select it. A small bar above it has the actions. Double-click, Enter or F2 renames it, Insert adds, and Delete removes. A click also shows the item's line in the editor, as before.
+
 ## BPMN
 
 Business process diagrams in BPMN 2.0 are drawn by Figvex's own renderer, written from the OMG specification. There's no bpmn.io watermark, because bpmn-js isn't used.
@@ -82,6 +97,15 @@ Business process diagrams in BPMN 2.0 are drawn by Figvex's own renderer, writte
   </process>
 </definitions>
 ```
+
+Shapes can be dragged in the diagram. The new positions are written into the XML when you let go, so undo, saving and sharing work as for typed changes.
+
+- Shapes snap into line with their neighbours, or move in steps of 5. Hold Alt to move freely.
+- Arrow keys nudge the selected shape by 1, or by 10 with Shift. Ctrl+Z and Ctrl+Y undo and redo from the diagram.
+- Flows attached to a moved shape follow it with right-angled routes. Boundary events move with their activity.
+- A pool is dragged by its name band and takes everything in it along. A task dropped in another lane is moved into that lane in the XML.
+- The first drag in a file with no saved positions adds them, so the layout you make is kept.
+- A click without a drag still selects the element's line in the editor.
 
 Supported: start, end, intermediate and boundary events with message, timer, error, signal, escalation, conditional, link, compensation, cancel and terminate markers; tasks of every type; sub-processes, transactions and call activities; loop and multi-instance markers; all five gateway types; data objects and data stores; pools, lanes, message flows, text annotations and groups. Colours set with bpmn.io's `bioc:` or the OMG `color:` attributes are kept. Typing `<` in the editor lists the BPMN elements.
 
@@ -347,13 +371,16 @@ docker/               nginx config for the Docker image
 | Ctrl/⌘ Enter | Redraw now |
 | Ctrl/⌘ / | Comment or uncomment lines |
 | 0 and 1 on the diagram | Fit to view, actual size |
+| Enter or F2 on the diagram | Rename the selected item |
+| Insert, Delete on the diagram | Add under or remove the selected item (org charts, networks) |
+| Arrow keys on a BPMN diagram | Nudge the selected shape (Shift: 10) |
 | ? or F1 | Help |
 
 ## Roadmap
 
 The full plan is in [ROADMAP.md](ROADMAP.md). It has three phases:
 
-1. Complex networking and visual editing.
+1. Complex networking and visual editing (done).
 2. Statistical charts, UI wireframes, network diagrams, advanced UML, cloud infrastructure, complex data models and coursework tools such as truth tables, Karnaugh maps and automata.
 3. Advanced scientific and financial charts, geographic maps, CAD, 3D, electrical schematics, formal process models and interactive visual analytics.
 

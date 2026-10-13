@@ -13,7 +13,7 @@ const FIT_PADDING = 40;
 export interface PreviewCallbacks {
   onZoom(scale: number): void;
   /** Clicked a diagram element; `hint` describes what was clicked. */
-  onPick(hint: SourceHint): void;
+  onPick(hint: SourceHint, target: Element): void;
 }
 
 export type SourceHint = { kind: "line"; line: number; name?: string } | { kind: "name"; name: string };
@@ -28,6 +28,8 @@ export interface PreviewTool {
   move(e: PointerEvent, at: { x: number; y: number }): void;
   up(e: PointerEvent, at: { x: number; y: number }): void;
   key?(e: KeyboardEvent): boolean;
+  /** Keep diagram points still on screen when a redraw moves the viewBox. */
+  anchor?: boolean;
 }
 
 export class Preview {
@@ -98,9 +100,17 @@ export class Preview {
     }
     this.sheet.replaceChildren(document.importNode(svg, true));
     this.sheet.dataset.tone = background;
+    const before = { size: this.size, viewBox: this.viewBox };
     this.size = { width, height };
     const vb = svg.viewBox.baseVal;
     this.viewBox = vb && vb.width > 0 ? { x: vb.x, y: vb.y, w: vb.width, h: vb.height } : { x: 0, y: 0, w: width, h: height };
+    // While an editing tool is on, a drawing that grows to the left or top
+    // keeps every point where it was on screen, so nothing jumps mid-drag.
+    const k = width / this.viewBox.w;
+    if (this.tool?.anchor && !this.fitMode && before.size.width && Math.abs(k - before.size.width / before.viewBox.w) < 1e-6) {
+      this.x += (this.viewBox.x - before.viewBox.x) * k * this.scale;
+      this.y += (this.viewBox.y - before.viewBox.y) * k * this.scale;
+    }
     if (this.fitMode) this.fit();
     else this.apply();
   }
@@ -271,7 +281,7 @@ export class Preview {
     this.drag = null;
     if (clicked && e.type === "pointerup") {
       const hint = sourceHint(clicked);
-      if (hint) this.callbacks.onPick(hint);
+      if (hint) this.callbacks.onPick(hint, clicked);
     }
   }
 
@@ -330,7 +340,7 @@ export function intrinsicSize(svg: SVGSVGElement): { width: number; height: numb
  * entities with data-source-line (0-based); Mermaid nodes carry ids such as
  * "flowchart-Login-3".
  */
-function sourceHint(target: Element | null): SourceHint | null {
+export function sourceHint(target: Element | null): SourceHint | null {
   if (!target) return null;
   const withLine = target.closest("[data-source-line]");
   if (withLine) {

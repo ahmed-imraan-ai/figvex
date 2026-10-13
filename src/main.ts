@@ -22,7 +22,7 @@ import {
 import { isPlantUmlLoaded, loadPlantUml } from "./engines/plantuml";
 import { BPMN_STYLES, CHART_STYLES, NET_STYLES, ORG_STYLES, SKETCH_STYLES, GRAPHVIZ_STYLES, MERMAID_STYLES, PLANTUML_STYLES, PLANTUML_THEMES } from "./engines/themes";
 import { byId, debounce, h, icon, isMac, modKey } from "./lib/dom";
-import { Preview, type SourceHint } from "./preview";
+import { Preview, sourceHint, type SourceHint } from "./preview";
 import { hasSharedDiagram, readSharedDiagram } from "./share";
 import { renderOptions, store, type Doc, type Settings } from "./store";
 import { BLANK_CODE, WELCOME_CODE, type Template } from "./templates";
@@ -34,7 +34,9 @@ import { Library } from "./ui/library";
 import { closePopover, toast, togglePopover } from "./ui/overlay";
 import { buildSettingsPanel } from "./ui/settings-panel";
 import { buildSharePanel } from "./ui/share-panel";
+import { BpmnCanvas } from "./ui/bpmn-canvas";
 import { LanguagePicker } from "./ui/language-picker";
+import { PreviewEditor } from "./ui/preview-editor";
 import { SketchCanvas } from "./ui/sketch-canvas";
 import { openTemplates } from "./ui/templates-dialog";
 
@@ -117,7 +119,10 @@ const editor = new DiagramEditor(byId("editor"), {
 
 const preview = new Preview(byId("stage"), byId("canvas"), byId("sheet"), {
   onZoom: (scale) => (ui.zoomLevel.textContent = `${Math.round(scale * 100)}%`),
-  onPick: (hint) => revealInCode(hint),
+  onPick: (hint, target) => {
+    // Org charts, networks, Graphviz and Mermaid flowcharts can be edited from here.
+    if (!previewEditor.click(target)) revealInCode(hint);
+  },
 });
 
 // Drawing tools over the preview, for sketches only.
@@ -127,6 +132,32 @@ const sketch = new SketchCanvas({
   editor,
   look: () => ({ dark: diagramTone() === "dark", style: store.settings.sketchStyle }),
   show: (svg) => preview.show(svg, diagramTone()),
+});
+
+// Renaming, adding and removing from the diagram for text languages.
+const previewEditor = new PreviewEditor({
+  preview,
+  editor,
+  engine: () => engine,
+  reveal: (target) => {
+    const hint = sourceHint(target);
+    if (hint) revealInCode(hint, false);
+  },
+  notify: (message) => toast(message),
+});
+
+// Dragging shapes in BPMN diagrams.
+const bpmnCanvas = new BpmnCanvas({
+  pane: ui.previewPane,
+  preview,
+  editor,
+  look: () => ({ dark: diagramTone() === "dark", style: store.settings.bpmnStyle }),
+  show: (svg) => preview.show(svg, diagramTone()),
+  pick: (target) => {
+    const hint = sourceHint(target);
+    if (hint) revealInCode(hint, false);
+  },
+  notify: (message) => toast(message),
 });
 
 ui.btn.zoomIn.addEventListener("click", () => preview.zoomBy(1.25));
@@ -151,6 +182,7 @@ function openDoc(next: Doc) {
   updateTitle();
   updateEngineUi();
   lastGood = null;
+  previewEditor.clear();
   preview.clear();
   hideError();
   ui.saveState.textContent = "";
@@ -164,8 +196,11 @@ function updateTitle() {
 function updateEngineUi() {
   languagePicker.set(engine);
   editor.setEngine(engine);
+  // Both tools share the preview's tool slot: switch off before switching on.
+  if (engine !== "sketch") sketch.deactivate();
+  if (engine !== "bpmn") bpmnCanvas.deactivate();
   if (engine === "sketch") sketch.activate();
-  else sketch.deactivate();
+  if (engine === "bpmn") bpmnCanvas.activate();
   fillStylePicker();
   ui.syntaxLink.href = DOCS[engine];
   ui.syntaxLink.textContent = `${ENGINE_LABEL[engine]} syntax`;
@@ -385,12 +420,13 @@ async function renderNow() {
     mapLine = result.mapLine ?? ((line: number) => line);
     try {
       // Sketches show the canvas version: grid, hit areas and selection.
-      preview.show((eng === "sketch" && sketch.display(code)) || result.svg, tone);
+      preview.show((eng === "sketch" && sketch.display(code)) || (eng === "bpmn" && bpmnCanvas.display(code)) || result.svg, tone);
     } catch (err) {
       showError({ ok: false, message: err instanceof Error ? err.message : String(err), ms: 0 });
       return;
     }
     lastGood = { svg: result.svg, tone };
+    previewEditor.refresh();
     hideError();
     const where = result.remote ? " on plantuml.com" : "";
     warnings = (result.warnings ?? []).map((w) => ({ ...w, line: mapLine(w.line) }));
@@ -487,7 +523,7 @@ function showError(err: RenderFailure) {
   ui.errorCard.hidden = false;
 }
 
-function revealInCode(hint: SourceHint) {
+function revealInCode(hint: SourceHint, focus = true) {
   const lines = editor.value.split(/\r?\n/);
   let line: number | undefined;
   if (hint.kind === "line") {
@@ -505,8 +541,8 @@ function revealInCode(hint: SourceHint) {
     if (idx >= 0) line = idx + 1;
   }
   if (line == null) return;
-  setMobileView("code");
-  editor.goToLine(line);
+  if (focus) setMobileView("code");
+  editor.goToLine(line, true, focus);
 }
 
 // ---------------------------------------------------------------------------

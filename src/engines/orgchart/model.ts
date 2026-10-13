@@ -60,8 +60,8 @@ export class OrgError extends Error {
   }
 }
 
-const PERSON = /^(\+\s*)?(\?|[^:#[\]]+?)\s*(?:#([A-Za-z_][\w-]*))?\s*(?::\s*([^[\]]*?))?\s*(?:\[([^\]]*)\])?\s*$/;
-const DOTTED = /^(.+?)\s+\.\.\s+(.+?)(?:\s+"([^"]*)")?\s*$/;
+export const PERSON = /^(\+\s*)?(\?|[^:#[\]]+?)\s*(?:#([A-Za-z_][\w-]*))?\s*(?::\s*([^[\]]*?))?\s*(?:\[([^\]]*)\])?\s*$/;
+export const DOTTED = /^(.+?)\s+\.\.\s+(.+?)(?:\s+"([^"]*)")?\s*$/;
 
 /** Indent width of a line, with a tab counting as two spaces. */
 function indentOf(raw: string): number {

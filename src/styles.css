@@ -1910,3 +1910,39 @@ dialog.modal.about {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* BPMN: shapes can be dragged; pools by their name band, lanes not at all. */
+.pane-preview[data-bpmn-edit] .stage [data-element-id]:not([data-kind="lane"]):not([data-kind="participant"]) {
+  cursor: move;
+}
+
+/* Editing from the diagram: the selected item's outline and its actions. */
+.pe-box {
+  position: absolute;
+  z-index: 3;
+  border: 1.5px dashed var(--accent);
+  border-radius: 6px;
+  pointer-events: none;
+}
+
+.pe-bar {
+  position: absolute;
+  z-index: 4;
+  display: flex;
+  gap: 2px;
+  padding: 3px;
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  background: var(--surface);
+  box-shadow: var(--shadow-pop);
+  transform: translateX(-50%);
+}
+
+.pe-box[hidden],
+.pe-bar[hidden] {
+  display: none;
+}
+
+.pe-input {
+  font-family: var(--font-sans);
+}
