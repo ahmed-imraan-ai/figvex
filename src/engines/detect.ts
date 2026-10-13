@@ -24,6 +24,10 @@ const dotStart = new RegExp(
   "i",
 );
 
+// SQL scripts, including pg_dump and mysqldump output.
+const SQL_START =
+  /^(create\s+(or\s+replace\s+)?(temp(orary)?\s+)?(table|schema|database|type|extension|sequence|unique\s+index|index|view)\b|alter\s+table\b|drop\s+(table|schema|database|type|view)\b|set\s+[\w.@]+\s*(=|to\b)|use\s+\S+\s*;?\s*$|pragma\s|begin(\s+transaction)?\s*;|start\s+transaction\b|insert\s+into\b|comment\s+on\b)/i;
+
 /**
  * Guess the engine from the first meaningful line. Returns null when the text
  * is empty or ambiguous, so the caller can keep whatever was chosen before.
@@ -52,6 +56,8 @@ export function detectEngine(code: string): Engine | null {
     if (line === "orgchart") return "orgchart";
     if (line === "network") return "network";
     if (line.startsWith("%%")) continue; // Mermaid comment or %%{init}%% directive
+    if (line.startsWith("--")) continue; // SQL comment
+    if (SQL_START.test(line)) return "sql";
     if (line.startsWith("'") || line.startsWith("/'")) return "plantuml";
     if (line.startsWith("//")) continue; // DOT comment
     if (line.startsWith("/*")) {
@@ -75,6 +81,10 @@ export function diagramKind(code: string, engine: Engine): string {
     return m[1] === "uml" ? "" : m[1];
   }
   if (engine === "sketch") return "";
+  if (engine === "sql") {
+    const n = (code.match(/create\s+table/gi) ?? []).length;
+    return `${n} table${n === 1 ? "" : "s"}`;
+  }
   if (engine === "network") return /^\s*direction\s+right/m.test(code) ? "left to right" : "";
   if (engine === "orgchart") return /^\s*direction\s+right/m.test(code) ? "left to right" : "";
   if (engine === "bpmn") {
