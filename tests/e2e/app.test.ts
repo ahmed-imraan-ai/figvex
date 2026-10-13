@@ -278,7 +278,7 @@ describe.skipIf(!chrome || !built)("Figvex in the browser", () => {
     expect(broken.error).toContain('"Nobody"');
     const ok = await openDiagram("orgchart", "Org click", "orgchart\nJane: CEO [Exec]\n  Ravi: CTO\n  Mia: CFO\n");
     expect(ok.error).toBeNull();
-    expect(await page.$eval("#engine-label", (el) => el.textContent)).toBe("Org chart");
+    expect(await page.$eval("#lang-input", (el) => (el as HTMLInputElement).value)).toBe("Org chart");
     const box = await (await page.$('#sheet [data-qualified-name="Mia"] rect'))!.boundingBox();
     await page.mouse.click(box!.x + box!.width / 2, box!.y + box!.height / 2);
     expect(await page.$eval("#status-cursor", (el) => el.textContent)).toMatch(/^Ln 4,/);
@@ -418,7 +418,7 @@ describe.skipIf(!chrome || !built)("Figvex in the browser", () => {
 
   it("names the diagram's language and fits the editor head on a phone screen", async () => {
     await openDiagram("graphviz", "Label test", "digraph { a -> b }");
-    expect(await page.$eval("#engine-label", (el) => el.textContent)).toBe("Graphviz");
+    expect(await page.$eval("#lang-input", (el) => (el as HTMLInputElement).value)).toBe("Graphviz");
     await page.setViewport({ width: 375, height: 740 });
     const fits = await page.evaluate(() => ({
       page: document.documentElement.scrollWidth <= innerWidth,
@@ -426,6 +426,36 @@ describe.skipIf(!chrome || !built)("Figvex in the browser", () => {
     }));
     await page.setViewport({ width: 1400, height: 900 });
     expect(fits).toEqual({ page: true, select: true });
+  });
+
+  it("changes language from the picker without overwriting a diagram", async () => {
+    await openDiagram("mermaid", "Picker real", "flowchart LR\n  pickerA --> pickerB\n");
+    const title = () => page.$eval("#doc-title", (el) => (el as HTMLInputElement).value);
+    const lang = () => page.$eval("#lang-input", (el) => (el as HTMLInputElement).value);
+    const pick = async (query: string) => {
+      await page.click("#lang-input");
+      await page.keyboard.type(query);
+      await page.keyboard.press("Enter");
+    };
+
+    // Real content: a new diagram is started and the old one is kept.
+    await pick("dot");
+    await page.waitForFunction(() => (document.getElementById("lang-input") as HTMLInputElement).value === "Graphviz");
+    expect(await title()).not.toBe("Picker real");
+    expect(await page.$eval("#toasts", (el) => el.textContent)).toContain('"Picker real" is still in your library');
+    const fresh = await title();
+
+    // Starter code: the language changes in place.
+    await pick("csv");
+    await page.waitForFunction(() => (document.getElementById("lang-input") as HTMLInputElement).value === "ECharts");
+    expect(await title()).toBe(fresh);
+    expect(await page.evaluate(() => document.querySelector(".cm-content")!.textContent)).toMatch(/^\{/);
+
+    // Escape leaves things as they were.
+    await page.click("#lang-input");
+    await page.keyboard.type("bpmn");
+    await page.keyboard.press("Escape");
+    expect(await lang()).toBe("ECharts");
   });
 
   it("throws no uncaught page errors", () => {
