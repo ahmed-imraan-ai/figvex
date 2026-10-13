@@ -1,6 +1,6 @@
-export type Engine = "plantuml" | "mermaid" | "graphviz" | "echarts" | "bpmn" | "sketch" | "orgchart" | "network";
+export type Engine = "plantuml" | "mermaid" | "graphviz" | "echarts" | "bpmn" | "sketch" | "orgchart" | "network" | "sql";
 
-export const ENGINES: readonly Engine[] = ["plantuml", "mermaid", "graphviz", "echarts", "bpmn", "sketch", "orgchart", "network"];
+export const ENGINES: readonly Engine[] = ["plantuml", "mermaid", "graphviz", "echarts", "bpmn", "sketch", "orgchart", "network", "sql"];
 
 export function isEngine(value: unknown): value is Engine {
   return ENGINES.includes(value as Engine);
@@ -28,6 +28,8 @@ export interface RenderOptions {
   orgStyle: OrgStyle;
   /** Network diagrams only: icon design. */
   netStyle: NetStyle;
+  /** ER diagrams from SQL: colour, black and white, or keys only. */
+  sqlStyle: SqlStyle;
 }
 
 export type GraphvizStyle = "plain" | "default";
@@ -41,6 +43,8 @@ export type SketchStyle = "clean" | "hand-drawn";
 export type OrgStyle = "cards" | "minimal" | "bold";
 
 export type NetStyle = "tiles" | "outline" | "mono";
+
+export type SqlStyle = "colour" | "plain" | "keys";
 
 export type MermaidTheme = "default" | "neutral" | "base" | "forest" | "neo" | "redux" | "redux-color";
 
@@ -77,6 +81,7 @@ export const ENGINE_LABEL: Record<Engine, string> = {
   sketch: "Sketch",
   orgchart: "Org chart",
   network: "Network",
+  sql: "SQL",
 };
 
 export const ENGINE_EXT: Record<Engine, string> = {
@@ -88,6 +93,7 @@ export const ENGINE_EXT: Record<Engine, string> = {
   sketch: "sketch",
   orgchart: "org",
   network: "network",
+  sql: "sql",
 };
 
 /** Short tag shown next to diagrams in lists. */
@@ -100,6 +106,7 @@ export const ENGINE_TAG: Record<Engine, string> = {
   sketch: "sketch",
   orgchart: "org",
   network: "net",
+  sql: "sql",
 };
 
 /** File extensions recognised when opening a file. */
@@ -112,6 +119,7 @@ export const ENGINE_FILE_EXTS: Record<Engine, string[]> = {
   sketch: ["sketch"],
   orgchart: ["org", "orgchart"],
   network: ["network", "net"],
+  sql: ["sql", "ddl"],
 };
 
 /** Info string for a Markdown code block. */
@@ -124,4 +132,5 @@ export const ENGINE_FENCE: Record<Engine, string> = {
   sketch: "sketch",
   orgchart: "orgchart",
   network: "network",
+  sql: "sql",
 };

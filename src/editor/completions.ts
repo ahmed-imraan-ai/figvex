@@ -377,6 +377,37 @@ function networkSource(ctx: CompletionContext): CompletionResult | null {
   return null;
 }
 
+const SQL_STARTERS: Completion[] = [
+  snippetCompletion("CREATE TABLE ${name} (\n  id ${int} PRIMARY KEY,\n  ${}\n);", { label: "CREATE TABLE", detail: "table", type: "keyword" }),
+  snippetCompletion("ALTER TABLE ${table} ADD FOREIGN KEY (${column}) REFERENCES ${other} (${id});", { label: "ALTER TABLE", detail: "add a foreign key", type: "keyword" }),
+  snippetCompletion("-- title: ${Schema}", { label: "-- title:", detail: "diagram title", type: "keyword" }),
+  snippetCompletion("-- group: ${Billing}", { label: "-- group:", detail: "tables below go in a box", type: "keyword" }),
+  snippetCompletion("-- focus: ${table}", { label: "-- focus:", detail: "show a table and its neighbours", type: "keyword" }),
+];
+
+const SQL_COLUMN_WORDS: Completion[] = [
+  ...["int", "bigint", "serial", "varchar(255)", "text", "boolean", "date", "timestamp", "numeric(10, 2)", "uuid", "jsonb"].map((label) => ({ label, type: "type" })),
+  ...["PRIMARY KEY", "NOT NULL", "UNIQUE", "DEFAULT", "CHECK", "CONSTRAINT"].map((label) => ({ label, type: "keyword" })),
+  snippetCompletion("REFERENCES ${table} (${id})", { label: "REFERENCES", detail: "foreign key", type: "keyword" }),
+  snippetCompletion("FOREIGN KEY (${column}) REFERENCES ${table} (${id})", { label: "FOREIGN KEY", detail: "table constraint", type: "keyword" }),
+];
+
+function sqlSource(ctx: CompletionContext): CompletionResult | null {
+  const doc = ctx.state.doc.toString();
+  const line = ctx.state.doc.lineAt(ctx.pos);
+  const before = line.text.slice(0, ctx.pos - line.from);
+  const tables = [...new Set([...doc.matchAll(/create\s+table\s+(?:if\s+not\s+exists\s+)?([\w."`[\]]+)/gi)].map((m) => m[1].replace(/["`[\]]/g, "")))];
+  // After REFERENCES: the tables.
+  if (/references\s+[\w.]*$/i.test(before)) {
+    const word = ctx.matchBefore(/[\w.]*/);
+    return word ? { from: word.from, options: tables.map((label) => ({ label, type: "class" })), validFor: /^[\w.]*$/ } : null;
+  }
+  const word = ctx.matchBefore(/[-\w]*/);
+  if (!word || (word.from === word.to && !ctx.explicit)) return null;
+  if (/^\s*[-\w]*$/.test(before) && !/^\s+/.test(before)) return { from: word.from, options: SQL_STARTERS, validFor: /^[-\w]*$/ };
+  return { from: word.from, options: SQL_COLUMN_WORDS, validFor: /^\w*$/ };
+}
+
 const SOURCES = {
   plantuml: plantumlSource,
   mermaid: mermaidSource,
@@ -386,6 +417,7 @@ const SOURCES = {
   sketch: sketchSource,
   orgchart: orgSource,
   network: networkSource,
+  sql: sqlSource,
 } as const;
 
 export function completionSource(engine: Engine) {

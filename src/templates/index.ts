@@ -7,6 +7,7 @@ import { networkTemplates } from "./network";
 import { orgchartTemplates } from "./orgchart";
 import { plantumlTemplates } from "./plantuml";
 import { sketchTemplates } from "./sketch";
+import { sqlTemplates } from "./sql";
 
 export interface Template {
   id: string;
@@ -58,6 +59,7 @@ internet -- r1
 r1 -- sw1
 sw1 -- pc1
 `,
+  sql: "CREATE TABLE customers (\n  id int PRIMARY KEY,\n  name text NOT NULL\n);\n\nCREATE TABLE orders (\n  id int PRIMARY KEY,\n  customer_id int NOT NULL REFERENCES customers (id),\n  placed_at timestamp NOT NULL\n);\n",
   echarts: '{\n  "xAxis": { "type": "category" },\n  "yAxis": {},\n  "series": [{ "type": "bar" }]\n}\n---\nname,value\nA,3\nB,5\nC,4\n',
 };
 
@@ -126,9 +128,17 @@ const blank: Template[] = [
     summary: "A router, a switch and a PC on one subnet. Indent devices under a zone to put them in it.",
     code: BLANK_CODE.network,
   },
+  {
+    id: "blank-sql",
+    engine: "sql",
+    category: "Start from scratch",
+    title: "Blank SQL schema",
+    summary: "Two tables and a foreign key. Paste your own CREATE TABLE statements to draw them.",
+    code: BLANK_CODE.sql,
+  },
 ];
 
-export const TEMPLATES: Template[] = [...blank, ...plantumlTemplates, ...mermaidTemplates, ...graphvizTemplates, ...chartTemplates, ...bpmnTemplates, ...sketchTemplates, ...orgchartTemplates, ...networkTemplates].sort(
+export const TEMPLATES: Template[] = [...blank, ...plantumlTemplates, ...mermaidTemplates, ...graphvizTemplates, ...chartTemplates, ...bpmnTemplates, ...sketchTemplates, ...orgchartTemplates, ...networkTemplates, ...sqlTemplates].sort(
   (a, b) => CATEGORIES.indexOf(a.category as never) - CATEGORIES.indexOf(b.category as never),
 );
 

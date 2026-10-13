@@ -309,6 +309,21 @@ describe.skipIf(!chrome || !built)("Figvex in the browser", () => {
     expect(await page.$eval("#status-cursor", (el) => el.textContent)).toMatch(/^Ln 4,/);
   });
 
+  it("draws tables from SQL, warns about a missing table and jumps to a column", async () => {
+    const code = "CREATE TABLE sqlteams (\n  id int PRIMARY KEY,\n  name text\n);\nCREATE TABLE sqlplayers (\n  id int PRIMARY KEY,\n  team_id int NOT NULL REFERENCES sqlteams (id),\n  coach_id int REFERENCES coaches (id)\n);\n";
+    const ok = await openDiagram("sql", "SQL test", code);
+    expect(ok.error).toBeNull();
+    expect(ok.state).toBe("warn");
+    expect(await page.$eval("#lang-input", (el) => (el as HTMLInputElement).value)).toBe("SQL");
+    expect(await page.$eval(".cm-warnMarker", (el) => (el as HTMLElement).title)).toContain("coaches isn't defined here");
+    expect(await page.$$eval("#sheet [data-qualified-name]", (els) => els.length)).toBe(7);
+
+    // Clicking a column row selects its line.
+    const row = await (await page.$('#sheet [data-qualified-name="team_id"] rect'))!.boundingBox();
+    await page.mouse.click(row!.x + row!.width / 2, row!.y + row!.height / 2);
+    expect(await page.$eval("#status-cursor", (el) => el.textContent)).toMatch(/^Ln 7,/);
+  });
+
   it("drags BPMN shapes and writes the positions into the XML", async () => {
     const saved = TEMPLATES.find((t) => t.id === "bpmn-saved-layout")!.code.replace("Review claim", "Review the claim");
     await openDiagram("bpmn", "Drag test", saved);

@@ -13,10 +13,11 @@ It was built for computer science students: UML for software engineering courses
 ## Features
 
 - Live preview for PlantUML, Mermaid, Graphviz DOT, BPMN 2.0 and ECharts data charts, with the language picked up from the first line
+- ER diagrams drawn straight from SQL: paste `CREATE TABLE` statements, or a whole PostgreSQL, MySQL, SQLite or SQL Server dump, and get tables with crow's foot links
 - Network diagrams with device icons, subnets, VLANs, ports and link types, and checks that catch address mistakes as you type
 - Org charts from an indented list of people, with departments, assistants, vacancies, dotted lines and three card styles
 - A sketch canvas for freeform diagrams: boxes, arrows that stay attached, text and pen, in a clean or hand-drawn style
-- 68 templates written around coursework: a library system class diagram, JWT login sequence, TCP state machine, DFA for multiples of 3, binary search tree, hash table, confusion matrix, sorting benchmark, library loan process, login wireframe, society committee org chart, subnetting exercise, university ER schema, capstone Gantt plan and more
+- 74 templates written around coursework: a library system class diagram, JWT login sequence, TCP state machine, DFA for multiples of 3, binary search tree, hash table, confusion matrix, sorting benchmark, library loan process, login wireframe, society committee org chart, subnetting exercise, university ER schema from SQL, capstone Gantt plan and more
 - Export to SVG, PNG, JPG, WEBP and vector PDF, at 1× to 4× scale, with a solid or transparent background
 - Copy the image straight to the clipboard for pasting into a report or slides
 - Share links that carry the whole diagram in the URL, with no server involved
@@ -26,7 +27,7 @@ It was built for computer science students: UML for software engineering courses
 - Errors point at the line, with a marker in the editor
 - Every diagram saved in the browser, with rename, duplicate, delete and undo; collapsed, the list stays as a narrow rail of recent diagrams
 - A language picker above the editor that you can type into to search; changing the language of a diagram with real content starts a new one, so nothing is overwritten
-- Open `.puml`, `.mmd`, `.gv`, `.dot`, `.bpmn`, `.sketch`, `.org`, `.network`, chart and Markdown files, or drag them onto the window; a `.csv` file opens as a bar chart of its columns
+- Open `.puml`, `.mmd`, `.gv`, `.dot`, `.bpmn`, `.sketch`, `.org`, `.network`, `.sql`, chart and Markdown files, or drag them onto the window; a `.csv` file opens as a bar chart of its columns
 - Light and dark themes for the app and for the diagrams, separately
 - Pan and zoom with mouse, trackpad or touch; works on phones as two tabs
 
@@ -225,6 +226,41 @@ Addresses can be IPv4 or IPv6, with or without a prefix. Figvex checks them as y
 
 The checks don't stop the drawing. The Style menu has **Colour tiles**, **Outline** and **Greyscale**. Clicking a device, link or zone jumps to its line.
 
+## ER diagrams from SQL
+
+Paste SQL and Figvex draws the tables, their keys and the foreign keys between them. It reads `CREATE TABLE`, `ALTER TABLE ... ADD`, `CREATE UNIQUE INDEX` and `COMMENT ON`, and skips everything else, so a full `pg_dump` or `mysqldump` file works as it is. PostgreSQL, MySQL, SQLite and SQL Server syntax are all understood, including quoted, backticked and bracketed names.
+
+```sql
+-- title: Shop
+-- group: Sales
+CREATE TABLE customers (
+  id serial PRIMARY KEY,
+  email varchar(255) NOT NULL UNIQUE
+);
+CREATE TABLE orders (
+  id serial PRIMARY KEY,
+  customer_id int NOT NULL REFERENCES customers (id),
+  gift_for int REFERENCES customers (id)
+);
+```
+
+Each foreign key becomes a link from its column to the column it refers to, with crow's foot ends:
+
+- On the referenced side, two bars mean every row has a parent. A bar and a circle mean the foreign key can be NULL.
+- On the other side, the crow's foot means many rows can point at one parent. When the foreign key is also unique or the primary key, it becomes a bar and a circle: zero or one.
+
+Rows are marked **PK**, **FK** or **UQ**. A `?` after the type means the column allows NULL.
+
+| Comment | Does |
+| --- | --- |
+| `-- title: Shop` | A heading above the diagram |
+| `-- group: Billing` | Puts the tables after it in a box, until the next `-- group:`. An empty `-- group:` ends it. Tables in two or more schemas are boxed by schema when there are no groups |
+| `-- focus: orders, customers` | Draws only these tables and the tables they link to |
+
+These are plain SQL comments, so the script still runs.
+
+Figvex marks problems in the editor margin and on the table without stopping the drawing: a foreign key to a table or column that isn't defined, a table defined twice, a table with no primary key, and an `ALTER TABLE` for a table that doesn't exist. The Style menu has **Colour**, **Black and white** and **Keys only**, which hides every column that isn't a key. Clicking a table, column or link jumps to its line.
+
 ## Charts
 
 A chart is an [ECharts option](https://echarts.apache.org/en/option.html) written as JSON. Comments and trailing commas are allowed. Data can go in the JSON, or as CSV under a line of three dashes, where it becomes the chart's dataset:
@@ -345,7 +381,7 @@ Set these as environment variables when building (in Netlify under **Site config
 ```
 src/
   main.ts             wiring: documents, rendering, toolbar, shortcuts
-  engines/            PlantUML, Mermaid, Graphviz, ECharts, BPMN, sketch, org chart and network engines, language detection, themes
+  engines/            PlantUML, Mermaid, Graphviz, ECharts, BPMN, sketch, org chart, network and SQL engines, language detection, themes
   editor/             CodeMirror setup, syntax colouring, autocomplete
   preview.ts          pan and zoom canvas, click-to-source
   export.ts           SVG, PNG, JPG, WEBP and PDF export
@@ -382,7 +418,7 @@ docker/               nginx config for the Docker image
 The full plan is in [ROADMAP.md](ROADMAP.md). It has three phases:
 
 1. Complex networking and visual editing (done).
-2. Statistical charts, UI wireframes, network diagrams, advanced UML, cloud infrastructure, complex data models and coursework tools such as truth tables, Karnaugh maps and automata.
+2. Statistical charts, UI wireframes, network diagrams, advanced UML, cloud infrastructure, complex data models (ER diagrams from SQL are done) and coursework tools such as truth tables, Karnaugh maps and automata.
 3. Advanced scientific and financial charts, geographic maps, CAD, 3D, electrical schematics, formal process models and interactive visual analytics.
 
 AI assistance is planned alongside these, through MCP only: people use their own assistant and subscription, such as Claude Code or Claude Desktop, and it works with Figvex through a local `figvex-mcp` server. There's no login; links and pairing codes connect the assistant to the user's diagrams. Figvex runs no AI service of its own.
