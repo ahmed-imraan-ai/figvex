@@ -1,6 +1,6 @@
 # Roadmap
 
-Figvex started with PlantUML and Mermaid, and now also draws Graphviz DOT, BPMN, org charts, data charts and freeform sketches. The plan is to add more kinds of diagram and chart behind the same editor, preview, export and sharing. The work is split into three phases. Items within a phase aren't in a fixed order.
+Figvex started with PlantUML and Mermaid, and now also draws Graphviz DOT, BPMN, network diagrams, org charts, data charts and freeform sketches. The plan is to add more kinds of diagram and chart behind the same editor, preview, export and sharing. The work is split into three phases. Items within a phase aren't in a fixed order.
 
 ## Done
 
@@ -10,6 +10,7 @@ Figvex started with PlantUML and Mermaid, and now also draws Graphviz DOT, BPMN,
 - **Freeform diagrams.** A sketch canvas built in-house rather than on Excalidraw, so there's no React and nothing extra to download. Boxes, ellipses, diamonds, text, arrows that stay attached to shapes, and a pen, in a clean or hand-drawn style. Sketches are stored as text, one element per line, so saving, sharing, export and undo work as for every other type. The canvas is also the start of visual editing. It has a connector tool for right-angle lines, connection points on each side of a shape, alignment guides, box-select, and align and distribute.
 - **Org charts.** Written as an indented list of people and laid out as a tidy tree by our own layout: departments with colours and a legend, assistants, vacant posts, dotted-line reporting, team sizes, a compact layout, top-down or left-to-right, and three card styles.
 - **Complex networking.** A network language with 18 device icons, zones for subnets, VLANs and sites that nest, port names, cable, trunk, VPN and wireless links, and straight, curved or right-angled lines. Graphviz does the layout; the icons and drawing are ours. IPv4 and IPv6 addresses are checked as you type: addresses outside their subnet, duplicates, network and broadcast addresses, overlapping subnets and VLAN clashes.
+- **Visual editing.** Changes made in the diagram are written back to the text, so undo, saving and sharing behave as for typing. BPMN shapes can be dragged, with alignment guides, right-angled rerouting of flows, lane changes, and positions added to files that had none. Org charts and networks can be built from the diagram: rename, add a report or a linked device, and remove. Graphviz nodes and Mermaid flowchart nodes can be renamed. Sketches are drawn on a canvas. Between them, a diagram can be made without writing code.
 
 ## How new types fit in
 
@@ -37,9 +38,9 @@ When a library's licence doesn't fit, we implement the feature ourselves from pu
 
 This is a project policy, not legal advice.
 
-## Phase 1: next
+## Phase 1
 
-- **Visual editing.** Drag shapes in the preview and write the change back to the source, plus a canvas-first mode for people who'd rather not write code. This is the largest item, because each engine needs a mapping between shapes and source lines. Two parts already work: click-to-source for PlantUML, Graphviz and BPMN, and the sketch canvas, which writes every drag back to its text. What's left is doing the same for the text languages.
+Done. See above.
 
 ## Phase 2
 
