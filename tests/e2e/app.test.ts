@@ -339,6 +339,57 @@ describe.skipIf(!chrome || !built)("Figvex in the browser", () => {
     await page.waitForFunction(() => (document.querySelector(".cm-content")!.textContent ?? "").includes('<dc:Bounds x="240" y="80"'));
   });
 
+  it("renames, adds and removes from the diagram in text languages", async () => {
+    const text = () => page.evaluate(() => document.querySelector(".cm-content")!.textContent ?? "");
+    const settle = (re: RegExp) => page.waitForFunction((src) => new RegExp(src).test(document.querySelector(".cm-content")!.textContent ?? ""), {}, re.source);
+    const doubleClick = async (selector: string) => {
+      const b = (await (await page.$(selector))!.boundingBox())!;
+      await page.mouse.click(b.x + b.width / 2, b.y + b.height / 2);
+      await page.mouse.click(b.x + b.width / 2, b.y + b.height / 2);
+      await page.waitForSelector(".pe-input");
+    };
+    const typeIn = async (value: string) => {
+      await page.keyboard.down("Control");
+      await page.keyboard.press("a");
+      await page.keyboard.up("Control");
+      await page.keyboard.type(value);
+      await page.keyboard.press("Enter");
+    };
+
+    // Org chart: rename, add a report, remove.
+    await openDiagram("orgchart", "Edit org", "orgchart\nPat Boss: Owner\n  Sam Lead: Manager\n  Kim Ops: Operations\n");
+    await doubleClick('#sheet [data-qualified-name="Sam Lead"] rect');
+    expect(await page.$eval(".pe-input", (el) => (el as HTMLTextAreaElement).value)).toBe("Sam Lead: Manager");
+    await typeIn("Sam Lee: Head of Sales");
+    await settle(/Sam Lee: Head of Sales/);
+    await page.keyboard.press("Insert");
+    await page.waitForSelector(".pe-input");
+    await typeIn("Rae New: Sales Rep");
+    await settle(/ {4}Rae New: Sales Rep/);
+    const kim = (await (await page.$('#sheet [data-qualified-name="Kim Ops"] rect'))!.boundingBox())!;
+    await page.mouse.click(kim.x + kim.width / 2, kim.y + kim.height / 2);
+    await page.waitForSelector(".pe-bar:not([hidden])");
+    await page.keyboard.press("Delete");
+    await page.waitForFunction(() => !(document.querySelector(".cm-content")!.textContent ?? "").includes("Kim Ops"));
+
+    // Network: rename a device.
+    await openDiagram("network", "Edit net", 'network\nrouter edgert "Edge"\nswitch coresw\nedgert -- coresw\n');
+    await doubleClick('#sheet [data-qualified-name="coresw"] rect');
+    await typeIn("Core switch");
+    await settle(/switch coresw "Core switch"/);
+
+    // Graphviz and Mermaid flowcharts: rename a node.
+    await openDiagram("graphviz", "Edit dot", "digraph { node [shape=box]; first -> second }");
+    await doubleClick("#sheet g.node:nth-of-type(2)");
+    await typeIn("Second step");
+    await settle(/second \[label="Second step"\]/);
+    await openDiagram("mermaid", "Edit mmd", "flowchart LR\n  P1[Plan] --> P2[Build]\n");
+    await doubleClick("#sheet g.node");
+    await typeIn("Plan it");
+    await settle(/P1\[Plan it\]/);
+    expect(await text()).toContain("P2[Build]");
+  });
+
   it("hides the drawing tools for other languages", async () => {
     await openDiagram("plantuml", "No tools", "@startuml\nTools -> Hidden\n@enduml");
     expect(await page.$eval(".sketch-tools", (el) => (el as HTMLElement).hidden)).toBe(true);
