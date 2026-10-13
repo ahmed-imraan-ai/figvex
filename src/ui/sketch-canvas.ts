@@ -146,11 +146,20 @@ export class SketchCanvas implements PreviewTool {
   /** The canvas version of a successful render: grid, hit areas, selection. */
   display(code: string): string | null {
     if (this.gesture) return null;
+    const input = this.input as (HTMLTextAreaElement & { sketchEl?: ShapeEl | LinkEl }) | null;
+    const old = this.model;
+    const editing = input?.sketchEl && old ? keyOf(input.sketchEl, old.elements.indexOf(input.sketchEl)) : undefined;
     try {
       this.model = parseSketch(code);
     } catch {
       this.model = null;
       return null;
+    }
+    // A render can land while a label is being typed; keep the text box on
+    // the same element in the new model, or the label would be lost.
+    if (input && editing) {
+      const same = this.model.elements.find((el, i) => keyOf(el, i) === editing);
+      if (same && (same.type === "shape" || same.type === "link")) input.sketchEl = same;
     }
     this.code = code;
     this.dirty.clear();

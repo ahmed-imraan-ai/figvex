@@ -34,6 +34,7 @@ import { Library } from "./ui/library";
 import { closePopover, toast, togglePopover } from "./ui/overlay";
 import { buildSettingsPanel } from "./ui/settings-panel";
 import { buildSharePanel } from "./ui/share-panel";
+import { LanguagePicker } from "./ui/language-picker";
 import { SketchCanvas } from "./ui/sketch-canvas";
 import { openTemplates } from "./ui/templates-dialog";
 
@@ -47,7 +48,7 @@ const ui = {
   workspace: byId("workspace"),
   titleInput: byId<HTMLInputElement>("doc-title"),
   saveState: byId("save-state"),
-  engineLabel: byId("engine-label"),
+  languageHost: byId("language-picker"),
   styleSelect: byId<HTMLSelectElement>("style-select"),
   syntaxLink: byId<HTMLAnchorElement>("link-syntax"),
   previewPane: document.querySelector<HTMLElement>(".pane-preview")!,
@@ -161,10 +162,7 @@ function updateTitle() {
 }
 
 function updateEngineUi() {
-  // The language is chosen when a diagram is created and follows the first
-  // line after that, so the head only names it.
-  ui.engineLabel.textContent = ENGINE_LABEL[engine];
-  ui.engineLabel.dataset.engine = engine;
+  languagePicker.set(engine);
   editor.setEngine(engine);
   if (engine === "sketch") sketch.activate();
   else sketch.deactivate();
@@ -173,6 +171,26 @@ function updateEngineUi() {
   ui.syntaxLink.textContent = `${ENGINE_LABEL[engine]} syntax`;
   updateStatusEngine();
 }
+
+// Picking a language swaps the starter code when the diagram has nothing of
+// its own yet. Otherwise the code would no longer match the language, so a
+// new diagram is started and the current one stays in the library.
+const languagePicker = new LanguagePicker((next) => {
+  const code = editor.value.trim();
+  const starter = !code || Object.values(BLANK_CODE).some((b) => b.trim() === code);
+  if (starter) {
+    engine = next;
+    store.update(doc.id, { engine });
+    updateEngineUi();
+    editor.replace(BLANK_CODE[next]);
+  } else {
+    const previous = doc.title;
+    createDoc(DEFAULT_TITLE, next, BLANK_CODE[next]);
+    toast(`Started a new ${ENGINE_LABEL[next]} diagram. "${previous}" is still in your library.`);
+  }
+  editor.focus();
+});
+ui.languageHost.replaceWith(languagePicker.element);
 
 function updateStatusEngine() {
   const kind = diagramKind(editor.value, engine);
