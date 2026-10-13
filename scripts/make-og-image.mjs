@@ -53,8 +53,8 @@ const card = `<!doctype html><html><head><style>${style}
 </style></head><body><div class="card">
   <div class="text">
     <div class="brand">${mark.replaceAll("{S}", "64")}<span>figvex</span></div>
-    <h1>Free online PlantUML and Mermaid editor</h1>
-    <p>Diagrams render as you type, right in your browser. Open source.</p>
+    <h1>Free online diagram editor</h1>
+    <p>PlantUML, Mermaid, Graphviz, BPMN, networks, org charts and charts. Drawn as you type, in your browser.</p>
   </div>
   <div class="shot"><img src="data:image/png;base64,${screenshot}"></div>
 </div></body></html>`;
