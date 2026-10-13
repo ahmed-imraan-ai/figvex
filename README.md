@@ -4,7 +4,7 @@
 
 **Live site: [figvex.sudo520.com](https://figvex.sudo520.com)**
 
-A live editor for PlantUML, Mermaid, Graphviz and BPMN diagrams and data charts. Type on the left, the diagram redraws on the right. It runs in the browser, and your diagrams stay on your machine unless you share them or turn on the PlantUML server option.
+A live editor for PlantUML, Mermaid, Graphviz and BPMN diagrams, org charts, data charts and freeform sketches. Type on the left, the diagram redraws on the right. It runs in the browser, and your diagrams stay on your machine unless you share them or turn on the PlantUML server option.
 
 It was built for computer science students: UML for software engineering courses, ER diagrams for databases, state machines and automata for theory, trees and graphs for algorithms, Gantt charts for group projects, and charts of results for lab reports.
 
@@ -13,7 +13,9 @@ It was built for computer science students: UML for software engineering courses
 ## Features
 
 - Live preview for PlantUML, Mermaid, Graphviz DOT, BPMN 2.0 and ECharts data charts, with the language picked up from the first line
-- 55 templates written around coursework: a library system class diagram, JWT login sequence, TCP state machine, DFA for multiples of 3, binary search tree, hash table, confusion matrix, sorting benchmark, library loan process, university ER schema, capstone Gantt plan and more
+- Org charts from an indented list of people, with departments, assistants, vacancies, dotted lines and three card styles
+- A sketch canvas for freeform diagrams: boxes, arrows that stay attached, text and pen, in a clean or hand-drawn style
+- 62 templates written around coursework: a library system class diagram, JWT login sequence, TCP state machine, DFA for multiples of 3, binary search tree, hash table, confusion matrix, sorting benchmark, library loan process, login wireframe, society committee org chart, university ER schema, capstone Gantt plan and more
 - Export to SVG, PNG, JPG, WEBP and vector PDF, at 1× to 4× scale, with a solid or transparent background
 - Copy the image straight to the clipboard for pasting into a report or slides
 - Share links that carry the whole diagram in the URL, with no server involved
@@ -23,7 +25,7 @@ It was built for computer science students: UML for software engineering courses
 - Errors point at the line, with a marker in the editor
 - Every diagram saved in the browser, with rename, duplicate, delete and undo; collapsed, the list stays as a narrow rail of recent diagrams
 - Pick the language when you create a diagram; after that it follows the first line, shown as a label above the editor
-- Open `.puml`, `.mmd`, `.gv`, `.dot`, `.bpmn`, chart and Markdown files, or drag them onto the window; a `.csv` file opens as a bar chart of its columns
+- Open `.puml`, `.mmd`, `.gv`, `.dot`, `.bpmn`, `.sketch`, `.org`, chart and Markdown files, or drag them onto the window; a `.csv` file opens as a bar chart of its columns
 - Light and dark themes for the app and for the diagrams, separately
 - Pan and zoom with mouse, trackpad or touch; works on phones as two tabs
 
@@ -80,6 +82,73 @@ Business process diagrams in BPMN 2.0 are drawn by Figvex's own renderer, writte
 ```
 
 Supported: start, end, intermediate and boundary events with message, timer, error, signal, escalation, conditional, link, compensation, cancel and terminate markers; tasks of every type; sub-processes, transactions and call activities; loop and multi-instance markers; all five gateway types; data objects and data stores; pools, lanes, message flows, text annotations and groups. Colours set with bpmn.io's `bioc:` or the OMG `color:` attributes are kept. Typing `<` in the editor lists the BPMN elements.
+
+## Sketches
+
+For diagrams that don't fit a language: draw them. Pick **Blank sketch** under Templates, then use the tools above the diagram.
+
+| Tool | Key | |
+| --- | --- | --- |
+| Select | V | Click to select, Shift-click to add, drag on empty space to box-select, drag to move, drag a corner to resize |
+| Box, Ellipse, Diamond | R, O, D | Drag to draw, or click for the usual size |
+| Arrow, Line | A, L | Start or end on a shape to attach to it; attached lines follow when it moves |
+| Connector | C | An arrow with right angles, for org charts and flow diagrams |
+| Text | T | Click and type |
+| Pen | P | Freehand |
+
+Double-click a shape or arrow (or press Enter) to edit its label; double-click empty space to add text. Delete removes the selection, Ctrl/⌘ D duplicates it, arrow keys nudge it, and Ctrl/⌘ Z undoes. Shapes snap to a 10 px grid; hold Alt to place freely. Scroll, or hold Space and drag, to pan.
+
+Snapping and arranging:
+
+- While moving, resizing or drawing, a shape lines up with the edges and centres of the shapes around it, and a guide line shows what it lined up with.
+- While drawing or re-attaching a line, the shape under the pointer shows a connection point on each side. Drop on one to pin the line to that side (`ceo.bottom`); drop anywhere else on the shape and the side follows the shape's position.
+- E switches the selected lines between straight and right angles.
+- With two or more shapes selected, buttons appear to align their left edges, centres, right edges, tops, middles or bottoms; with three or more, to space them evenly across or down.
+
+A sketch is stored as text, one element per line, so it saves, shares and undoes like everything else, and you can edit it on either side:
+
+```
+sketch
+box login 40 40 160 80 "Login page" round fill=#fde68a
+ellipse user 260 60 120 60 "User"
+arrow user -> login "signs in" dashed
+line login.right -> user.left elbow dashed
+text note 40 160 "Notes go here" size=18
+```
+
+Elements are `box`, `ellipse`, `diamond`, `text`, `arrow`, `line` and `pen`. Options are `fill=`, `stroke=`, `width=`, `size=`, `dashed`, `round` and `bold`; arrows and lines also take `both` or `none` for their heads and `elbow` for right angles, and either end can name a side, such as `ceo.bottom`. The Style menu switches between **Clean** and **Hand-drawn**.
+
+## Org charts
+
+Write the people as an indented list and Figvex lays out the chart. Indenting a line puts that person under the line above.
+
+```
+orgchart
+title "Northwind Software"
+counts
+Jane Smith: Chief Executive [Executive]
+  + Lee Park: Executive Assistant
+  Ravi Patel: Chief Technology Officer [Engineering]
+    Ana Lopez #ana: Engineering Manager
+      Tom Reed: Developer
+      ?: Graduate Developer
+  Mia Chen #mia: Chief Financial Officer [Finance]
+ana .. mia "budget"
+```
+
+| Write | For |
+| --- | --- |
+| `Name: Job title [Department]` | A person. Only the name is needed. People without a department take their manager's colour. |
+| `+ Name: Job title` | An assistant, shown beside the manager rather than below |
+| `?: Job title` | A vacant post, drawn dashed |
+| `Name #id` | A short name, for dotted lines or when two people share a name |
+| `a .. b "label"` | A dotted-line (matrix) reporting line |
+| `title "…"` | A heading above the chart |
+| `direction right` | Left to right instead of top down |
+| `compact` | Stack the bottom level of each branch in a column, for wide teams |
+| `counts` | Show how many people sit under each manager |
+
+The Style menu has **Cards** (initials and a department colour strip), **Minimal** (black and white, for printing) and **Bold** (department-coloured headers). Department colours come with a legend, and clicking a person jumps to their line. For a chart you want to arrange by hand instead, use a sketch with the Connector tool.
 
 ## Charts
 
@@ -200,7 +269,7 @@ Set these as environment variables when building (in Netlify under **Site config
 ```
 src/
   main.ts             wiring: documents, rendering, toolbar, shortcuts
-  engines/            PlantUML, Mermaid, Graphviz, ECharts and BPMN engines, language detection, themes
+  engines/            PlantUML, Mermaid, Graphviz, ECharts, BPMN, sketch and org chart engines, language detection, themes
   editor/             CodeMirror setup, syntax colouring, autocomplete
   preview.ts          pan and zoom canvas, click-to-source
   export.ts           SVG, PNG, JPG, WEBP and PDF export
@@ -232,7 +301,7 @@ docker/               nginx config for the Docker image
 
 The full plan is in [ROADMAP.md](ROADMAP.md). It has three phases:
 
-1. Freeform diagrams, complex networking and visual editing.
+1. Complex networking and visual editing.
 2. Statistical charts, UI wireframes, network diagrams, advanced UML, cloud infrastructure, complex data models and coursework tools such as truth tables, Karnaugh maps and automata.
 3. Advanced scientific and financial charts, geographic maps, CAD, 3D, electrical schematics, formal process models and interactive visual analytics.
 

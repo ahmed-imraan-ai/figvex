@@ -178,6 +178,117 @@ describe.skipIf(!chrome || !built)("Figvex in the browser", () => {
     expect(await page.$eval("#status-cursor", (el) => el.textContent)).toMatch(/^Ln 4,/);
   });
 
+  it("draws on the sketch canvas and writes the shapes into the text", async () => {
+    await openDiagram("sketch", "Canvas test", "sketch\n");
+    expect(await page.$eval(".sketch-tools", (el) => (el as HTMLElement).hidden)).toBe(false);
+    const sheet = (await (await page.$("#sheet > svg"))!.boundingBox())!;
+    const at = (fx: number, fy: number) => ({ x: sheet.x + sheet.width * fx, y: sheet.y + sheet.height * fy });
+    const drag = async (a: { x: number; y: number }, b: { x: number; y: number }) => {
+      await page.mouse.move(a.x, a.y);
+      await page.mouse.down();
+      await page.mouse.move((a.x + b.x) / 2, (a.y + b.y) / 2, { steps: 4 });
+      await page.mouse.move(b.x, b.y, { steps: 4 });
+      await page.mouse.up();
+    };
+    const text = () => page.evaluate(() => document.querySelector(".cm-content")!.textContent ?? "");
+
+    await page.click('.sketch-tool[data-tool="box"]');
+    await drag(at(0.1, 0.1), at(0.3, 0.25));
+    await page.keyboard.press("o");
+    await drag(at(0.6, 0.1), at(0.8, 0.25));
+    await page.keyboard.press("a");
+    await drag(at(0.2, 0.17), at(0.7, 0.17));
+    await page.waitForFunction(() => /arrow box1 -> ellipse1/.test(document.querySelector(".cm-content")!.textContent ?? ""));
+    expect(await text()).toMatch(/box box1 [\d.]+ [\d.]+ [\d.]+ [\d.]+/);
+    expect(await text()).toMatch(/ellipse ellipse1/);
+
+    // Double-click the box to give it a label.
+    const box = at(0.2, 0.17);
+    await page.mouse.click(box.x, box.y, { count: 2 });
+    await page.waitForSelector(".sketch-label");
+    await page.keyboard.type("Login");
+    await page.keyboard.press("Enter");
+    await page.waitForFunction(() => /box box1 .* "Login"/.test(document.querySelector(".cm-content")!.textContent ?? ""));
+
+    // Move the box; the arrow stays attached by id.
+    const before = (await text()).match(/box box1 ([\d.]+) ([\d.]+)/)!;
+    await drag(at(0.15, 0.2), at(0.15, 0.5));
+    await page.waitForFunction(
+      (y) => !(document.querySelector(".cm-content")!.textContent ?? "").includes(`box box1 ${y}`),
+      {},
+      `${before[1]} ${before[2]}`,
+    );
+    expect(await text()).toMatch(/arrow box1 -> ellipse1/);
+
+    // Delete the ellipse, then undo from the canvas.
+    await page.mouse.click(at(0.7, 0.17).x, at(0.7, 0.17).y);
+    await page.keyboard.press("Delete");
+    await page.waitForFunction(() => !/ellipse ellipse1/.test(document.querySelector(".cm-content")!.textContent ?? ""));
+    expect(await text()).toMatch(/arrow box1 -> [\d.]+,[\d.]+/);
+    await page.keyboard.down("Control");
+    await page.keyboard.press("z");
+    await page.keyboard.up("Control");
+    await page.waitForFunction(() => /ellipse ellipse1/.test(document.querySelector(".cm-content")!.textContent ?? ""));
+  });
+
+  it("snaps connectors to sides, lines shapes up and arranges a selection", async () => {
+    await openDiagram("sketch", "Snap test", "sketch\nbox boss 300 60 160 70 \"Boss\"\nbox dev 200 260 140 70 \"Dev\"\nbox ops 520 300 140 70 \"Ops\"\n");
+    // Diagram coordinates to screen coordinates.
+    const map = await page.$eval("#sheet > svg", (svg) => {
+      const r = svg.getBoundingClientRect();
+      const vb = (svg as SVGSVGElement).viewBox.baseVal;
+      return { left: r.left, top: r.top, k: r.width / vb.width, vx: vb.x, vy: vb.y };
+    });
+    const at = (x: number, y: number) => ({ x: map.left + (x - map.vx) * map.k, y: map.top + (y - map.vy) * map.k });
+    const drag = async (a: { x: number; y: number }, b: { x: number; y: number }) => {
+      await page.mouse.move(a.x, a.y);
+      await page.mouse.down();
+      await page.mouse.move((a.x + b.x) / 2, (a.y + b.y) / 2, { steps: 5 });
+      await page.mouse.move(b.x, b.y, { steps: 5 });
+      await page.mouse.up();
+    };
+    const text = () => page.evaluate(() => document.querySelector(".cm-content")!.textContent ?? "");
+
+    // Connector from the boss's bottom point to the dev's top point.
+    await page.click('.sketch-tool[data-tool="connector"]');
+    await drag(at(380, 129), at(270, 261));
+    await page.waitForFunction(() => /arrow boss\.bottom -> dev\.top elbow/.test(document.querySelector(".cm-content")!.textContent ?? ""));
+
+    // E switches the selected connector to a straight line and back.
+    await page.keyboard.press("e");
+    await page.waitForFunction(() => /arrow boss\.bottom -> dev\.top(?! elbow)/.test(document.querySelector(".cm-content")!.textContent ?? ""));
+    await page.keyboard.press("e");
+    await page.waitForFunction(() => /dev\.top elbow/.test(document.querySelector(".cm-content")!.textContent ?? ""));
+
+    // Dragging ops near dev's row lines its top up with dev's (y 260).
+    await drag(at(590, 335), at(590, 299));
+    await page.waitForFunction(() => /box ops \d+ 260 /.test(document.querySelector(".cm-content")!.textContent ?? ""));
+
+    // Box-select dev and ops, then align their left edges.
+    await drag(at(150, 220), at(720, 420));
+    await page.waitForSelector(".sketch-arrange:not([hidden])");
+    await page.click('.sketch-arrange button[aria-label="Align left"]');
+    await page.waitForFunction(() => /box ops 200 /.test(document.querySelector(".cm-content")!.textContent ?? ""));
+    expect(await text()).toMatch(/box dev 200 /);
+  });
+
+  it("draws an org chart, reports mistakes by line and jumps to a person", async () => {
+    const broken = await openDiagram("orgchart", "Broken org", "orgchart\nJane: CEO\n  Ravi: CTO\nRavi .. Nobody");
+    expect(broken.error).toContain("line 4");
+    expect(broken.error).toContain('"Nobody"');
+    const ok = await openDiagram("orgchart", "Org click", "orgchart\nJane: CEO [Exec]\n  Ravi: CTO\n  Mia: CFO\n");
+    expect(ok.error).toBeNull();
+    expect(await page.$eval("#engine-label", (el) => el.textContent)).toBe("Org chart");
+    const box = await (await page.$('#sheet [data-qualified-name="Mia"] rect'))!.boundingBox();
+    await page.mouse.click(box!.x + box!.width / 2, box!.y + box!.height / 2);
+    expect(await page.$eval("#status-cursor", (el) => el.textContent)).toMatch(/^Ln 4,/);
+  });
+
+  it("hides the drawing tools for other languages", async () => {
+    await openDiagram("plantuml", "No tools", "@startuml\nTools -> Hidden\n@enduml");
+    expect(await page.$eval(".sketch-tools", (el) => (el as HTMLElement).hidden)).toBe(true);
+  });
+
   it("explains diagram types the browser engine lacks", async () => {
     const result = await openDiagram("plantuml", "Wireframe", "@startsalt\n{\n  Login | \"user\"\n}\n@endsalt");
     expect(result.error).toContain("Salt wireframes");

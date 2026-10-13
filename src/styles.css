@@ -710,6 +710,100 @@ body.is-resizing .stage {
   outline-offset: -2px;
 }
 
+/* Sketch canvas: tools float over the top of the preview. */
+.sketch-tools {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  z-index: 3;
+  display: flex;
+  gap: 2px;
+  padding: 3px;
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  background: var(--surface);
+  box-shadow: var(--shadow-pop);
+  transform: translateX(-50%);
+}
+
+.sketch-tools[hidden],
+.sketch-arrange[hidden] {
+  display: none;
+}
+
+/* Align, distribute and line style for the current selection. */
+.sketch-arrange {
+  position: absolute;
+  top: 58px;
+  left: 50%;
+  z-index: 3;
+  display: flex;
+  gap: 2px;
+  padding: 3px;
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  background: var(--surface);
+  box-shadow: var(--shadow-pop);
+  transform: translateX(-50%);
+}
+
+.sketch-tool {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--ink-2);
+  cursor: pointer;
+}
+
+.sketch-tool:hover {
+  background: var(--press);
+  color: var(--ink);
+}
+
+.sketch-tool[aria-pressed="true"] {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.pane-preview[data-sketch-tool]:not([data-sketch-tool="select"]) .stage {
+  cursor: crosshair;
+}
+
+.stage [data-sketch-key] {
+  cursor: move;
+}
+
+.pane-preview[data-sketch-tool]:not([data-sketch-tool="select"]) .stage [data-sketch-key] {
+  cursor: crosshair;
+}
+
+.sketch-label {
+  position: absolute;
+  z-index: 4;
+  min-width: 80px;
+  padding: 2px 6px;
+  border: 1px solid var(--accent);
+  border-radius: 4px;
+  background: var(--surface);
+  color: var(--ink);
+  font-family: Helvetica, Arial, sans-serif;
+  line-height: 1.25;
+  text-align: center;
+  resize: none;
+  overflow: hidden;
+  transform: translate(-50%, -50%);
+}
+
+.sketch-label[data-anchor="start"] {
+  text-align: left;
+  transform: none;
+}
+
 .stage.is-panning {
   cursor: grabbing;
 }
@@ -1049,6 +1143,14 @@ body.is-resizing .stage {
 
 .engine-tag[data-engine="bpmn"] {
   color: var(--syn-label);
+}
+
+.engine-tag[data-engine="sketch"] {
+  color: var(--accent);
+}
+
+.engine-tag[data-engine="orgchart"] {
+  color: var(--syn-keyword);
 }
 
 .library-item .item-actions {

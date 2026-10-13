@@ -1,5 +1,5 @@
 import { autocompletion, closeBrackets, closeBracketsKeymap, completionKeymap } from "@codemirror/autocomplete";
-import { defaultKeymap, history, historyKeymap, indentWithTab, toggleComment } from "@codemirror/commands";
+import { defaultKeymap, history, historyKeymap, indentWithTab, redo, toggleComment, undo } from "@codemirror/commands";
 import { HighlightStyle, bracketMatching, indentOnInput, indentUnit, syntaxHighlighting } from "@codemirror/language";
 import { highlightSelectionMatches, search, searchKeymap } from "@codemirror/search";
 import { Compartment, EditorSelection, EditorState, StateEffect, StateField } from "@codemirror/state";
@@ -19,7 +19,7 @@ import {
 import { tags as t } from "@lezer/highlight";
 import type { Engine } from "../engines/types";
 import { completionSource } from "./completions";
-import { chartLanguage, dotLanguage, mermaidLanguage, plantumlLanguage, xmlLanguage } from "./languages";
+import { chartLanguage, dotLanguage, mermaidLanguage, orgLanguage, plantumlLanguage, sketchLanguage, xmlLanguage } from "./languages";
 
 // Colours come from CSS variables so light and dark themes share one style.
 const highlight = HighlightStyle.define([
@@ -233,6 +233,35 @@ export class DiagramEditor {
     });
   }
 
+  /**
+   * Change the text to `next` with the smallest edit that gets there, so the
+   * cursor and scroll position survive. Used when the sketch canvas writes.
+   */
+  applyText(next: string) {
+    const prev = this.view.state.doc.toString();
+    if (prev === next) return;
+    let start = 0;
+    while (start < prev.length && start < next.length && prev[start] === next[start]) start++;
+    let endPrev = prev.length;
+    let endNext = next.length;
+    while (endPrev > start && endNext > start && prev[endPrev - 1] === next[endNext - 1]) {
+      endPrev--;
+      endNext--;
+    }
+    this.view.dispatch({
+      changes: { from: start, to: endPrev, insert: next.slice(start, endNext) },
+      userEvent: "input.canvas",
+    });
+  }
+
+  undo() {
+    return undo(this.view);
+  }
+
+  redo() {
+    return redo(this.view);
+  }
+
   setEngine(engine: Engine) {
     if (engine === this.engine) return;
     this.engine = engine;
@@ -272,7 +301,7 @@ export class DiagramEditor {
   }
 }
 
-const LANGUAGES = { plantuml: plantumlLanguage, mermaid: mermaidLanguage, graphviz: dotLanguage, echarts: chartLanguage, bpmn: xmlLanguage } as const;
+const LANGUAGES = { plantuml: plantumlLanguage, mermaid: mermaidLanguage, graphviz: dotLanguage, echarts: chartLanguage, bpmn: xmlLanguage, sketch: sketchLanguage, orgchart: orgLanguage } as const;
 
 function languageFor(engine: Engine) {
   return LANGUAGES[engine];

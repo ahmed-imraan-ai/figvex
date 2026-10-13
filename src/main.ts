@@ -20,7 +20,7 @@ import {
   type RenderResult,
 } from "./engines";
 import { isPlantUmlLoaded, loadPlantUml } from "./engines/plantuml";
-import { BPMN_STYLES, CHART_STYLES, GRAPHVIZ_STYLES, MERMAID_STYLES, PLANTUML_STYLES, PLANTUML_THEMES } from "./engines/themes";
+import { BPMN_STYLES, CHART_STYLES, ORG_STYLES, SKETCH_STYLES, GRAPHVIZ_STYLES, MERMAID_STYLES, PLANTUML_STYLES, PLANTUML_THEMES } from "./engines/themes";
 import { byId, debounce, h, icon, isMac, modKey } from "./lib/dom";
 import { Preview, type SourceHint } from "./preview";
 import { hasSharedDiagram, readSharedDiagram } from "./share";
@@ -34,6 +34,7 @@ import { Library } from "./ui/library";
 import { closePopover, toast, togglePopover } from "./ui/overlay";
 import { buildSettingsPanel } from "./ui/settings-panel";
 import { buildSharePanel } from "./ui/share-panel";
+import { SketchCanvas } from "./ui/sketch-canvas";
 import { openTemplates } from "./ui/templates-dialog";
 
 const DEFAULT_TITLE = "Untitled diagram";
@@ -118,6 +119,15 @@ const preview = new Preview(byId("stage"), byId("canvas"), byId("sheet"), {
   onPick: (hint) => revealInCode(hint),
 });
 
+// Drawing tools over the preview, for sketches only.
+const sketch = new SketchCanvas({
+  pane: ui.previewPane,
+  preview,
+  editor,
+  look: () => ({ dark: diagramTone() === "dark", style: store.settings.sketchStyle }),
+  show: (svg) => preview.show(svg, diagramTone()),
+});
+
 ui.btn.zoomIn.addEventListener("click", () => preview.zoomBy(1.25));
 ui.btn.zoomOut.addEventListener("click", () => preview.zoomBy(0.8));
 ui.btn.zoomFit.addEventListener("click", () => preview.fit());
@@ -156,6 +166,8 @@ function updateEngineUi() {
   ui.engineLabel.textContent = ENGINE_LABEL[engine];
   ui.engineLabel.dataset.engine = engine;
   editor.setEngine(engine);
+  if (engine === "sketch") sketch.activate();
+  else sketch.deactivate();
   fillStylePicker();
   ui.syntaxLink.href = DOCS[engine];
   ui.syntaxLink.textContent = `${ENGINE_LABEL[engine]} syntax`;
@@ -195,6 +207,14 @@ function fillStylePicker() {
     select.append(...BPMN_STYLES.map((s) => option(s.value, s.label)));
     select.value = store.settings.bpmnStyle;
     select.disabled = false;
+  } else if (engine === "sketch") {
+    select.append(...SKETCH_STYLES.map((s) => option(s.value, s.label)));
+    select.value = store.settings.sketchStyle;
+    select.disabled = false;
+  } else if (engine === "orgchart") {
+    select.append(...ORG_STYLES.map((s) => option(s.value, s.label)));
+    select.value = store.settings.orgStyle;
+    select.disabled = false;
   } else {
     select.append(...MERMAID_STYLES.map((s) => option(s.value, s.label)));
     select.value = store.settings.mermaidTheme;
@@ -208,6 +228,8 @@ ui.styleSelect.addEventListener("change", () => {
   else if (engine === "graphviz") store.setSettings({ graphvizStyle: value as Settings["graphvizStyle"] });
   else if (engine === "echarts") store.setSettings({ chartStyle: value as Settings["chartStyle"] });
   else if (engine === "bpmn") store.setSettings({ bpmnStyle: value as Settings["bpmnStyle"] });
+  else if (engine === "sketch") store.setSettings({ sketchStyle: value as Settings["sketchStyle"] });
+  else if (engine === "orgchart") store.setSettings({ orgStyle: value as Settings["orgStyle"] });
   else store.setSettings({ mermaidTheme: value as Settings["mermaidTheme"] });
 });
 
@@ -339,7 +361,8 @@ async function renderNow() {
   if (result.ok) {
     mapLine = result.mapLine ?? ((line: number) => line);
     try {
-      preview.show(result.svg, tone);
+      // Sketches show the canvas version: grid, hit areas and selection.
+      preview.show((eng === "sketch" && sketch.display(code)) || result.svg, tone);
     } catch (err) {
       showError({ ok: false, message: err instanceof Error ? err.message : String(err), ms: 0 });
       return;
@@ -469,7 +492,9 @@ function applySettings(force = false) {
     s.mermaidTheme !== prev.mermaidTheme ||
     s.graphvizStyle !== prev.graphvizStyle ||
     s.chartStyle !== prev.chartStyle ||
-    s.bpmnStyle !== prev.bpmnStyle;
+    s.bpmnStyle !== prev.bpmnStyle ||
+    s.sketchStyle !== prev.sketchStyle ||
+    s.orgStyle !== prev.orgStyle;
   if (styleChanged) fillStylePicker();
   const needsRender =
     s.diagramTheme !== prev.diagramTheme ||
@@ -552,9 +577,9 @@ async function openFile(file: File) {
   let eng: Engine | null = ENGINES.find((e) => ENGINE_FILE_EXTS[e].includes(ext)) ?? null;
 
   if (ext === "md" || ext === "markdown") {
-    const block = text.match(/```(plantuml|puml|mermaid|dot|graphviz|echarts|bpmn)\s*\n([\s\S]*?)```/);
+    const block = text.match(/```(plantuml|puml|mermaid|dot|graphviz|echarts|bpmn|orgchart)\s*\n([\s\S]*?)```/);
     if (!block) {
-      toast(`No plantuml, mermaid, dot, echarts or bpmn code block found in ${file.name}.`, { error: true });
+      toast(`No plantuml, mermaid, dot, echarts, bpmn or orgchart code block found in ${file.name}.`, { error: true });
       return;
     }
     eng = ENGINES.find((e) => ENGINE_FENCE[e] === block[1]) ?? (block[1] === "graphviz" ? "graphviz" : "plantuml");

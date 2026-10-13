@@ -13,6 +13,8 @@ export const ENGINE_VERSION = {
   graphviz: GRAPHVIZ_VERSION,
   echarts: ECHARTS_VERSION,
   bpmn: "2.0",
+  sketch: "",
+  orgchart: "",
 } as const;
 
 /** Set VITE_REPO_URL to an empty string to hide the GitHub links. */
@@ -37,4 +39,6 @@ export const DOCS = {
   graphviz: "https://graphviz.org/doc/info/lang.html",
   echarts: "https://echarts.apache.org/en/option.html",
   bpmn: "https://www.omg.org/spec/BPMN/2.0.2/",
+  sketch: "https://github.com/ahmed-imraan-ai/figvex#sketches",
+  orgchart: "https://github.com/ahmed-imraan-ai/figvex#org-charts",
 } as const;

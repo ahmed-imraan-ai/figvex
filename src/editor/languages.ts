@@ -1,4 +1,4 @@
-// Lightweight stream tokenizers for PlantUML, Mermaid, DOT, chart JSON and BPMN XML. They only need to
+// Lightweight stream tokenizers for every diagram language. They only need to
 // be good enough for colouring; the engines do the real parsing.
 
 import { StreamLanguage, type StringStream } from "@codemirror/language";
@@ -328,5 +328,80 @@ export const xmlLanguage = StreamLanguage.define<XmlState>({
   },
   languageData: {
     commentTokens: { block: { open: "<!--", close: "-->" } },
+  },
+});
+
+/** Org charts: settings, then "Name #id: Title [Department]" lines. */
+export const orgLanguage = StreamLanguage.define<{ part: "name" | "title" | "done" }>({
+  name: "orgchart",
+  startState: () => ({ part: "name" }),
+  token(stream: StringStream, state) {
+    if (stream.sol()) {
+      state.part = "name";
+      if (stream.match(/^\s*#\s.*$/) || stream.match(/^\s*#$/)) return "comment";
+      if (stream.match(/^(orgchart|title|direction|compact|counts)\b/)) {
+        state.part = "done";
+        return "keyword";
+      }
+    }
+    if (stream.eatSpace()) return null;
+    if (stream.match(/^"[^"]*"?/)) return "string";
+    if (stream.match(/^\s#\s.*$/)) return "comment";
+    if (stream.match(/^(down|right)\b/) && state.part === "done") return "atom";
+    if (stream.match("..")) {
+      state.part = "name";
+      return "operator";
+    }
+    if (state.part === "name" && stream.match(/^\+/)) return "operator";
+    if (state.part === "name" && stream.match(/^\?/)) return "atom";
+    if (stream.match(/^#[A-Za-z_][\w-]*/)) return "macroName";
+    if (stream.match(/^\[[^\]]*\]?/)) return "annotation";
+    if (stream.eat(":")) {
+      state.part = "title";
+      return "punctuation";
+    }
+    if (state.part === "title") {
+      stream.match(/^[^[#]+/) || stream.next();
+      return "labelName";
+    }
+    stream.match(/^[^:[#.]+/) || stream.next();
+    return state.part === "name" ? "keyword" : null;
+  },
+  languageData: {
+    commentTokens: { line: "#" },
+  },
+});
+
+const SKETCH_KINDS =/^(sketch|box|ellipse|diamond|text|arrow|line|pen)\b/;
+
+/** The sketch format: element kind, id, numbers, "labels" and options. */
+export const sketchLanguage = StreamLanguage.define<{ first: boolean }>({
+  name: "sketch",
+  startState: () => ({ first: true }),
+  token(stream: StringStream, state) {
+    if (stream.sol()) state.first = true;
+    if (stream.eatSpace()) return null;
+    if (stream.sol() && stream.peek() === "#") {
+      stream.skipToEnd();
+      return "comment";
+    }
+    if (state.first) {
+      state.first = false;
+      if (stream.match(SKETCH_KINDS)) return "keyword";
+    }
+    if (stream.match(/^"(?:[^"\\]|\\.)*"?/)) return "string";
+    if (stream.match("->")) return "operator";
+    if (stream.match(/^(fill|stroke|width|size)=/)) {
+      stream.match(/^#[0-9a-fA-F]{3,8}\b/) || stream.match(/^[\w.]+/);
+      return "macroName";
+    }
+    if (stream.match(/^(dashed|round|bold|both|none)\b/)) return "atom";
+    if (stream.match(/^-?\d+(\.\d+)?(,-?\d+(\.\d+)?)?/)) return "number";
+    if (stream.match(/^[A-Za-z_][\w-]*/)) return "labelName";
+    stream.next();
+    return null;
+  },
+  languageData: {
+    commentTokens: { line: "#" },
   },
 });

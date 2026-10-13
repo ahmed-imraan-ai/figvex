@@ -262,7 +262,69 @@ function bpmnSource(ctx: CompletionContext): CompletionResult | null {
   };
 }
 
-const SOURCES = { plantuml: plantumlSource, mermaid: mermaidSource, graphviz: dotSource, echarts: chartSource, bpmn: bpmnSource } as const;
+const SKETCH_SNIPPETS: Completion[] = [
+  snippetCompletion('box ${id} ${40} ${40} ${160} ${80} "${Label}"', { label: "box", detail: "id x y width height", type: "keyword" }),
+  snippetCompletion('ellipse ${id} ${40} ${40} ${120} ${70} "${Label}"', { label: "ellipse", detail: "id x y width height", type: "keyword" }),
+  snippetCompletion('diamond ${id} ${40} ${40} ${120} ${80} "${Label}"', { label: "diamond", detail: "id x y width height", type: "keyword" }),
+  snippetCompletion('text ${id} ${40} ${40} "${Words}"', { label: "text", detail: "id x y", type: "keyword" }),
+  snippetCompletion('arrow ${from} -> ${to} "${}"', { label: "arrow", detail: "from -> to", type: "keyword" }),
+  snippetCompletion("line ${from} -> ${to}", { label: "line", detail: "from -> to", type: "keyword" }),
+];
+
+const SKETCH_OPTIONS = ["fill=", "stroke=", "width=", "size=", "dashed", "round", "bold", "both", "none"].map((label) => ({
+  label,
+  type: "property",
+}));
+
+function sketchSource(ctx: CompletionContext): CompletionResult | null {
+  const line = ctx.state.doc.lineAt(ctx.pos);
+  const before = line.text.slice(0, ctx.pos - line.from);
+  const word = ctx.matchBefore(/[\w=-]*/);
+  if (!word || (word.from === word.to && !ctx.explicit)) return null;
+  if (/^\s*[\w-]*$/.test(before)) return { from: word.from, options: SKETCH_SNIPPETS, validFor: /^\w*$/ };
+  // After the first word: option names, or the ids of shapes for arrow ends.
+  const ids = [...ctx.state.doc.toString().matchAll(/^\s*(?:box|ellipse|diamond|text)\s+([A-Za-z_][\w-]*)/gm)].map((m) => m[1]);
+  const isLink = /^\s*(arrow|line)\b/.test(before);
+  return {
+    from: word.from,
+    options: isLink ? [...ids.map((label) => ({ label, type: "variable" })), ...SKETCH_OPTIONS] : SKETCH_OPTIONS,
+    validFor: /^[\w=-]*$/,
+  };
+}
+
+const ORG_SETTINGS: Completion[] = [
+  snippetCompletion('title "${Company}"', { label: "title", detail: "chart title", type: "keyword" }),
+  snippetCompletion("direction ${right}", { label: "direction", detail: "down or right", type: "keyword" }),
+  { label: "compact", detail: "stack the bottom level", type: "keyword" },
+  { label: "counts", detail: "show team sizes", type: "keyword" },
+];
+
+function orgSource(ctx: CompletionContext): CompletionResult | null {
+  const doc = ctx.state.doc.toString();
+  const line = ctx.state.doc.lineAt(ctx.pos);
+  const before = line.text.slice(0, ctx.pos - line.from);
+  // Departments already used, inside [ ].
+  const dept = before.match(/\[([^\]]*)$/);
+  if (dept) {
+    const used = [...new Set([...doc.matchAll(/\[([^\]]+)\]/g)].map((m) => m[1].trim()))];
+    return { from: ctx.pos - dept[1].length, options: used.map((label) => ({ label, type: "constant", apply: `${label}]` })), validFor: /^[^\]]*$/ };
+  }
+  // People's names and ids after "..".
+  const dotted = before.match(/\.\.\s+([^"]*)$/);
+  if (dotted) {
+    const names = [...doc.matchAll(/^\s*\+?\s*([^:#[\n?]+?)\s*(?:#([A-Za-z_][\w-]*))?\s*(?::|$)/gm)]
+      .filter((m) => !/^(orgchart|title|direction|compact|counts)\b/.test(m[1]) && !m[1].includes(".."))
+      .map((m) => m[2] ?? m[1].trim());
+    return { from: ctx.pos - dotted[1].length, options: [...new Set(names)].map((label) => ({ label, type: "variable" })) };
+  }
+  const word = ctx.matchBefore(/\w*/);
+  if (!word || (word.from === word.to && !ctx.explicit)) return null;
+  const beforePeople = !/^\s*\+?\s*[^\s:#].*:/m.test(doc.slice(0, line.from));
+  if (/^\w*$/.test(before) && beforePeople) return { from: word.from, options: ORG_SETTINGS, validFor: /^\w*$/ };
+  return null;
+}
+
+const SOURCES = { plantuml: plantumlSource, mermaid: mermaidSource, graphviz: dotSource, echarts: chartSource, bpmn: bpmnSource, sketch: sketchSource, orgchart: orgSource } as const;
 
 export function completionSource(engine: Engine) {
   return SOURCES[engine];
