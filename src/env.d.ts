@@ -5,6 +5,8 @@ declare const __APP_VERSION__: string;
 declare const __DEPLOY_LABEL__: string;
 /** True when the build ran on Netlify. */
 declare const __ON_NETLIFY__: boolean;
+/** Google Analytics ID; empty unless this is the live site. */
+declare const __GA_ID__: string;
 declare const __PLANTUML_VERSION__: string;
 declare const __MERMAID_VERSION__: string;
 /** Graphviz inside the Viz.js build that ships with PlantUML. */

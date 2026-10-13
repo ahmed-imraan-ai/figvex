@@ -1,4 +1,4 @@
-import { PLANTUML_SERVER } from "../config";
+import { GA_ID, PLANTUML_SERVER } from "../config";
 import { h } from "../lib/dom";
 import { store, type Settings } from "../store";
 
@@ -94,6 +94,24 @@ export function buildSettingsPanel(): HTMLElement {
         { class: "panel-hint" },
         `Salt, ditaa, math, nwdiag and a few other types aren't in the browser engine yet. With this on, only those diagrams are sent to ${server} to be drawn.`,
       ),
+    ),
+    GA_ID ? privacySection() : null,
+  );
+}
+
+function privacySection() {
+  const input = h("input", { class: "switch", type: "checkbox", id: "set-analytics", role: "switch" });
+  input.checked = store.settings.analytics === "on";
+  input.addEventListener("change", () => store.setSettings({ analytics: input.checked ? "on" : "off" }));
+  return h(
+    "div",
+    { class: "panel-section" },
+    h("h3", { class: "panel-title" }, "Privacy"),
+    h("div", { class: "panel-row" }, h("label", { for: "set-analytics" }, "Google Analytics"), input),
+    h(
+      "p",
+      { class: "panel-hint" },
+      "Counts visits with cookies. Sends the page address and basic browser details to Google, never your diagrams.",
     ),
   );
 }
