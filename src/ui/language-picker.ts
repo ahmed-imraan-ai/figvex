@@ -14,6 +14,7 @@ const ABOUT: Record<Engine, { blurb: string; words: string }> = {
   sketch: { blurb: "Draw boxes and arrows by hand", words: "draw whiteboard freeform canvas pen" },
   orgchart: { blurb: "People and who they report to", words: "organisation organization team people hierarchy staff" },
   network: { blurb: "Devices, subnets, VLANs and links", words: "lan wan ip subnet vlan router switch firewall topology infrastructure" },
+  sql: { blurb: "ER diagrams from CREATE TABLE statements", words: "er erd entity relationship database schema table ddl postgres mysql sqlite" },
 };
 
 function matches(engine: Engine, query: string): number {

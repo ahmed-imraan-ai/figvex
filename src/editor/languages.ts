@@ -411,6 +411,57 @@ export const networkLanguage = StreamLanguage.define<{ first: boolean }>({
   },
 });
 
+const SQL_KEYWORDS = new Set(
+  `
+  create table alter add drop column constraint primary foreign key references unique index on not null default check
+  if exists temporary temp or replace only cascade restrict set delete update no action collate comment is as
+  auto_increment autoincrement identity generated always by stored virtual without rowid clustered nonclustered
+  schema database use view insert into values select from where and in go begin commit transaction with
+  `.trim().split(/\s+/),
+);
+
+const SQL_TYPES =
+  /^(big|small|tiny|medium)?(int|integer|serial)\d?\b|^(numeric|decimal|real|float|double|precision|money|bit|boolean|bool|n?(var)?char|character|varying|n?text|string|uuid|json|jsonb|xml|bytea|blob|binary|varbinary|date|time|timestamp|timestamptz|datetime2?|interval|year|enum|inet|cidr|array|number|varchar2|clob|unsigned)\b/i;
+
+/** SQL DDL: keywords, types, strings, quoted names and "-- group:" style comments. */
+export const sqlLanguage = StreamLanguage.define<{ inComment: boolean }>({
+  name: "sql",
+  startState: () => ({ inComment: false }),
+  token(stream: StringStream, state) {
+    if (state.inComment) {
+      if (stream.skipTo("*/")) {
+        stream.match("*/");
+        state.inComment = false;
+      } else stream.skipToEnd();
+      return "comment";
+    }
+    if (stream.eatSpace()) return null;
+    if (stream.match(/^--\s*(title|group|focus)\s*:/i)) {
+      stream.skipToEnd();
+      return "meta";
+    }
+    if (stream.match("--") || (stream.sol() && stream.peek() === "#")) {
+      stream.skipToEnd();
+      return "comment";
+    }
+    if (stream.match("/*")) {
+      state.inComment = true;
+      return "comment";
+    }
+    if (stream.match(/^'(?:[^']|'')*'?/)) return "string";
+    if (stream.match(/^"[^"]*"?/) || stream.match(/^`[^`]*`?/) || stream.match(/^\[[^\]]*\]?/)) return "variableName";
+    if (stream.match(/^\d+(\.\d+)?/)) return "number";
+    if (stream.match(SQL_TYPES)) return "typeName";
+    const word = stream.match(/^[A-Za-z_][\w$]*/) as RegExpMatchArray | null;
+    if (word) return SQL_KEYWORDS.has(word[0].toLowerCase()) ? "keyword" : "variableName";
+    stream.next();
+    return null;
+  },
+  languageData: {
+    commentTokens: { line: "--", block: { open: "/*", close: "*/" } },
+  },
+});
+
 const SKETCH_KINDS =/^(sketch|box|ellipse|diamond|text|arrow|line|pen)\b/;
 
 /** The sketch format: element kind, id, numbers, "labels" and options. */
