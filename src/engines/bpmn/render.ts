@@ -84,8 +84,8 @@ export function drawBpmn(model: BpmnModel, opts: DrawStyle): string {
     extent.maxX = Math.max(extent.maxX, x + w);
     extent.maxY = Math.max(extent.maxY, y + h);
   };
-  const group = (node: { line?: number; id: string }, body: string) =>
-    `<g${node.line ? ` data-source-line="${node.line - 1}"` : ""} data-element-id="${esc(node.id)}">${body}</g>`;
+  const group = (node: { line?: number; id: string; kind?: string }, body: string) =>
+    `<g${node.line ? ` data-source-line="${node.line - 1}"` : ""} data-element-id="${esc(node.id)}"${node.kind ? ` data-kind="${node.kind}"` : ""}>${body}</g>`;
 
   for (const node of model.nodes.values()) {
     const di = model.shapes.get(node.id);

@@ -83,6 +83,15 @@ Business process diagrams in BPMN 2.0 are drawn by Figvex's own renderer, writte
 </definitions>
 ```
 
+Shapes can be dragged in the diagram. The new positions are written into the XML when you let go, so undo, saving and sharing work as for typed changes.
+
+- Shapes snap into line with their neighbours, or move in steps of 5. Hold Alt to move freely.
+- Arrow keys nudge the selected shape by 1, or by 10 with Shift. Ctrl+Z and Ctrl+Y undo and redo from the diagram.
+- Flows attached to a moved shape follow it with right-angled routes. Boundary events move with their activity.
+- A pool is dragged by its name band and takes everything in it along. A task dropped in another lane is moved into that lane in the XML.
+- The first drag in a file with no saved positions adds them, so the layout you make is kept.
+- A click without a drag still selects the element's line in the editor.
+
 Supported: start, end, intermediate and boundary events with message, timer, error, signal, escalation, conditional, link, compensation, cancel and terminate markers; tasks of every type; sub-processes, transactions and call activities; loop and multi-instance markers; all five gateway types; data objects and data stores; pools, lanes, message flows, text annotations and groups. Colours set with bpmn.io's `bioc:` or the OMG `color:` attributes are kept. Typing `<` in the editor lists the BPMN elements.
 
 ## Sketches

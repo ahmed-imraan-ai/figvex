@@ -355,14 +355,14 @@ export class DiagramEditor {
     this.view.dispatch({ effects: setWarnings.of(list) });
   }
 
-  goToLine(line: number, select = true) {
+  goToLine(line: number, select = true, focus = true) {
     const doc = this.view.state.doc;
     const target = doc.line(Math.max(1, Math.min(line, doc.lines)));
     this.view.dispatch({
       selection: select ? EditorSelection.range(target.from, target.to) : EditorSelection.cursor(target.from),
       effects: EditorView.scrollIntoView(target.from, { y: "center" }),
     });
-    this.view.focus();
+    if (focus) this.view.focus();
   }
 
   focus() {

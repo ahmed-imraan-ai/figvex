@@ -309,6 +309,36 @@ describe.skipIf(!chrome || !built)("Figvex in the browser", () => {
     expect(await page.$eval("#status-cursor", (el) => el.textContent)).toMatch(/^Ln 4,/);
   });
 
+  it("drags BPMN shapes and writes the positions into the XML", async () => {
+    const saved = TEMPLATES.find((t) => t.id === "bpmn-saved-layout")!.code.replace("Review claim", "Review the claim");
+    await openDiagram("bpmn", "Drag test", saved);
+    const text = () => page.evaluate(() => document.querySelector(".cm-content")!.textContent ?? "");
+    const shape = async () => (await (await page.$('#sheet [data-element-id="review"]'))!.boundingBox())!;
+
+    // A click selects the element's line without moving anything.
+    const start = await shape();
+    await page.mouse.click(start.x + start.width / 2, start.y + start.height / 2);
+    expect(await page.$eval("#status-cursor", (el) => el.textContent)).toMatch(/^Ln 9,/);
+    expect(await text()).toContain('<dc:Bounds x="240" y="80" width="100" height="80" />');
+
+    // A drag moves the task; its flows get right-angled routes.
+    const a = { x: start.x + start.width / 2, y: start.y + start.height / 2 };
+    await page.mouse.move(a.x, a.y);
+    await page.mouse.down();
+    for (let i = 1; i <= 8; i++) await page.mouse.move(a.x, a.y + i * 12);
+    await page.mouse.up();
+    await page.waitForFunction(() => !(document.querySelector(".cm-content")!.textContent ?? "").includes('<dc:Bounds x="240" y="80"'));
+    const moved = (await text()).match(/<dc:Bounds x="240" y="(\d+)" width="100" height="80" \/>/);
+    expect(Number(moved![1])).toBeGreaterThan(110);
+    expect(await text()).toMatch(/<di:waypoint x="188" y="120" \/><di:waypoint x="214" y="120" \/>/);
+
+    // Undo from the diagram puts it back.
+    await page.keyboard.down("Control");
+    await page.keyboard.press("z");
+    await page.keyboard.up("Control");
+    await page.waitForFunction(() => (document.querySelector(".cm-content")!.textContent ?? "").includes('<dc:Bounds x="240" y="80"'));
+  });
+
   it("hides the drawing tools for other languages", async () => {
     await openDiagram("plantuml", "No tools", "@startuml\nTools -> Hidden\n@enduml");
     expect(await page.$eval(".sketch-tools", (el) => (el as HTMLElement).hidden)).toBe(true);
