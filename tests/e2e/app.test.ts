@@ -397,6 +397,17 @@ describe.skipIf(!chrome || !built)("Figvex in the browser", () => {
     expect(await page.$eval("#status-cursor", (el) => el.textContent)).toMatch(/^Ln 4,/);
   });
 
+  it("marks modelling mistakes in a PlantUML class diagram", async () => {
+    const code = "@startuml\nclass Lecturer\nclass Module\nLectuer --> Module : teaches\n@enduml";
+    const ok = await openDiagram("plantuml", "Lint test", code);
+    expect(ok.error).toBeNull();
+    expect(ok.state).toBe("warn");
+    expect(await page.$eval(".cm-warnMarker", (el) => (el as HTMLElement).title)).toContain("Did you mean Lecturer?");
+    // The marker sits on the line with the typo, after the theme line Figvex adds.
+    await page.click("#status-render");
+    expect(await page.$eval("#status-cursor", (el) => el.textContent)).toMatch(/^Ln 4,/);
+  });
+
   it("draws Graphviz labels with runs of spaces", async () => {
     // Graphviz writes them as no-break spaces, which the sanitiser turns into &nbsp;.
     const ok = await openDiagram("graphviz", "Spaces", 'digraph { spaced [label="two  spaces"] }');
