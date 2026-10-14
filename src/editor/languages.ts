@@ -610,6 +610,37 @@ export const structuresLanguage = StreamLanguage.define<{ first: boolean }>({
   },
 });
 
+const WIRE_CONTROLS = /^(header|nav|tabs|heading|text|field|password|textarea|search|dropdown|checkbox|radio|toggle|slider|progress|button|link|image|avatar|list|table|row|divider|space|alert|card|box|columns)\b/;
+
+/** Wireframes: screens, controls, "texts" and flags. */
+export const wireframeLanguage = StreamLanguage.define<{ first: boolean }>({
+  name: "wireframe",
+  startState: () => ({ first: true }),
+  token(stream: StringStream, state) {
+    if (stream.sol()) state.first = true;
+    if (stream.eatSpace()) return null;
+    if ((stream.sol() || /\s/.test(stream.string.charAt(stream.pos - 1))) && stream.match("#")) {
+      stream.skipToEnd();
+      return "comment";
+    }
+    if (state.first) {
+      state.first = false;
+      if (stream.match(/^(wireframe|title|screen)\b/)) return "keyword";
+      if (stream.match(WIRE_CONTROLS)) return "typeName";
+    }
+    if (stream.match(/^\*?"(?:[^"\\]|\\.)*"?/)) return "string";
+    if (stream.match(/^->/)) return "operator";
+    if (stream.match(/^(phone|tablet|desktop|browser|window|primary|danger|small|on|checked|back|menu|filled|dashed|success|warning|error|info)\b/)) return "atom";
+    if (stream.match(/^\d+(%|x\d+)?/)) return "number";
+    if (stream.match(/^[\w-]+/)) return "variableName";
+    stream.next();
+    return null;
+  },
+  languageData: {
+    commentTokens: { line: "#" },
+  },
+});
+
 const SKETCH_KINDS =/^(sketch|box|ellipse|diamond|text|arrow|line|pen)\b/;
 
 /** The sketch format: element kind, id, numbers, "labels" and options. */

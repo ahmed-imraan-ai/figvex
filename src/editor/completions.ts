@@ -512,6 +512,51 @@ function structuresSource(ctx: CompletionContext): CompletionResult | null {
   return null;
 }
 
+const WIRE_TOP: Completion[] = [
+  snippetCompletion('screen ${home} "${Home}" ${phone}', { label: "screen", detail: "phone, tablet, desktop, browser or window", type: "keyword" }),
+  snippetCompletion('${from} -> ${to} "${label}"', { label: "->", detail: "flow between screens", type: "keyword" }),
+  snippetCompletion('title "${Title}"', { label: "title", detail: "heading", type: "keyword" }),
+];
+
+const WIRE_CONTROL_SNIPPETS: Completion[] = [
+  snippetCompletion('header "${Title}" ${back}', { label: "header", detail: "app bar; back, menu", type: "class" }),
+  snippetCompletion('nav "${Home}" *"${Search}" "${Profile}"', { label: "nav", detail: "* marks the current item", type: "class" }),
+  snippetCompletion('tabs *"${One}" "${Two}"', { label: "tabs", detail: "* marks the current tab", type: "class" }),
+  snippetCompletion('heading "${Heading}"', { label: "heading", type: "class" }),
+  snippetCompletion('text "${Some text}"', { label: "text", detail: "wrapped paragraph", type: "class" }),
+  snippetCompletion('field "${Label}" "${placeholder}"', { label: "field", detail: "text field", type: "class" }),
+  snippetCompletion('password "${Password}"', { label: "password", type: "class" }),
+  snippetCompletion('textarea "${Message}" "${placeholder}"', { label: "textarea", type: "class" }),
+  snippetCompletion('search "${Search}"', { label: "search", type: "class" }),
+  snippetCompletion('dropdown "${Label}" "${Value}"', { label: "dropdown", type: "class" }),
+  snippetCompletion('checkbox "${Label}" ${on}', { label: "checkbox", type: "class" }),
+  snippetCompletion('radio "${Label}" ${on}', { label: "radio", type: "class" }),
+  snippetCompletion('toggle "${Label}" ${on}', { label: "toggle", type: "class" }),
+  snippetCompletion('slider "${Volume}" ${60}', { label: "slider", detail: "percent", type: "class" }),
+  snippetCompletion('progress "${Upload}" ${40}', { label: "progress", detail: "percent", type: "class" }),
+  snippetCompletion('button "${OK}" ${primary}', { label: "button", detail: "primary, danger, small", type: "class" }),
+  snippetCompletion('link "${Forgot password?}"', { label: "link", type: "class" }),
+  snippetCompletion('image "${Photo}" ${140}', { label: "image", detail: "placeholder, height", type: "class" }),
+  snippetCompletion('avatar "${Name}" "${detail}"', { label: "avatar", type: "class" }),
+  snippetCompletion('list "${One}" "${Two}" "${Three}"', { label: "list", type: "class" }),
+  snippetCompletion('table "${Name}" "${Email}"\n    row "${Ann}" "${ann@example.com}"', { label: "table", detail: "header, then indented rows", type: "class" }),
+  snippetCompletion("row", { label: "row", detail: "indented controls side by side", type: "class" }),
+  snippetCompletion('card "${Title}"', { label: "card", detail: "indented controls in a card", type: "class" }),
+  snippetCompletion('alert "${Saved}" ${success}', { label: "alert", detail: "info, success, warning, error", type: "class" }),
+  { label: "divider", type: "class" },
+  snippetCompletion("space ${16}", { label: "space", type: "class" }),
+];
+
+function wireframeSource(ctx: CompletionContext): CompletionResult | null {
+  const line = ctx.state.doc.lineAt(ctx.pos);
+  const before = line.text.slice(0, ctx.pos - line.from);
+  const word = ctx.matchBefore(/\w*/);
+  if (!word || (word.from === word.to && !ctx.explicit)) return null;
+  if (/^\w*$/.test(before)) return { from: word.from, options: WIRE_TOP, validFor: /^\w*$/ };
+  if (/^\s+\w*$/.test(before)) return { from: word.from, options: WIRE_CONTROL_SNIPPETS, validFor: /^\w*$/ };
+  return null;
+}
+
 const SOURCES = {
   plantuml: plantumlSource,
   mermaid: mermaidSource,
@@ -526,6 +571,7 @@ const SOURCES = {
   automaton: automatonSource,
   wavedrom: waveSource,
   structures: structuresSource,
+  wireframe: wireframeSource,
 } as const;
 
 export function completionSource(engine: Engine) {

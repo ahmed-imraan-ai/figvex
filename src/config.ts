@@ -22,6 +22,7 @@ export const ENGINE_VERSION = {
   automaton: "",
   wavedrom: "3.7.0",
   structures: "",
+  wireframe: "",
 } as const;
 
 /** Set VITE_REPO_URL to an empty string to hide the GitHub links. */
@@ -54,4 +55,5 @@ export const DOCS = {
   automaton: "https://github.com/ahmed-imraan-ai/figvex#automata",
   wavedrom: "https://wavedrom.com/tutorial.html",
   structures: "https://github.com/ahmed-imraan-ai/figvex#data-structures",
+  wireframe: "https://github.com/ahmed-imraan-ai/figvex#ui-wireframes",
 } as const;

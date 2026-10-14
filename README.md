@@ -19,10 +19,11 @@ It was built for computer science students: UML for software engineering courses
 - Digital timing diagrams, register bit fields and logic from assignments, with WaveDrom
 - Data structure pictures: arrays with pointers, stacks, queues, linked lists, trees, binary search trees, heaps, hash tables and graphs, one per line
 - Cloud diagrams with the official AWS, Azure, Google Cloud and Kubernetes icons, and a search that inserts any of 1,200 icons with its includes
+- UI wireframes: phone, tablet and browser screens of common controls, with arrows for the user flow, drawn clean or sketchy
 - Network diagrams with device icons, subnets, VLANs, ports and link types, and checks that catch address mistakes as you type
 - Org charts from an indented list of people, with departments, assistants, vacancies, dotted lines and three card styles
 - A sketch canvas for freeform diagrams: boxes, arrows that stay attached, text and pen, in a clean or hand-drawn style
-- 108 templates written around coursework: a library system class diagram, JWT login sequence, TCP state machine, DFA for multiples of 3, binary search tree, hash table, confusion matrix, sorting benchmark, library loan process, login wireframe, society committee org chart, subnetting exercise, university ER schema from SQL, levelled data flow diagrams, Karnaugh maps, a full adder circuit, Turing machines, an SPI timing diagram, hash tables with chaining and probing, capstone Gantt plan and more
+- 111 templates written around coursework: a library system class diagram, JWT login sequence, TCP state machine, DFA for multiples of 3, binary search tree, hash table, confusion matrix, sorting benchmark, library loan process, login wireframe, an app sign-in flow, society committee org chart, subnetting exercise, university ER schema from SQL, levelled data flow diagrams, Karnaugh maps, a full adder circuit, Turing machines, an SPI timing diagram, hash tables with chaining and probing, capstone Gantt plan and more
 - Export to SVG, PNG, JPG, WEBP and vector PDF, at 1× to 4× scale, with a solid or transparent background
 - Copy the image straight to the clipboard for pasting into a report or slides
 - Share links that carry the whole diagram in the URL, with no server involved
@@ -32,7 +33,7 @@ It was built for computer science students: UML for software engineering courses
 - Errors point at the line, with a marker in the editor
 - Every diagram saved in the browser, with rename, duplicate, delete and undo; collapsed, the list stays as a narrow rail of recent diagrams
 - A language picker above the editor that you can type into to search; changing the language of a diagram with real content starts a new one, so nothing is overwritten
-- Open `.puml`, `.mmd`, `.gv`, `.dot`, `.bpmn`, `.sketch`, `.org`, `.network`, `.sql`, `.logic`, `.automaton`, `.wavedrom`, `.structures`, chart and Markdown files, or drag them onto the window; a `.csv` file opens as a bar chart of its columns
+- Open `.puml`, `.mmd`, `.gv`, `.dot`, `.bpmn`, `.sketch`, `.org`, `.network`, `.sql`, `.logic`, `.automaton`, `.wavedrom`, `.structures`, `.wireframe`, chart and Markdown files, or drag them onto the window; a `.csv` file opens as a bar chart of its columns
 - Light and dark themes for the app and for the diagrams, separately
 - Pan and zoom with mouse, trackpad or touch; works on phones as two tabs
 
@@ -181,6 +182,47 @@ ana .. mia "budget"
 | `counts` | Show how many people sit under each manager |
 
 The Style menu has **Cards** (initials and a department colour strip), **Minimal** (black and white, for printing) and **Bold** (department-coloured headers). Department colours come with a legend, and clicking a person jumps to their line. For a chart you want to arrange by hand instead, use a sketch with the Connector tool.
+
+## UI wireframes
+
+Screens of common controls, one per line and indented under their screen, with arrows between screens for a user flow.
+
+```
+wireframe
+screen login "Sign in" phone
+  header "Campus app"
+  field "Email" "you@uni.ac.uk"
+  password "Password"
+  row
+    checkbox "Remember me" on
+    link "Forgot password?"
+  button "Sign in" primary
+screen home "Home" phone
+  header "Today" menu
+  list "Timetable" "Grades" "Library"
+  nav *"Home" "Search" "Profile"
+login -> home "Sign in"
+```
+
+A screen is `phone`, `tablet`, `desktop`, `browser` or `window`, or a size like `400x600`; it grows to fit what's in it. Quoted text is what a control shows, and words after it change it.
+
+| Control | Writes | Options |
+| --- | --- | --- |
+| `header "Title"` | An app bar | `back`, `menu` |
+| `nav "A" *"B" "C"`, `tabs` | A navigation bar or tabs; `*` marks the current one | |
+| `heading`, `text`, `link` | Text; `text` wraps | |
+| `field "Label" "placeholder"`, `password`, `textarea`, `search`, `dropdown "Label" "Value"` | Inputs | `filled` shows the text as typed |
+| `checkbox`, `radio`, `toggle` | Choices | `on` |
+| `slider "Label" 40`, `progress "Label" 70` | A slider or progress bar at a percentage | |
+| `button "OK"` | A button | `primary`, `danger`, `small` |
+| `image "Caption" 160`, `avatar "Name" "detail"` | Placeholders | a height for images |
+| `list "One" "Two"` | A list with chevrons | |
+| `table "Name" "Email"` | A table; indented `row "Ann" "ann@uni.ac.uk"` lines are its rows | |
+| `alert "Saved"` | A message box | `info`, `success`, `warning`, `error` |
+| `row`, `card "Title"`, `box` | Containers: `row` puts the controls indented under it side by side | `dashed` for a box |
+| `divider`, `space 24` | Spacing | |
+
+`a -> b "label"` draws an arrow from screen a to screen b. The Style menu picks **Clean** or **Sketchy**, which draws everything by hand like a paper prototype. Clicking a control jumps to its line.
 
 ## Cloud diagrams
 
@@ -541,7 +583,7 @@ Set these as environment variables when building (in Netlify under **Site config
 ```
 src/
   main.ts             wiring: documents, rendering, toolbar, shortcuts
-  engines/            PlantUML, Mermaid, Graphviz, ECharts, BPMN, sketch, org chart, network, SQL, logic, automaton, WaveDrom and data structure engines, language detection, themes
+  engines/            PlantUML, Mermaid, Graphviz, ECharts, BPMN, sketch, org chart, network, SQL, logic, automaton, WaveDrom, data structure and wireframe engines, language detection, themes
   editor/             CodeMirror setup, syntax colouring, autocomplete
   preview.ts          pan and zoom canvas, click-to-source
   export.ts           SVG, PNG, JPG, WEBP and PDF export

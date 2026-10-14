@@ -1,6 +1,6 @@
-export type Engine = "plantuml" | "mermaid" | "graphviz" | "echarts" | "bpmn" | "sketch" | "orgchart" | "network" | "sql" | "logic" | "automaton" | "wavedrom" | "structures";
+export type Engine = "plantuml" | "mermaid" | "graphviz" | "echarts" | "bpmn" | "sketch" | "orgchart" | "network" | "sql" | "logic" | "automaton" | "wavedrom" | "structures" | "wireframe";
 
-export const ENGINES: readonly Engine[] = ["plantuml", "mermaid", "graphviz", "echarts", "bpmn", "sketch", "orgchart", "network", "sql", "logic", "automaton", "wavedrom", "structures"];
+export const ENGINES: readonly Engine[] = ["plantuml", "mermaid", "graphviz", "echarts", "bpmn", "sketch", "orgchart", "network", "sql", "logic", "automaton", "wavedrom", "structures", "wireframe"];
 
 export function isEngine(value: unknown): value is Engine {
   return ENGINES.includes(value as Engine);
@@ -38,6 +38,8 @@ export interface RenderOptions {
   waveStyle: WaveStyle;
   /** Data structures only: plain nodes, or tree and graph nodes tinted. */
   structStyle: StructStyle;
+  /** Wireframes only: crisp lines, or hand-drawn like a paper prototype. */
+  wireStyle: WireStyle;
 }
 
 export type GraphvizStyle = "plain" | "default";
@@ -61,6 +63,8 @@ export type AutomatonStyle = "plain" | "colour";
 export type WaveStyle = "default" | "narrow" | "lowkey";
 
 export type StructStyle = "plain" | "colour";
+
+export type WireStyle = "clean" | "sketchy";
 
 export type MermaidTheme = "default" | "neutral" | "base" | "forest" | "neo" | "redux" | "redux-color";
 
@@ -102,6 +106,7 @@ export const ENGINE_LABEL: Record<Engine, string> = {
   automaton: "Automata",
   wavedrom: "Timing (WaveDrom)",
   structures: "Data structures",
+  wireframe: "Wireframe",
 };
 
 export const ENGINE_EXT: Record<Engine, string> = {
@@ -118,6 +123,7 @@ export const ENGINE_EXT: Record<Engine, string> = {
   automaton: "automaton",
   wavedrom: "wavedrom",
   structures: "structures",
+  wireframe: "wireframe",
 };
 
 /** Short tag shown next to diagrams in lists. */
@@ -135,6 +141,7 @@ export const ENGINE_TAG: Record<Engine, string> = {
   automaton: "fa",
   wavedrom: "wave",
   structures: "ds",
+  wireframe: "ui",
 };
 
 /** File extensions recognised when opening a file. */
@@ -152,6 +159,7 @@ export const ENGINE_FILE_EXTS: Record<Engine, string[]> = {
   automaton: ["automaton", "fsm", "dfa", "nfa", "tm"],
   wavedrom: ["wavedrom", "wavejson"],
   structures: ["structures", "ds"],
+  wireframe: ["wireframe", "wire"],
 };
 
 /** Info string for a Markdown code block. */
@@ -169,4 +177,5 @@ export const ENGINE_FENCE: Record<Engine, string> = {
   automaton: "automaton",
   wavedrom: "wavedrom",
   structures: "structures",
+  wireframe: "wireframe",
 };
