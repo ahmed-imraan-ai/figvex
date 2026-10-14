@@ -459,6 +459,27 @@ function automatonSource(ctx: CompletionContext): CompletionResult | null {
   return null;
 }
 
+const WAVE_SNIPPETS: Completion[] = [
+  snippetCompletion("{ name: '${clk}', wave: '${p.......}' },", { label: "clock", detail: "clock signal", type: "function" }),
+  snippetCompletion("{ name: '${data}', wave: '${x.345x}', data: ['${a}', '${b}', '${c}'] },", { label: "bus", detail: "data bus with labels", type: "function" }),
+  snippetCompletion("{ name: '${req}', wave: '${0.1..0}' },", { label: "signal", detail: "a 0/1 signal", type: "function" }),
+  snippetCompletion("{},", { label: "gap", detail: "empty row", type: "function" }),
+  snippetCompletion("['${Group}',\n  ${}\n],", { label: "group", detail: "a named group of signals", type: "function" }),
+  snippetCompletion("head: { text: '${Title}', tick: 0 },", { label: "head", detail: "title and tick numbers", type: "keyword" }),
+  snippetCompletion("config: { hscale: ${2} },", { label: "config", detail: "horizontal scale", type: "keyword" }),
+  snippetCompletion("edge: ['${a~>b} ${label}'],", { label: "edge", detail: "arrows between nodes", type: "keyword" }),
+];
+
+function waveSource(ctx: CompletionContext): CompletionResult | null {
+  const word = ctx.matchBefore(/\w*/);
+  if (!word || (word.from === word.to && !ctx.explicit)) return null;
+  const line = ctx.state.doc.lineAt(ctx.pos);
+  const before = line.text.slice(0, ctx.pos - line.from);
+  // Inside a string (a wave), don't complete.
+  if ((before.match(/'/g) ?? []).length % 2 === 1) return null;
+  return { from: word.from, options: WAVE_SNIPPETS, validFor: /^\w*$/ };
+}
+
 const SOURCES = {
   plantuml: plantumlSource,
   mermaid: mermaidSource,
@@ -471,6 +492,7 @@ const SOURCES = {
   sql: sqlSource,
   logic: logicSource,
   automaton: automatonSource,
+  wavedrom: waveSource,
 } as const;
 
 export function completionSource(engine: Engine) {

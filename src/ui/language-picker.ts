@@ -14,6 +14,7 @@ const ABOUT: Record<Engine, { blurb: string; words: string }> = {
   sketch: { blurb: "Draw boxes and arrows by hand", words: "draw whiteboard freeform canvas pen" },
   orgchart: { blurb: "People and who they report to", words: "organisation organization team people hierarchy staff" },
   network: { blurb: "Devices, subnets, VLANs and links", words: "lan wan ip subnet vlan router switch firewall topology infrastructure" },
+  wavedrom: { blurb: "Digital timing diagrams, registers and logic in WaveJSON", words: "timing waveform signal clock bus digital electronics register bitfield wavejson waveform hardware" },
   automaton: { blurb: "DFAs, NFAs and Turing machines, stepped through", words: "automaton automata dfa nfa finite state machine fsm turing tm regular language theory computation" },
   logic: { blurb: "Truth tables, Karnaugh maps and gate circuits", words: "boolean truth table karnaugh kmap k-map gates circuit minterm algebra digital electronics" },
   sql: { blurb: "ER diagrams from CREATE TABLE statements", words: "er erd entity relationship database schema table ddl postgres mysql sqlite" },

@@ -33,9 +33,11 @@
     "@plantuml/core": "1.2026.8",
     "dompurify": "^3.4.16",
     "echarts": "6.1.0",
+    "json5": "^2.2.3",
     "jspdf": "^4.2.1",
     "mermaid": "^12.1.0",
-    "svg2pdf.js": "^2.8.1"
+    "svg2pdf.js": "^2.8.1",
+    "wavedrom": "^3.7.0"
   },
   "devDependencies": {
     "@types/node": "^26.6.5",

@@ -1,5 +1,6 @@
 import { SERIES_TYPES } from "./chart";
 import type { Engine } from "./types";
+import { isWaveJson } from "./wavedrom";
 
 const MERMAID_TYPES = [
   "flowchart", "graph", "sequenceDiagram", "classDiagram", "classDiagram-v2", "stateDiagram",
@@ -66,7 +67,7 @@ export function detectEngine(code: string): Engine | null {
       inBlockComment = !line.includes("*/", 2);
       continue;
     }
-    if (line.startsWith("{")) return "echarts"; // a JSON chart option
+    if (line.startsWith("{")) return isWaveJson(code) ? "wavedrom" : "echarts"; // WaveJSON or a JSON chart option
     if (line.startsWith("<")) return BPMN_ROOT.test(code) ? "bpmn" : null;
     if (dotStart.test(line)) return "graphviz";
     if (mermaidStart.test(line)) return "mermaid";
