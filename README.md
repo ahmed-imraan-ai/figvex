@@ -23,14 +23,14 @@ It was built for computer science students: UML for software engineering courses
 - Network diagrams with device icons, subnets, VLANs, ports and link types, and checks that catch address mistakes as you type
 - Org charts from an indented list of people, with departments, assistants, vacancies, dotted lines and three card styles
 - A sketch canvas for freeform diagrams: boxes, arrows that stay attached, text and pen, in a clean or hand-drawn style
-- 111 templates written around coursework: a library system class diagram, JWT login sequence, TCP state machine, DFA for multiples of 3, binary search tree, hash table, confusion matrix, sorting benchmark, library loan process, login wireframe, an app sign-in flow, society committee org chart, subnetting exercise, university ER schema from SQL, levelled data flow diagrams, Karnaugh maps, a full adder circuit, Turing machines, an SPI timing diagram, hash tables with chaining and probing, capstone Gantt plan and more
+- 114 templates written around coursework: a library system class diagram, JWT login sequence, TCP state machine, DFA for multiples of 3, binary search tree, hash table, confusion matrix, sorting benchmark, library loan process, login wireframe, an app sign-in flow, society committee org chart, subnetting exercise, university ER schema from SQL, levelled data flow diagrams, Karnaugh maps, a full adder circuit, Turing machines, an SPI timing diagram, hash tables with chaining and probing, capstone Gantt plan, communication, composite structure and interaction overview diagrams and more
 - Export to SVG, PNG, JPG, WEBP and vector PDF, at 1× to 4× scale, with a solid or transparent background
 - Copy the image straight to the clipboard for pasting into a report or slides
 - Share links that carry the whole diagram in the URL, with no server involved
 - Copy as a Markdown code block, or as a plantuml.com image link for a README
 - Plain black-and-white PlantUML by default, with PlantUML's own colours and its 40 bundled themes one click away
 - Click a shape in the diagram to jump to the line that drew it; rename, add and remove from the diagram for org charts and networks, rename for Graphviz and Mermaid flowcharts, and drag BPMN shapes
-- Errors point at the line, with a marker in the editor
+- Errors point at the line, with a marker in the editor; PlantUML class, sequence and state diagrams are also checked for common modelling mistakes
 - Every diagram saved in the browser, with rename, duplicate, delete and undo; collapsed, the list stays as a narrow rail of recent diagrams
 - A language picker above the editor that you can type into to search; changing the language of a diagram with real content starts a new one, so nothing is overwritten
 - Open `.puml`, `.mmd`, `.gv`, `.dot`, `.bpmn`, `.sketch`, `.org`, `.network`, `.sql`, `.logic`, `.automaton`, `.wavedrom`, `.structures`, `.wireframe`, chart and Markdown files, or drag them onto the window; a `.csv` file opens as a bar chart of its columns
@@ -70,6 +70,16 @@ PlantUML's `@startdot` blocks are drawn with Graphviz too.
 The browser build of PlantUML doesn't include these yet: Salt wireframes, ditaa, math and LaTeX, nwdiag, Chen ER, `@startfiles`, `@startchronology`, `@startboard`, `@startgit`, `@startwire`, `@starthcl`, and `!include` from a URL.
 
 When a diagram uses one of these, Figvex says so instead of showing a stack trace. In Settings you can turn on **Use server for missing types**. Only those diagrams are then sent to a PlantUML server to be drawn. The default is plantuml.com; you can point it at your own server (see Docker below).
+
+### Modelling checks
+
+PlantUML draws a class, sequence or state diagram even when the model has a mistake in it. Figvex checks for the common ones and marks them in the editor margin and the status bar, without stopping the drawing:
+
+- **Class diagrams:** inheritance that goes round in a circle, impossible multiplicities such as `5..2` or `1...*`, a class declared twice, an attribute in an interface, and a name in a relationship that looks like a typo of a declared class (PlantUML would quietly add a second class)
+- **Sequence diagrams:** a message to a name that looks like a typo of a declared participant, an activation that's never closed, and a deactivation with nothing active
+- **State diagrams:** states that can't be reached from the start
+
+The templates also show three UML diagrams PlantUML has no keyword for, drawn the way textbooks draw them: communication, composite structure and interaction overview diagrams.
 
 ## Editing from the diagram
 
