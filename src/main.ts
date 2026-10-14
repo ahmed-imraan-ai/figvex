@@ -21,7 +21,7 @@ import {
   type RenderResult,
 } from "./engines";
 import { isPlantUmlLoaded, loadPlantUml } from "./engines/plantuml";
-import { BPMN_STYLES, CHART_STYLES, NET_STYLES, SQL_STYLES, LOGIC_STYLES, ORG_STYLES, SKETCH_STYLES, GRAPHVIZ_STYLES, MERMAID_STYLES, PLANTUML_STYLES, PLANTUML_THEMES } from "./engines/themes";
+import { BPMN_STYLES, CHART_STYLES, NET_STYLES, SQL_STYLES, AUTOMATON_STYLES, LOGIC_STYLES, ORG_STYLES, SKETCH_STYLES, GRAPHVIZ_STYLES, MERMAID_STYLES, PLANTUML_STYLES, PLANTUML_THEMES } from "./engines/themes";
 import { byId, debounce, h, icon, isMac, modKey } from "./lib/dom";
 import { Preview, sourceHint, type SourceHint } from "./preview";
 import { hasSharedDiagram, readSharedDiagram } from "./share";
@@ -39,6 +39,7 @@ import { buildSharePanel } from "./ui/share-panel";
 import { BpmnCanvas } from "./ui/bpmn-canvas";
 import { LanguagePicker } from "./ui/language-picker";
 import { PreviewEditor } from "./ui/preview-editor";
+import { AutomatonPlayer } from "./ui/automaton-player";
 import { SketchCanvas } from "./ui/sketch-canvas";
 import { openTemplates } from "./ui/templates-dialog";
 
@@ -148,6 +149,9 @@ const previewEditor = new PreviewEditor({
   notify: (message) => toast(message),
 });
 
+// Stepping through an automaton's inputs.
+const player = new AutomatonPlayer({ preview, pane: ui.previewPane, engine: () => engine });
+
 // Dragging shapes in BPMN diagrams.
 const bpmnCanvas = new BpmnCanvas({
   pane: ui.previewPane,
@@ -185,6 +189,7 @@ function openDoc(next: Doc) {
   updateEngineUi();
   lastGood = null;
   previewEditor.clear();
+  player.clear();
   preview.clear();
   hideError();
   ui.saveState.textContent = "";
@@ -278,6 +283,10 @@ function fillStylePicker() {
     select.append(...SQL_STYLES.map((s) => option(s.value, s.label)));
     select.value = store.settings.sqlStyle;
     select.disabled = false;
+  } else if (engine === "automaton") {
+    select.append(...AUTOMATON_STYLES.map((s) => option(s.value, s.label)));
+    select.value = store.settings.automatonStyle;
+    select.disabled = false;
   } else if (engine === "logic") {
     select.append(...LOGIC_STYLES.map((s) => option(s.value, s.label)));
     select.value = store.settings.logicStyle;
@@ -299,6 +308,7 @@ ui.styleSelect.addEventListener("change", () => {
   else if (engine === "orgchart") store.setSettings({ orgStyle: value as Settings["orgStyle"] });
   else if (engine === "network") store.setSettings({ netStyle: value as Settings["netStyle"] });
   else if (engine === "sql") store.setSettings({ sqlStyle: value as Settings["sqlStyle"] });
+  else if (engine === "automaton") store.setSettings({ automatonStyle: value as Settings["automatonStyle"] });
   else if (engine === "logic") store.setSettings({ logicStyle: value as Settings["logicStyle"] });
   else store.setSettings({ mermaidTheme: value as Settings["mermaidTheme"] });
 });
@@ -439,6 +449,7 @@ async function renderNow() {
     }
     lastGood = { svg: result.svg, tone };
     previewEditor.refresh();
+    player.refresh();
     hideError();
     const where = result.remote ? " on plantuml.com" : "";
     warnings = (result.warnings ?? []).map((w) => ({ ...w, line: mapLine(w.line) }));
@@ -587,7 +598,8 @@ function applySettings(force = false) {
     s.orgStyle !== prev.orgStyle ||
     s.netStyle !== prev.netStyle ||
     s.sqlStyle !== prev.sqlStyle ||
-    s.logicStyle !== prev.logicStyle;
+    s.logicStyle !== prev.logicStyle ||
+    s.automatonStyle !== prev.automatonStyle;
   if (styleChanged) fillStylePicker();
   const needsRender =
     s.diagramTheme !== prev.diagramTheme ||
@@ -670,9 +682,9 @@ async function openFile(file: File) {
   let eng: Engine | null = ENGINES.find((e) => ENGINE_FILE_EXTS[e].includes(ext)) ?? null;
 
   if (ext === "md" || ext === "markdown") {
-    const block = text.match(/```(plantuml|puml|mermaid|dot|graphviz|echarts|bpmn|orgchart|network|sql|logic)\s*\n([\s\S]*?)```/);
+    const block = text.match(/```(plantuml|puml|mermaid|dot|graphviz|echarts|bpmn|orgchart|network|sql|logic|automaton)\s*\n([\s\S]*?)```/);
     if (!block) {
-      toast(`No plantuml, mermaid, dot, echarts, bpmn, orgchart, network, sql or logic code block found in ${file.name}.`, { error: true });
+      toast(`No plantuml, mermaid, dot, echarts, bpmn, orgchart, network, sql, logic or automaton code block found in ${file.name}.`, { error: true });
       return;
     }
     eng = ENGINES.find((e) => ENGINE_FENCE[e] === block[1]) ?? (block[1] === "graphviz" ? "graphviz" : "plantuml");

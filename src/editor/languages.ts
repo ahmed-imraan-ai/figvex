@@ -503,6 +503,50 @@ export const logicLanguage = StreamLanguage.define<{ first: boolean; setting: bo
   },
 });
 
+/** Automata: settings, state names and transition labels. */
+export const automatonLanguage = StreamLanguage.define<{ first: boolean; label: boolean }>({
+  name: "automaton",
+  startState: () => ({ first: true, label: false }),
+  token(stream: StringStream, state) {
+    if (stream.sol()) {
+      state.first = true;
+      state.label = false;
+    }
+    if (stream.eatSpace()) return null;
+    if ((stream.sol() || /\s/.test(stream.string.charAt(stream.pos - 1))) && stream.match(/^(#|\/\/)/)) {
+      stream.skipToEnd();
+      return "comment";
+    }
+    if (state.first) {
+      state.first = false;
+      if (stream.match(/^(automaton|dfa|nfa|tm|turing|title|start|accept|final|input|direction|blank|states?)\b(?!\s*-)/)) return "keyword";
+    }
+    if (state.label) {
+      if (stream.match("->")) {
+        state.label = false;
+        return "operator";
+      }
+      if (stream.match(/^(ε|eps|epsilon|λ)\b/)) return "atom";
+      if (stream.match(/^[,;/]/)) return "punctuation";
+      if (stream.match(/^[LRSN](?=\s*(;|->))/)) return "keyword";
+      stream.next();
+      return "string";
+    }
+    if (stream.match(/^"[^"]*"?/)) return "string";
+    if (stream.match(/^-(?!>)/)) {
+      state.label = true;
+      return "operator";
+    }
+    if (stream.match(/^(->|:)/)) return "operator";
+    if (stream.match(/^\S+/)) return "variableName";
+    stream.next();
+    return null;
+  },
+  languageData: {
+    commentTokens: { line: "#" },
+  },
+});
+
 const SKETCH_KINDS =/^(sketch|box|ellipse|diamond|text|arrow|line|pen)\b/;
 
 /** The sketch format: element kind, id, numbers, "labels" and options. */

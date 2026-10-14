@@ -1,6 +1,6 @@
-export type Engine = "plantuml" | "mermaid" | "graphviz" | "echarts" | "bpmn" | "sketch" | "orgchart" | "network" | "sql" | "logic";
+export type Engine = "plantuml" | "mermaid" | "graphviz" | "echarts" | "bpmn" | "sketch" | "orgchart" | "network" | "sql" | "logic" | "automaton";
 
-export const ENGINES: readonly Engine[] = ["plantuml", "mermaid", "graphviz", "echarts", "bpmn", "sketch", "orgchart", "network", "sql", "logic"];
+export const ENGINES: readonly Engine[] = ["plantuml", "mermaid", "graphviz", "echarts", "bpmn", "sketch", "orgchart", "network", "sql", "logic", "automaton"];
 
 export function isEngine(value: unknown): value is Engine {
   return ENGINES.includes(value as Engine);
@@ -32,6 +32,8 @@ export interface RenderOptions {
   sqlStyle: SqlStyle;
   /** Logic only: how NOT, AND and OR are written. */
   logicStyle: LogicStyle;
+  /** Automata only: plain circles, or the start and accepting states tinted. */
+  automatonStyle: AutomatonStyle;
 }
 
 export type GraphvizStyle = "plain" | "default";
@@ -49,6 +51,8 @@ export type NetStyle = "tiles" | "outline" | "mono";
 export type SqlStyle = "colour" | "plain" | "keys";
 
 export type LogicStyle = "overbar" | "prime" | "logic" | "code";
+
+export type AutomatonStyle = "plain" | "colour";
 
 export type MermaidTheme = "default" | "neutral" | "base" | "forest" | "neo" | "redux" | "redux-color";
 
@@ -87,6 +91,7 @@ export const ENGINE_LABEL: Record<Engine, string> = {
   network: "Network",
   sql: "SQL",
   logic: "Logic",
+  automaton: "Automata",
 };
 
 export const ENGINE_EXT: Record<Engine, string> = {
@@ -100,6 +105,7 @@ export const ENGINE_EXT: Record<Engine, string> = {
   network: "network",
   sql: "sql",
   logic: "logic",
+  automaton: "automaton",
 };
 
 /** Short tag shown next to diagrams in lists. */
@@ -114,6 +120,7 @@ export const ENGINE_TAG: Record<Engine, string> = {
   network: "net",
   sql: "sql",
   logic: "logic",
+  automaton: "fa",
 };
 
 /** File extensions recognised when opening a file. */
@@ -128,6 +135,7 @@ export const ENGINE_FILE_EXTS: Record<Engine, string[]> = {
   network: ["network", "net"],
   sql: ["sql", "ddl"],
   logic: ["logic", "bool"],
+  automaton: ["automaton", "fsm", "dfa", "nfa", "tm"],
 };
 
 /** Info string for a Markdown code block. */
@@ -142,4 +150,5 @@ export const ENGINE_FENCE: Record<Engine, string> = {
   network: "network",
   sql: "sql",
   logic: "logic",
+  automaton: "automaton",
 };

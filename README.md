@@ -15,10 +15,11 @@ It was built for computer science students: UML for software engineering courses
 - Live preview for PlantUML, Mermaid, Graphviz DOT, BPMN 2.0 and ECharts data charts, with the language picked up from the first line
 - ER diagrams drawn straight from SQL: paste `CREATE TABLE` statements, or a whole PostgreSQL, MySQL, SQLite or SQL Server dump, and get tables with crow's foot links
 - Boolean logic: truth tables, Karnaugh maps with their groups, the simplest sum of products and product of sums, and gate circuits, from an expression or a list of minterms
+- Automata: DFAs, NFAs with ε moves and Turing machines from their transitions, with each input run through the machine and a step-through on the diagram
 - Network diagrams with device icons, subnets, VLANs, ports and link types, and checks that catch address mistakes as you type
 - Org charts from an indented list of people, with departments, assistants, vacancies, dotted lines and three card styles
 - A sketch canvas for freeform diagrams: boxes, arrows that stay attached, text and pen, in a clean or hand-drawn style
-- 83 templates written around coursework: a library system class diagram, JWT login sequence, TCP state machine, DFA for multiples of 3, binary search tree, hash table, confusion matrix, sorting benchmark, library loan process, login wireframe, society committee org chart, subnetting exercise, university ER schema from SQL, levelled data flow diagrams, Karnaugh maps, a full adder circuit, capstone Gantt plan and more
+- 89 templates written around coursework: a library system class diagram, JWT login sequence, TCP state machine, DFA for multiples of 3, binary search tree, hash table, confusion matrix, sorting benchmark, library loan process, login wireframe, society committee org chart, subnetting exercise, university ER schema from SQL, levelled data flow diagrams, Karnaugh maps, a full adder circuit, Turing machines, capstone Gantt plan and more
 - Export to SVG, PNG, JPG, WEBP and vector PDF, at 1× to 4× scale, with a solid or transparent background
 - Copy the image straight to the clipboard for pasting into a report or slides
 - Share links that carry the whole diagram in the URL, with no server involved
@@ -28,7 +29,7 @@ It was built for computer science students: UML for software engineering courses
 - Errors point at the line, with a marker in the editor
 - Every diagram saved in the browser, with rename, duplicate, delete and undo; collapsed, the list stays as a narrow rail of recent diagrams
 - A language picker above the editor that you can type into to search; changing the language of a diagram with real content starts a new one, so nothing is overwritten
-- Open `.puml`, `.mmd`, `.gv`, `.dot`, `.bpmn`, `.sketch`, `.org`, `.network`, `.sql`, `.logic`, chart and Markdown files, or drag them onto the window; a `.csv` file opens as a bar chart of its columns
+- Open `.puml`, `.mmd`, `.gv`, `.dot`, `.bpmn`, `.sketch`, `.org`, `.network`, `.sql`, `.logic`, `.automaton`, chart and Markdown files, or drag them onto the window; a `.csv` file opens as a bar chart of its columns
 - Light and dark themes for the app and for the diagrams, separately
 - Pan and zoom with mouse, trackpad or touch; works on phones as two tabs
 
@@ -302,6 +303,39 @@ NOT binds tightest, then AND, XOR and OR. A variable is a letter, optionally fol
 
 Simplification uses the Quine–McCluskey method, so the answer is minimal, and don't cares are used only where they help. Karnaugh maps are drawn for 2 to 4 variables and truth tables for up to 6, and each group on the map has the same colour as its term in the answer. The Style menu picks the notation for the answers: **Overbars** (Ā·B), **Primes** (A'B), **Logic symbols** (¬A ∧ B) or **Programming** (!A && B).
 
+## Automata
+
+Write the transitions and Figvex draws the state diagram, runs each input through it, and lets you step through a run on the diagram.
+
+```
+automaton
+title "Strings that end in ab"
+start q0
+accept q2
+q0 -b-> q0
+q0 -a-> q1
+q1 -a-> q1
+q1 -b-> q2
+q2 -a-> q1
+q2 -b-> q0
+input abab
+```
+
+| Line | Does |
+| --- | --- |
+| `q0 -a-> q1` | A transition. `q0 -a, b-> q1` takes either symbol, and `q0 -> q1 : a` is the same thing |
+| `q0 -ε-> q1` | A move that reads nothing (also `eps`) |
+| `q0 -1/0,R-> q1` | A Turing machine move: read 1, write 0, move right (`L`, `R` or `S` to stay). Separate several with `;` |
+| `start q0` | The start state. Without it, the first state written is the start |
+| `accept q2 q3` | Accepting states, drawn with a double ring |
+| `input abba` | A string to run. `input ε` is the empty string. Symbols longer than a character are separated by spaces: `input coin push` |
+| `states q0 q1 q2` | The order states are first placed in, if it matters |
+| `blank _`, `direction down`, `title "…"`, `# comment` | The Turing machine blank, a top-down layout, a heading, a comment |
+
+Figvex works out what kind of machine it is: a Turing machine when the moves are read/write,direction; a DFA when every state has at most one move per symbol and there are no ε moves; otherwise an NFA, which is run as a set of states at once. Under the diagram, each input shows whether it is accepted and why. Turing machines stop after 500 steps if they don't halt.
+
+The bar at the bottom of the diagram steps through a run: the current states and the arrows just followed are highlighted, and the tape shows where the head is. The menu in the bar picks which input to follow. Figvex warns about states that can't be reached, a machine with no accepting state and inputs that use a symbol no transition reads.
+
 ## Charts
 
 A chart is an [ECharts option](https://echarts.apache.org/en/option.html) written as JSON. Comments and trailing commas are allowed. Data can go in the JSON, or as CSV under a line of three dashes, where it becomes the chart's dataset:
@@ -422,7 +456,7 @@ Set these as environment variables when building (in Netlify under **Site config
 ```
 src/
   main.ts             wiring: documents, rendering, toolbar, shortcuts
-  engines/            PlantUML, Mermaid, Graphviz, ECharts, BPMN, sketch, org chart, network, SQL and logic engines, language detection, themes
+  engines/            PlantUML, Mermaid, Graphviz, ECharts, BPMN, sketch, org chart, network, SQL, logic and automaton engines, language detection, themes
   editor/             CodeMirror setup, syntax colouring, autocomplete
   preview.ts          pan and zoom canvas, click-to-source
   export.ts           SVG, PNG, JPG, WEBP and PDF export
