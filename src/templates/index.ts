@@ -10,6 +10,7 @@ import { sketchTemplates } from "./sketch";
 import { sqlTemplates } from "./sql";
 import { logicTemplates } from "./logic";
 import { cloudTemplates } from "./cloud";
+import { advancedUmlTemplates } from "./uml-advanced";
 import { automatonTemplates } from "./automaton";
 import { wavedromTemplates } from "./wavedrom";
 import { structuresTemplates } from "./structures";
@@ -189,7 +190,7 @@ const blank: Template[] = [
   },
 ];
 
-export const TEMPLATES: Template[] = [...blank, ...plantumlTemplates, ...mermaidTemplates, ...graphvizTemplates, ...chartTemplates, ...bpmnTemplates, ...sketchTemplates, ...orgchartTemplates, ...networkTemplates, ...sqlTemplates, ...logicTemplates, ...automatonTemplates, ...wavedromTemplates, ...structuresTemplates, ...cloudTemplates, ...wireframeTemplates].sort(
+export const TEMPLATES: Template[] = [...blank, ...plantumlTemplates, ...mermaidTemplates, ...graphvizTemplates, ...chartTemplates, ...bpmnTemplates, ...sketchTemplates, ...orgchartTemplates, ...networkTemplates, ...sqlTemplates, ...logicTemplates, ...automatonTemplates, ...wavedromTemplates, ...structuresTemplates, ...cloudTemplates, ...wireframeTemplates, ...advancedUmlTemplates].sort(
   (a, b) => CATEGORIES.indexOf(a.category as never) - CATEGORIES.indexOf(b.category as never),
 );
 

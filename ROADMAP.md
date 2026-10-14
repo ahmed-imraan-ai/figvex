@@ -16,6 +16,7 @@ Figvex started with PlantUML and Mermaid, and now also draws Graphviz DOT, BPMN,
 - **Statistical charts (phase 2).** Box plots, histograms, trend lines and density curves worked out from raw CSV data by stat: transforms in the chart engine: Tukey whiskers and outliers, Sturges or fixed-width bins, least-squares fits (linear, polynomial, exponential, logarithmic, power) with the equation and R², and Gaussian kernel density.
 - **Cloud infrastructure (phase 2).** Templates for AWS, Azure, Google Cloud and Kubernetes with the official icons from PlantUML's standard library, and an icon search above the editor that previews any of about 1,200 icons and inserts it with its includes.
 - **UI wireframes (phase 2).** A wireframe language: phone, tablet, desktop, browser and window screens with headers, navigation, tabs, inputs, choices, sliders, buttons, lists, tables, alerts, cards and rows, and arrows between screens for user flows. Drawn clean or hand-drawn.
+- **Advanced UML (phase 2).** Templates for communication, composite structure and interaction overview diagrams, and modelling checks on PlantUML class, sequence and state diagrams: inheritance cycles, impossible multiplicities, duplicate classes, attributes in interfaces, likely typos of declared classes and participants, unbalanced activations and unreachable states.
 
 ## How new types fit in
 
@@ -52,7 +53,7 @@ Done. See above.
 - **Statistical charts.** Done (see above).
 - **UI wireframes.** Done (see above). Salt still needs the PlantUML browser build to include it.
 - **Network diagrams.** Physical views (racks, floor plans and cabling) alongside the logical network language, and import from a device list.
-- **Advanced UML.** The UML diagrams PlantUML and Mermaid cover poorly or not at all, such as composite structure, communication and interaction overview diagrams, and checks for common modelling mistakes.
+- **Advanced UML.** Done (see above).
 - **Cloud infrastructure.** Done (see above).
 - **Complex data models.** Done (see above).
 - **More text languages.** D2 and nomnoml, for people coming from those tools.

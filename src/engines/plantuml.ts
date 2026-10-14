@@ -12,6 +12,7 @@ import {
 } from "../config";
 import { plantumlEncode } from "../lib/encode";
 import { loadVizScript, renderGraphviz } from "./graphviz";
+import { lintPlantUml } from "./plantuml-lint";
 import type { RenderOptions, RenderResult } from "./types";
 
 interface PlantUmlModule {
@@ -184,8 +185,14 @@ export async function renderPlantUml(code: string, options: RenderOptions): Prom
   }
 
   const styled = applyStyle(code, options.plantumlTheme);
+  // Modelling checks run on the editor text. The app maps warnings with
+  // mapLine, so their lines are given in the styled text.
+  const toStyled = (line: number) => [line, line + 1].find((s) => styled.mapLine(s) === line) ?? line;
+  const warnings = lintPlantUml(code).map((w) => ({ ...w, line: toStyled(w.line) }));
   const finish = (result: RenderResult): RenderResult =>
-    result.ok ? { ...result, mapLine: styled.mapLine } : { ...result, line: result.line && styled.mapLine(result.line) };
+    result.ok
+      ? { ...result, mapLine: styled.mapLine, ...(warnings.length ? { warnings } : {}) }
+      : { ...result, line: result.line && styled.mapLine(result.line) };
 
   const missing = unsupportedFeature(code);
   if (missing) {
