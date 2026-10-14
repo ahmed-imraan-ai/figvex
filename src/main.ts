@@ -21,7 +21,7 @@ import {
   type RenderResult,
 } from "./engines";
 import { isPlantUmlLoaded, loadPlantUml } from "./engines/plantuml";
-import { BPMN_STYLES, CHART_STYLES, NET_STYLES, SQL_STYLES, ORG_STYLES, SKETCH_STYLES, GRAPHVIZ_STYLES, MERMAID_STYLES, PLANTUML_STYLES, PLANTUML_THEMES } from "./engines/themes";
+import { BPMN_STYLES, CHART_STYLES, NET_STYLES, SQL_STYLES, LOGIC_STYLES, ORG_STYLES, SKETCH_STYLES, GRAPHVIZ_STYLES, MERMAID_STYLES, PLANTUML_STYLES, PLANTUML_THEMES } from "./engines/themes";
 import { byId, debounce, h, icon, isMac, modKey } from "./lib/dom";
 import { Preview, sourceHint, type SourceHint } from "./preview";
 import { hasSharedDiagram, readSharedDiagram } from "./share";
@@ -278,6 +278,10 @@ function fillStylePicker() {
     select.append(...SQL_STYLES.map((s) => option(s.value, s.label)));
     select.value = store.settings.sqlStyle;
     select.disabled = false;
+  } else if (engine === "logic") {
+    select.append(...LOGIC_STYLES.map((s) => option(s.value, s.label)));
+    select.value = store.settings.logicStyle;
+    select.disabled = false;
   } else {
     select.append(...MERMAID_STYLES.map((s) => option(s.value, s.label)));
     select.value = store.settings.mermaidTheme;
@@ -295,6 +299,7 @@ ui.styleSelect.addEventListener("change", () => {
   else if (engine === "orgchart") store.setSettings({ orgStyle: value as Settings["orgStyle"] });
   else if (engine === "network") store.setSettings({ netStyle: value as Settings["netStyle"] });
   else if (engine === "sql") store.setSettings({ sqlStyle: value as Settings["sqlStyle"] });
+  else if (engine === "logic") store.setSettings({ logicStyle: value as Settings["logicStyle"] });
   else store.setSettings({ mermaidTheme: value as Settings["mermaidTheme"] });
 });
 
@@ -581,7 +586,8 @@ function applySettings(force = false) {
     s.sketchStyle !== prev.sketchStyle ||
     s.orgStyle !== prev.orgStyle ||
     s.netStyle !== prev.netStyle ||
-    s.sqlStyle !== prev.sqlStyle;
+    s.sqlStyle !== prev.sqlStyle ||
+    s.logicStyle !== prev.logicStyle;
   if (styleChanged) fillStylePicker();
   const needsRender =
     s.diagramTheme !== prev.diagramTheme ||
@@ -664,9 +670,9 @@ async function openFile(file: File) {
   let eng: Engine | null = ENGINES.find((e) => ENGINE_FILE_EXTS[e].includes(ext)) ?? null;
 
   if (ext === "md" || ext === "markdown") {
-    const block = text.match(/```(plantuml|puml|mermaid|dot|graphviz|echarts|bpmn|orgchart|network|sql)\s*\n([\s\S]*?)```/);
+    const block = text.match(/```(plantuml|puml|mermaid|dot|graphviz|echarts|bpmn|orgchart|network|sql|logic)\s*\n([\s\S]*?)```/);
     if (!block) {
-      toast(`No plantuml, mermaid, dot, echarts, bpmn, orgchart, network or sql code block found in ${file.name}.`, { error: true });
+      toast(`No plantuml, mermaid, dot, echarts, bpmn, orgchart, network, sql or logic code block found in ${file.name}.`, { error: true });
       return;
     }
     eng = ENGINES.find((e) => ENGINE_FENCE[e] === block[1]) ?? (block[1] === "graphviz" ? "graphviz" : "plantuml");

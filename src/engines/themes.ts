@@ -1,4 +1,4 @@
-import type { SqlStyle, BpmnStyle, ChartStyle, NetStyle, OrgStyle, SketchStyle, GraphvizStyle, MermaidTheme } from "./types";
+import type { LogicStyle, SqlStyle, BpmnStyle, ChartStyle, NetStyle, OrgStyle, SketchStyle, GraphvizStyle, MermaidTheme } from "./types";
 
 /** Themes bundled with PlantUML (themes.js), minus "plain" and "_none_". */
 export const PLANTUML_THEMES = `amiga aws-orange black-knight bluegray blueprint carbon-gray cerulean
@@ -60,4 +60,11 @@ export const SQL_STYLES: { value: SqlStyle; label: string }[] = [
   { value: "colour", label: "Colour" },
   { value: "plain", label: "Black and white" },
   { value: "keys", label: "Keys only" },
+];
+
+export const LOGIC_STYLES: { value: LogicStyle; label: string }[] = [
+  { value: "overbar", label: "Overbars" },
+  { value: "prime", label: "Primes" },
+  { value: "logic", label: "Logic symbols" },
+  { value: "code", label: "Programming" },
 ];

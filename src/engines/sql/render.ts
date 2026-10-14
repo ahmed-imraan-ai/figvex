@@ -213,6 +213,39 @@ function marker(end: { p: Point; d: Point }, kind: "one" | "zero-one" | "many", 
   return `<g stroke="${c.wire}" stroke-width="1.4" fill="none">${parts.join("")}</g>`;
 }
 
+/**
+ * Links from the same key all start at one point, so their ends would be
+ * drawn on top of each other. Ends that share a point are spread up and
+ * down the row instead. Ports are on the sides of a table, so moving an
+ * end and the control point next to it vertically keeps it on the edge.
+ */
+export function spreadEnds(routes: Map<Relation, Point[]>): Map<Relation, Point[]> {
+  const out = new Map([...routes].map(([r, pts]) => [r, pts.map((p) => ({ ...p }))]));
+  const shared = new Map<string, { pts: Point[]; atStart: boolean }[]>();
+  for (const pts of out.values()) {
+    if (pts.length < 2) continue;
+    for (const atStart of [true, false]) {
+      const p = atStart ? pts[0] : pts[pts.length - 1];
+      const k = `${Math.round(p.x)},${Math.round(p.y)}`;
+      shared.set(k, [...(shared.get(k) ?? []), { pts, atStart }]);
+    }
+  }
+  for (const ends of shared.values()) {
+    if (ends.length < 2) continue;
+    // Top to bottom by where each link heads, so they don't cross.
+    const heading = (e: { pts: Point[]; atStart: boolean }) => (e.atStart ? e.pts[e.pts.length - 1].y : e.pts[0].y);
+    ends.sort((a, b) => heading(a) - heading(b));
+    const gap = Math.min(7, 16 / (ends.length - 1));
+    ends.forEach((e, i) => {
+      const dy = (i - (ends.length - 1) / 2) * gap;
+      const [a, b] = e.atStart ? [0, 1] : [e.pts.length - 1, e.pts.length - 2];
+      e.pts[a].y += dy;
+      e.pts[b].y += dy;
+    });
+  }
+  return out;
+}
+
 function curve(pts: Point[]): string {
   let d = `M${n(pts[0].x)} ${n(pts[0].y)}`;
   for (let i = 1; i + 2 < pts.length; i += 3) d += `C${[pts[i], pts[i + 1], pts[i + 2]].map((p) => `${n(p.x)} ${n(p.y)}`).join(" ")}`;
@@ -250,7 +283,7 @@ export function drawSql(schema: SqlSchema, lay: SqlLayout, opts: SqlDraw): strin
     );
   }
 
-  for (const [r, pts] of lay.routes) {
+  for (const [r, pts] of spreadEnds(lay.routes)) {
     if (pts.length < 2) continue;
     const parentEnd = marker(endOf(pts, true), r.optional ? "zero-one" : "one", { wire, paper });
     const childEnd = marker(endOf(pts, false), r.single ? "zero-one" : "many", { wire, paper });

@@ -408,6 +408,34 @@ function sqlSource(ctx: CompletionContext): CompletionResult | null {
   return { from: word.from, options: SQL_COLUMN_WORDS, validFor: /^\w*$/ };
 }
 
+const LOGIC_LINES: Completion[] = [
+  snippetCompletion("${F} = ${A·B + C}", { label: "F =", detail: "function from an expression", type: "function" }),
+  snippetCompletion("${F}(${A}, ${B}, ${C}) = m(${1, 3, 5})", { label: "m(...)", detail: "function from minterms", type: "function" }),
+  snippetCompletion('title "${Title}"', { label: "title", detail: "heading", type: "keyword" }),
+  snippetCompletion("vars ${A B C}", { label: "vars", detail: "variables, in order", type: "keyword" }),
+  snippetCompletion("show ${table kmap simplified circuit}", { label: "show", detail: "what to draw", type: "keyword" }),
+  snippetCompletion("form ${both}", { label: "form", detail: "sop, pos or both", type: "keyword" }),
+  snippetCompletion("gates ${iec}", { label: "gates", detail: "ansi or iec symbols", type: "keyword" }),
+  snippetCompletion("circuit ${simplified}", { label: "circuit", detail: "written or simplified", type: "keyword" }),
+  snippetCompletion("compare ${F} ${G}", { label: "compare", detail: "check two functions match", type: "keyword" }),
+];
+
+const LOGIC_SHOW = ["table", "kmap", "simplified", "circuit", "minterms", "all"].map((label) => ({ label, type: "constant" }));
+
+function logicSource(ctx: CompletionContext): CompletionResult | null {
+  const line = ctx.state.doc.lineAt(ctx.pos);
+  const before = line.text.slice(0, ctx.pos - line.from);
+  const word = ctx.matchBefore(/\w*/);
+  if (!word || (word.from === word.to && !ctx.explicit)) return null;
+  if (/^\s*show\b/.test(before)) return { from: word.from, options: LOGIC_SHOW, validFor: /^\w*$/ };
+  if (/^\s*\w*$/.test(before)) return { from: word.from, options: LOGIC_LINES, validFor: /^\w*$/ };
+  if (/=/.test(before)) {
+    const ops = ["and", "or", "not", "xor", "nand", "nor", "xnor"].map((label) => ({ label, type: "keyword" }));
+    return { from: word.from, options: ops, validFor: /^\w*$/ };
+  }
+  return null;
+}
+
 const SOURCES = {
   plantuml: plantumlSource,
   mermaid: mermaidSource,
@@ -418,6 +446,7 @@ const SOURCES = {
   orgchart: orgSource,
   network: networkSource,
   sql: sqlSource,
+  logic: logicSource,
 } as const;
 
 export function completionSource(engine: Engine) {

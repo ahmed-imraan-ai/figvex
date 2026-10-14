@@ -14,10 +14,11 @@ It was built for computer science students: UML for software engineering courses
 
 - Live preview for PlantUML, Mermaid, Graphviz DOT, BPMN 2.0 and ECharts data charts, with the language picked up from the first line
 - ER diagrams drawn straight from SQL: paste `CREATE TABLE` statements, or a whole PostgreSQL, MySQL, SQLite or SQL Server dump, and get tables with crow's foot links
+- Boolean logic: truth tables, Karnaugh maps with their groups, the simplest sum of products and product of sums, and gate circuits, from an expression or a list of minterms
 - Network diagrams with device icons, subnets, VLANs, ports and link types, and checks that catch address mistakes as you type
 - Org charts from an indented list of people, with departments, assistants, vacancies, dotted lines and three card styles
 - A sketch canvas for freeform diagrams: boxes, arrows that stay attached, text and pen, in a clean or hand-drawn style
-- 78 templates written around coursework: a library system class diagram, JWT login sequence, TCP state machine, DFA for multiples of 3, binary search tree, hash table, confusion matrix, sorting benchmark, library loan process, login wireframe, society committee org chart, subnetting exercise, university ER schema from SQL, levelled data flow diagrams, capstone Gantt plan and more
+- 83 templates written around coursework: a library system class diagram, JWT login sequence, TCP state machine, DFA for multiples of 3, binary search tree, hash table, confusion matrix, sorting benchmark, library loan process, login wireframe, society committee org chart, subnetting exercise, university ER schema from SQL, levelled data flow diagrams, Karnaugh maps, a full adder circuit, capstone Gantt plan and more
 - Export to SVG, PNG, JPG, WEBP and vector PDF, at 1× to 4× scale, with a solid or transparent background
 - Copy the image straight to the clipboard for pasting into a report or slides
 - Share links that carry the whole diagram in the URL, with no server involved
@@ -27,7 +28,7 @@ It was built for computer science students: UML for software engineering courses
 - Errors point at the line, with a marker in the editor
 - Every diagram saved in the browser, with rename, duplicate, delete and undo; collapsed, the list stays as a narrow rail of recent diagrams
 - A language picker above the editor that you can type into to search; changing the language of a diagram with real content starts a new one, so nothing is overwritten
-- Open `.puml`, `.mmd`, `.gv`, `.dot`, `.bpmn`, `.sketch`, `.org`, `.network`, `.sql`, chart and Markdown files, or drag them onto the window; a `.csv` file opens as a bar chart of its columns
+- Open `.puml`, `.mmd`, `.gv`, `.dot`, `.bpmn`, `.sketch`, `.org`, `.network`, `.sql`, `.logic`, chart and Markdown files, or drag them onto the window; a `.csv` file opens as a bar chart of its columns
 - Light and dark themes for the app and for the diagrams, separately
 - Pan and zoom with mouse, trackpad or touch; works on phones as two tabs
 
@@ -261,6 +262,46 @@ These are plain SQL comments, so the script still runs.
 
 Figvex marks problems in the editor margin and on the table without stopping the drawing: a foreign key to a table or column that isn't defined, a table defined twice, a table with no primary key, and an `ALTER TABLE` for a table that doesn't exist. The Style menu has **Colour**, **Black and white** and **Keys only**, which hides every column that isn't a key. Clicking a table, column or link jumps to its line.
 
+## Logic
+
+Write a boolean expression and Figvex draws its truth table, its Karnaugh map with the groups circled, the simplest form and, if you ask, the gate circuit.
+
+```
+logic
+title "Full adder"
+vars A B Cin
+S = A ^ B ^ Cin
+Cout = AB + Cin(A ^ B)
+G(A, B, C, D) = m(0, 2, 5, 7, 8, 10, 13, 15) + d(1, 9)
+show table kmap simplified circuit
+```
+
+Operators can be written the way your course writes them:
+
+| Operator | Write |
+| --- | --- |
+| NOT | `!A`, `~A`, `¬A`, `not A` or `A'` |
+| AND | `A·B`, `A.B`, `A*B`, `A&B`, `A∧B`, `A and B`, or side by side: `AB` |
+| OR | `A+B`, `A\|B`, `A∨B`, `A or B` |
+| XOR, XNOR | `A^B`, `A⊕B`, `A xor B`; `A⊙B`, `A xnor B` |
+| NAND, NOR | `A↑B`, `A nand B`; `A↓B`, `A nor B` |
+
+NOT binds tightest, then AND, XOR and OR. A variable is a letter, optionally followed by digits (`A`, `x1`), so `AB` is A AND B. Longer names such as `Cin` work once they are listed on a `vars` line.
+
+| Line | Does |
+| --- | --- |
+| `F = expression` | A function. Its variables are the ones it uses, in alphabetical order |
+| `F(A, B, C) = m(1, 3, 5) + d(7)` | A function from its minterms, with optional don't cares. `M(...)` lists maxterms instead |
+| `vars A B C` | The variables and their order, for the table and the maps |
+| `show table kmap simplified circuit minterms` | What to draw (or `all`). The default is table, map and simplified |
+| `form sop` / `pos` / `both` | Simplify to a sum of products, a product of sums, or both |
+| `circuit written` / `simplified` | Draw the circuit as written or from the simplest form |
+| `gates ansi` / `iec` | Curved gate shapes, or IEC boxes with `&` and `≥1` |
+| `compare F G` | Checks two functions give the same output for every input, or lists where they differ |
+| `title "…"`, `# comment` | A heading, and a comment |
+
+Simplification uses the Quine–McCluskey method, so the answer is minimal, and don't cares are used only where they help. Karnaugh maps are drawn for 2 to 4 variables and truth tables for up to 6, and each group on the map has the same colour as its term in the answer. The Style menu picks the notation for the answers: **Overbars** (Ā·B), **Primes** (A'B), **Logic symbols** (¬A ∧ B) or **Programming** (!A && B).
+
 ## Charts
 
 A chart is an [ECharts option](https://echarts.apache.org/en/option.html) written as JSON. Comments and trailing commas are allowed. Data can go in the JSON, or as CSV under a line of three dashes, where it becomes the chart's dataset:
@@ -381,7 +422,7 @@ Set these as environment variables when building (in Netlify under **Site config
 ```
 src/
   main.ts             wiring: documents, rendering, toolbar, shortcuts
-  engines/            PlantUML, Mermaid, Graphviz, ECharts, BPMN, sketch, org chart, network and SQL engines, language detection, themes
+  engines/            PlantUML, Mermaid, Graphviz, ECharts, BPMN, sketch, org chart, network, SQL and logic engines, language detection, themes
   editor/             CodeMirror setup, syntax colouring, autocomplete
   preview.ts          pan and zoom canvas, click-to-source
   export.ts           SVG, PNG, JPG, WEBP and PDF export

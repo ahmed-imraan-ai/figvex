@@ -462,6 +462,47 @@ export const sqlLanguage = StreamLanguage.define<{ inComment: boolean }>({
   },
 });
 
+/** Logic files: settings, function names, operators, minterm lists. */
+export const logicLanguage = StreamLanguage.define<{ first: boolean; setting: boolean }>({
+  name: "logic",
+  startState: () => ({ first: true, setting: false }),
+  token(stream: StringStream, state) {
+    if (stream.sol()) {
+      state.first = true;
+      state.setting = false;
+    }
+    if (stream.eatSpace()) return null;
+    if (stream.match(/^(#|\/\/)/)) {
+      stream.skipToEnd();
+      return "comment";
+    }
+    if (state.first) {
+      state.first = false;
+      if (stream.match(/^(logic|title|vars|show|form|gates|circuit|compare)\b/)) {
+        state.setting = true;
+        return "keyword";
+      }
+      if (stream.match(/^[A-Za-z]\w*(?=\s*(\(|=))/)) return "def";
+    }
+    if (stream.match(/^"[^"]*"?/)) return "string";
+    if (state.setting) {
+      if (stream.match(/^(table|kmap|simplified|circuit|minterms|all|sop|pos|both|ansi|iec|written)\b/)) return "atom";
+      stream.match(/^[^\s#]+/) || stream.next();
+      return "variableName";
+    }
+    if (stream.match(/^(sum|prod|Σm|ΠM|Σ|Π|m|M|d|dc)(?=\s*\()/)) return "macroName";
+    if (stream.match(/^(and|or|not|xor|xnor|nand|nor)\b/i)) return "operator";
+    if (stream.match(/^(&&|\|\||[·.*&∧⋅+|∨^⊕⊙↑↓!~¬'’=])/)) return "operator";
+    if (stream.match(/^\d+/)) return "number";
+    if (stream.match(/^[A-Za-z]\w*/)) return "variableName";
+    stream.next();
+    return null;
+  },
+  languageData: {
+    commentTokens: { line: "#" },
+  },
+});
+
 const SKETCH_KINDS =/^(sketch|box|ellipse|diamond|text|arrow|line|pen)\b/;
 
 /** The sketch format: element kind, id, numbers, "labels" and options. */
