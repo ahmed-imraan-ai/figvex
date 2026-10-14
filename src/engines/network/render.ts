@@ -195,7 +195,7 @@ export function layoutNetwork(net: Network, viz: VizInstance): NetLayout {
 
 const ZONE_COLOURS = ["#3b6fd8", "#2f9e5b", "#d4880f", "#7b5cd6", "#c94f8a", "#1f97b0", "#cf4b3d", "#6a9a24"];
 
-const KIND_COLOUR: Record<DeviceKind, string> = {
+export const KIND_COLOUR: Record<DeviceKind, string> = {
   internet: "#3b6fd8",
   cloud: "#3b6fd8",
   router: "#1f97b0",

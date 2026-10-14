@@ -339,6 +339,9 @@ const NET_SETTINGS: Completion[] = [
   snippetCompletion("direction ${right}", { label: "direction", detail: "down or right", type: "keyword" }),
   snippetCompletion("lines ${square}", { label: "lines", detail: "straight, curved or square", type: "keyword" }),
   snippetCompletion("checks ${off}", { label: "checks", detail: "address checks on or off", type: "keyword" }),
+  snippetCompletion('rack ${r1} "${Comms rack}" ${24U}\n  ${1} patch "${Patch panel}"', { label: "rack", detail: "rack elevation: unit, then device", type: "keyword" }),
+  snippetCompletion('floor ${f1} "${Ground floor}" ${24x14}\n  room "${Office}" ${0} ${0} ${12} ${8}', { label: "floor", detail: "floor plan in metres", type: "keyword" }),
+  snippetCompletion("view ${physical}", { label: "view", detail: "all, logical or physical", type: "keyword" }),
 ];
 
 const NET_LINKS: Completion[] = [
