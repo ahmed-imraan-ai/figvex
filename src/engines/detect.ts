@@ -56,6 +56,7 @@ export function detectEngine(code: string): Engine | null {
     if (line === "orgchart") return "orgchart";
     if (line === "network") return "network";
     if (line === "logic") return "logic";
+    if (/^(automaton|dfa|nfa|tm|turing)$/i.test(line)) return "automaton";
     if (line.startsWith("%%")) continue; // Mermaid comment or %%{init}%% directive
     if (line.startsWith("--")) continue; // SQL comment
     if (SQL_START.test(line)) return "sql";
