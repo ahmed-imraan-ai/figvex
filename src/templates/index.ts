@@ -11,6 +11,7 @@ import { sqlTemplates } from "./sql";
 import { logicTemplates } from "./logic";
 import { automatonTemplates } from "./automaton";
 import { wavedromTemplates } from "./wavedrom";
+import { structuresTemplates } from "./structures";
 
 export interface Template {
   id: string;
@@ -66,6 +67,7 @@ sw1 -- pc1
   logic: "logic\nF = A·B + C\nshow table kmap simplified\n",
   automaton: "automaton\nstart q0\naccept q1\nq0 -a-> q1\nq1 -b-> q0\ninput aba\n",
   wavedrom: "{ signal: [\n  { name: 'clk', wave: 'p.....' },\n  { name: 'data', wave: 'x.34.x', data: ['a', 'b'] }\n]}\n",
+  structures: "structures\narray A = [3, 1, 4, 1, 5]\nlist L = 3 -> 1 -> 4\nbst B = 8 3 10 1 6 14\n",
   echarts: '{\n  "xAxis": { "type": "category" },\n  "yAxis": {},\n  "series": [{ "type": "bar" }]\n}\n---\nname,value\nA,3\nB,5\nC,4\n',
 };
 
@@ -166,9 +168,17 @@ const blank: Template[] = [
     summary: "A clock and a data bus in WaveJSON.",
     code: BLANK_CODE.wavedrom,
   },
+  {
+    id: "blank-structures",
+    engine: "structures",
+    category: "Start from scratch",
+    title: "Blank data structures",
+    summary: "An array, a linked list and a binary search tree, one per line.",
+    code: BLANK_CODE.structures,
+  },
 ];
 
-export const TEMPLATES: Template[] = [...blank, ...plantumlTemplates, ...mermaidTemplates, ...graphvizTemplates, ...chartTemplates, ...bpmnTemplates, ...sketchTemplates, ...orgchartTemplates, ...networkTemplates, ...sqlTemplates, ...logicTemplates, ...automatonTemplates, ...wavedromTemplates].sort(
+export const TEMPLATES: Template[] = [...blank, ...plantumlTemplates, ...mermaidTemplates, ...graphvizTemplates, ...chartTemplates, ...bpmnTemplates, ...sketchTemplates, ...orgchartTemplates, ...networkTemplates, ...sqlTemplates, ...logicTemplates, ...automatonTemplates, ...wavedromTemplates, ...structuresTemplates].sort(
   (a, b) => CATEGORIES.indexOf(a.category as never) - CATEGORIES.indexOf(b.category as never),
 );
 

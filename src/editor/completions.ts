@@ -480,6 +480,38 @@ function waveSource(ctx: CompletionContext): CompletionResult | null {
   return { from: word.from, options: WAVE_SNIPPETS, validFor: /^\w*$/ };
 }
 
+const STRUCTURE_LINES: Completion[] = [
+  snippetCompletion("array ${A} = [${3, 1, 4, 1, 5}]", { label: "array", detail: "indexed cells", type: "class" }),
+  snippetCompletion("matrix ${M} = [[${1, 0}], [${0, 1}]]", { label: "matrix", detail: "rows of cells", type: "class" }),
+  snippetCompletion("stack ${S} = [${1, 2, 3}]", { label: "stack", detail: "last item on top", type: "class" }),
+  snippetCompletion("queue ${Q} = [${a, b, c}]", { label: "queue", detail: "front and rear", type: "class" }),
+  snippetCompletion("list ${L} = ${3 -> 1 -> 4}", { label: "list", detail: "linked list; <-> for doubly", type: "class" }),
+  snippetCompletion("tree ${T} = ${8(3(1, 6), 10(, 14))}", { label: "tree", detail: "value(children)", type: "class" }),
+  snippetCompletion("bst ${B} = ${8 3 10 1 6 14}", { label: "bst", detail: "binary search tree by insertion", type: "class" }),
+  snippetCompletion("heap ${H} = [${9, 5, 8, 1, 3}]", { label: "heap", detail: "array and tree", type: "class" }),
+  snippetCompletion("hash ${H} size ${7} = ${10, 22, 31, 4}", { label: "hash", detail: "hash table with chaining", type: "class" }),
+  snippetCompletion("graph ${G} = ${A-B, B-C:4, C-A}", { label: "graph", detail: "undirected, optional weights", type: "class" }),
+  snippetCompletion("digraph ${G} = ${A->B, B->C}", { label: "digraph", detail: "directed graph", type: "class" }),
+  snippetCompletion('title "${Title}"', { label: "title", detail: "heading", type: "keyword" }),
+];
+
+const STRUCTURE_OPTIONS: Completion[] = [
+  snippetCompletion("mark ${2}", { label: "mark", detail: "highlight items", type: "keyword" }),
+  snippetCompletion("ptr ${i}=${0}", { label: "ptr", detail: "named pointers into an array", type: "keyword" }),
+  { label: "circular", detail: "last node links to the first", type: "keyword" },
+  snippetCompletion("probe ${linear}", { label: "probe", detail: "linear or quadratic probing", type: "keyword" }),
+];
+
+function structuresSource(ctx: CompletionContext): CompletionResult | null {
+  const line = ctx.state.doc.lineAt(ctx.pos);
+  const before = line.text.slice(0, ctx.pos - line.from);
+  const word = ctx.matchBefore(/\w*/);
+  if (!word || (word.from === word.to && !ctx.explicit)) return null;
+  if (/^\s*\w*$/.test(before)) return { from: word.from, options: STRUCTURE_LINES, validFor: /^\w*$/ };
+  if (/=/.test(before) && /\s\w*$/.test(before)) return { from: word.from, options: STRUCTURE_OPTIONS, validFor: /^\w*$/ };
+  return null;
+}
+
 const SOURCES = {
   plantuml: plantumlSource,
   mermaid: mermaidSource,
@@ -493,6 +525,7 @@ const SOURCES = {
   logic: logicSource,
   automaton: automatonSource,
   wavedrom: waveSource,
+  structures: structuresSource,
 } as const;
 
 export function completionSource(engine: Engine) {
