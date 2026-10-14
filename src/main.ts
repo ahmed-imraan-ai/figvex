@@ -42,6 +42,8 @@ import { PreviewEditor } from "./ui/preview-editor";
 import { AutomatonPlayer } from "./ui/automaton-player";
 import { SketchCanvas } from "./ui/sketch-canvas";
 import { openTemplates } from "./ui/templates-dialog";
+import { openIconSearch } from "./ui/icon-search";
+import { insertIcon } from "./engines/icon-insert";
 
 const DEFAULT_TITLE = "Untitled diagram";
 
@@ -56,6 +58,7 @@ const ui = {
   languageHost: byId("language-picker"),
   styleSelect: byId<HTMLSelectElement>("style-select"),
   syntaxLink: byId<HTMLAnchorElement>("link-syntax"),
+  iconsBtn: byId<HTMLButtonElement>("btn-icons"),
   previewPane: document.querySelector<HTMLElement>(".pane-preview")!,
   previewMessage: byId("preview-message"),
   errorCard: byId("error-card"),
@@ -166,6 +169,16 @@ const bpmnCanvas = new BpmnCanvas({
   notify: (message) => toast(message),
 });
 
+// Cloud icons from PlantUML's standard library, for PlantUML diagrams.
+ui.iconsBtn.addEventListener("click", () =>
+  openIconSearch((index, icon) => {
+    const lib = index.libraries.find((l) => l.id === icon[0])!;
+    const result = insertIcon(editor.value, editor.cursorLine, lib, icon);
+    editor.applyText(result.code);
+    editor.goToLine(result.line);
+  }),
+);
+
 ui.btn.zoomIn.addEventListener("click", () => preview.zoomBy(1.25));
 ui.btn.zoomOut.addEventListener("click", () => preview.zoomBy(0.8));
 ui.btn.zoomFit.addEventListener("click", () => preview.fit());
@@ -209,6 +222,7 @@ function updateEngineUi() {
   if (engine === "sketch") sketch.activate();
   if (engine === "bpmn") bpmnCanvas.activate();
   fillStylePicker();
+  ui.iconsBtn.hidden = engine !== "plantuml";
   ui.syntaxLink.href = DOCS[engine];
   ui.syntaxLink.textContent = `${ENGINE_LABEL[engine]} syntax`;
   updateStatusEngine();

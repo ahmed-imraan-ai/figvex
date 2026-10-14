@@ -15,7 +15,8 @@
     "postinstall": "node scripts/copy-plantuml.mjs",
     "test:watch": "vitest",
     "test:e2e": "vitest run --config vitest.e2e.config.ts",
-    "licenses": "node scripts/collect-licenses.mjs"
+    "licenses": "node scripts/collect-licenses.mjs",
+    "icons": "node scripts/make-icon-index.mjs"
   },
   "engines": {
     "node": ">=20"
