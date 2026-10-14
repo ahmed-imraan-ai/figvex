@@ -17,10 +17,11 @@ It was built for computer science students: UML for software engineering courses
 - Boolean logic: truth tables, Karnaugh maps with their groups, the simplest sum of products and product of sums, and gate circuits, from an expression or a list of minterms
 - Automata: DFAs, NFAs with ε moves and Turing machines from their transitions, with each input run through the machine and a step-through on the diagram
 - Digital timing diagrams, register bit fields and logic from assignments, with WaveDrom
+- Data structure pictures: arrays with pointers, stacks, queues, linked lists, trees, binary search trees, heaps, hash tables and graphs, one per line
 - Network diagrams with device icons, subnets, VLANs, ports and link types, and checks that catch address mistakes as you type
 - Org charts from an indented list of people, with departments, assistants, vacancies, dotted lines and three card styles
 - A sketch canvas for freeform diagrams: boxes, arrows that stay attached, text and pen, in a clean or hand-drawn style
-- 95 templates written around coursework: a library system class diagram, JWT login sequence, TCP state machine, DFA for multiples of 3, binary search tree, hash table, confusion matrix, sorting benchmark, library loan process, login wireframe, society committee org chart, subnetting exercise, university ER schema from SQL, levelled data flow diagrams, Karnaugh maps, a full adder circuit, Turing machines, an SPI timing diagram, capstone Gantt plan and more
+- 99 templates written around coursework: a library system class diagram, JWT login sequence, TCP state machine, DFA for multiples of 3, binary search tree, hash table, confusion matrix, sorting benchmark, library loan process, login wireframe, society committee org chart, subnetting exercise, university ER schema from SQL, levelled data flow diagrams, Karnaugh maps, a full adder circuit, Turing machines, an SPI timing diagram, hash tables with chaining and probing, capstone Gantt plan and more
 - Export to SVG, PNG, JPG, WEBP and vector PDF, at 1× to 4× scale, with a solid or transparent background
 - Copy the image straight to the clipboard for pasting into a report or slides
 - Share links that carry the whole diagram in the URL, with no server involved
@@ -30,7 +31,7 @@ It was built for computer science students: UML for software engineering courses
 - Errors point at the line, with a marker in the editor
 - Every diagram saved in the browser, with rename, duplicate, delete and undo; collapsed, the list stays as a narrow rail of recent diagrams
 - A language picker above the editor that you can type into to search; changing the language of a diagram with real content starts a new one, so nothing is overwritten
-- Open `.puml`, `.mmd`, `.gv`, `.dot`, `.bpmn`, `.sketch`, `.org`, `.network`, `.sql`, `.logic`, `.automaton`, `.wavedrom`, chart and Markdown files, or drag them onto the window; a `.csv` file opens as a bar chart of its columns
+- Open `.puml`, `.mmd`, `.gv`, `.dot`, `.bpmn`, `.sketch`, `.org`, `.network`, `.sql`, `.logic`, `.automaton`, `.wavedrom`, `.structures`, chart and Markdown files, or drag them onto the window; a `.csv` file opens as a bar chart of its columns
 - Light and dark themes for the app and for the diagrams, separately
 - Pan and zoom with mouse, trackpad or touch; works on phones as two tabs
 
@@ -353,6 +354,37 @@ Each character in a `wave` is one clock cycle: `p` and `n` are clocks, `0` and `
 
 The Style menu picks WaveDrom's **default**, **narrow** or **low-key** skin; dark diagrams use its dark skin. WaveDrom is loaded the first time a timing diagram is drawn.
 
+## Data structures
+
+One structure per line, drawn the way textbooks draw them.
+
+```
+structures
+array A = [7, 2, 9, 4, 1, 8] mark 2, 3 ptr lo=0 mid=2 hi=5
+stack S = [10, 20, 30]
+queue Q = [a, b, c, d]
+list L = 3 -> 1 -> 4
+bst B = 50 30 70 20 40 60 80
+heap H = [90, 70, 80, 30, 50]
+hash T size 7 = 10, 22, 31, 4, 15
+graph G = A-B:4, A-C:2, B-C:5
+```
+
+| Line | Draws |
+| --- | --- |
+| `array A = [1, 2, 3]` | Cells with their indexes |
+| `matrix M = [[1, 0], [0, 1]]` | A grid with row and column numbers |
+| `stack S = [1, 2, 3]` | A stack with the last item on top |
+| `queue Q = [a, b, c]` | A queue with its front and rear |
+| `list L = 1 -> 2 -> 3` | A linked list ending in null; `<->` for doubly linked, `circular` to link the last node back to the first |
+| `tree T = 8(3(1, 6), 10(, 14))` | Any tree, as value(children). An empty slot (`10(, 14)`) keeps a lone child on the right |
+| `bst B = 8 3 10 1 6` | The binary search tree you get by inserting the values in order |
+| `heap H = [9, 5, 8, 1]` | A heap as a tree and as its array |
+| `hash H size 7 = 10, 22, 31` | A hash table with separate chaining; `probe linear` or `probe quadratic` for open addressing |
+| `graph G = A-B, B-C:4` | An undirected graph, with optional weights; `digraph` and `->` for a directed one |
+
+After any structure, `mark 2, 3` highlights items (by index in arrays and heaps, by value elsewhere), and `ptr i=0 j=4` puts named pointers under array cells. Hash tables hash a number by itself and text by the sum of its character codes, mod the size. Figvex warns when a heap isn't a heap, a pointer is past the end of its array, or a probing table runs out of room.
+
 ## Charts
 
 A chart is an [ECharts option](https://echarts.apache.org/en/option.html) written as JSON. Comments and trailing commas are allowed. Data can go in the JSON, or as CSV under a line of three dashes, where it becomes the chart's dataset:
@@ -473,7 +505,7 @@ Set these as environment variables when building (in Netlify under **Site config
 ```
 src/
   main.ts             wiring: documents, rendering, toolbar, shortcuts
-  engines/            PlantUML, Mermaid, Graphviz, ECharts, BPMN, sketch, org chart, network, SQL, logic, automaton and WaveDrom engines, language detection, themes
+  engines/            PlantUML, Mermaid, Graphviz, ECharts, BPMN, sketch, org chart, network, SQL, logic, automaton, WaveDrom and data structure engines, language detection, themes
   editor/             CodeMirror setup, syntax colouring, autocomplete
   preview.ts          pan and zoom canvas, click-to-source
   export.ts           SVG, PNG, JPG, WEBP and PDF export
@@ -510,7 +542,7 @@ docker/               nginx config for the Docker image
 The full plan is in [ROADMAP.md](ROADMAP.md). It has three phases:
 
 1. Complex networking and visual editing (done).
-2. Statistical charts, UI wireframes, network diagrams, advanced UML, cloud infrastructure, complex data models (ER diagrams from SQL are done) and coursework tools such as truth tables, Karnaugh maps and automata.
+2. Statistical charts, UI wireframes, network diagrams, advanced UML, cloud infrastructure, complex data models and coursework tools (both done: ER diagrams from SQL, logic, automata, timing diagrams and data structures).
 3. Advanced scientific and financial charts, geographic maps, CAD, 3D, electrical schematics, formal process models and interactive visual analytics.
 
 AI assistance is planned alongside these, through MCP only: people use their own assistant and subscription, such as Claude Code or Claude Desktop, and it works with Figvex through a local `figvex-mcp` server. There's no login; links and pairing codes connect the assistant to the user's diagrams. Figvex runs no AI service of its own.

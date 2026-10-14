@@ -354,6 +354,16 @@ describe.skipIf(!chrome || !built)("Figvex in the browser", () => {
     expect(await page.$$eval("#sheet use", (els) => els.length)).toBe(0);
   });
 
+  it("draws data structures and jumps to a structure's line", async () => {
+    const ok = await openDiagram("structures", "Structures test", "structures\narray Arr = [4, 2]\nbst Tree = 5 3 8\ngraph Gr = X-Y:2\n");
+    expect(ok.error).toBeNull();
+    expect(await page.$eval("#lang-input", (el) => (el as HTMLInputElement).value)).toBe("Data structures");
+    expect(await page.$$eval("#sheet [data-qualified-name]", (els) => els.map((e) => e.getAttribute("data-qualified-name")))).toEqual(["Arr", "Tree", "Gr"]);
+    const tree = await (await page.$('#sheet [data-qualified-name="Tree"] circle'))!.boundingBox();
+    await page.mouse.click(tree!.x + tree!.width / 2, tree!.y + tree!.height / 2);
+    expect(await page.$eval("#status-cursor", (el) => el.textContent)).toMatch(/^Ln 3,/);
+  });
+
   it("draws Graphviz labels with runs of spaces", async () => {
     // Graphviz writes them as no-break spaces, which the sanitiser turns into &nbsp;.
     const ok = await openDiagram("graphviz", "Spaces", 'digraph { spaced [label="two  spaces"] }');

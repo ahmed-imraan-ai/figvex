@@ -1,6 +1,6 @@
 # Roadmap
 
-Figvex started with PlantUML and Mermaid, and now also draws Graphviz DOT, BPMN, network diagrams, ER diagrams from SQL, org charts, data charts and freeform sketches. The plan is to add more kinds of diagram and chart behind the same editor, preview, export and sharing. The work is split into three phases. Items within a phase aren't in a fixed order.
+Figvex started with PlantUML and Mermaid, and now also draws Graphviz DOT, BPMN, network diagrams, ER diagrams from SQL, boolean logic, automata, timing diagrams, data structures, org charts, data charts and freeform sketches. The plan is to add more kinds of diagram and chart behind the same editor, preview, export and sharing. The work is split into three phases. Items within a phase aren't in a fixed order.
 
 ## Done
 
@@ -12,6 +12,7 @@ Figvex started with PlantUML and Mermaid, and now also draws Graphviz DOT, BPMN,
 - **Complex networking.** A network language with 18 device icons, zones for subnets, VLANs and sites that nest, port names, cable, trunk, VPN and wireless links, and straight, curved or right-angled lines. Graphviz does the layout; the icons and drawing are ours. IPv4 and IPv6 addresses are checked as you type: addresses outside their subnet, duplicates, network and broadcast addresses, overlapping subnets and VLAN clashes.
 - **Visual editing.** Changes made in the diagram are written back to the text, so undo, saving and sharing behave as for typing. BPMN shapes can be dragged, with alignment guides, right-angled rerouting of flows, lane changes, and positions added to files that had none. Org charts and networks can be built from the diagram: rename, add a report or a linked device, and remove. Graphviz nodes and Mermaid flowchart nodes can be renamed. Sketches are drawn on a canvas. Between them, a diagram can be made without writing code.
 - **Complex data models (phase 2).** ER diagrams drawn from SQL DDL, including whole PostgreSQL, MySQL, SQLite and SQL Server dumps. Foreign keys become crow's foot links between the columns, with cardinality taken from NOT NULL and unique constraints. `-- group:` comments box tables by area (or by schema), `-- focus:` draws one part of the model, and a keys-only style keeps large schemas readable. Missing tables and columns are marked as you type.
+- **Coursework tools (phase 2).** Boolean logic: truth tables, Karnaugh maps with their groups, minimal sum of products and product of sums (Quine–McCluskey), equivalence checks and gate circuits in ANSI or IEC symbols. Automata: DFAs, NFAs with ε moves and Turing machines from their transitions, with each input run through the machine and a step-through on the diagram. Timing diagrams, register fields and logic with WaveDrom (MIT). Data structure pictures: arrays with pointers, stacks, queues, linked lists, trees, binary search trees, heaps, hash tables and graphs.
 
 ## How new types fit in
 
@@ -52,7 +53,7 @@ Done. See above.
 - **Cloud infrastructure.** AWS, Azure, GCP and Kubernetes diagrams with official icons. PlantUML's standard library already has these icon sets; the work is templates, icon search and layout.
 - **Complex data models.** Done (see above).
 - **More text languages.** D2 and nomnoml, for people coming from those tools.
-- **Coursework tools.** Truth tables and Karnaugh maps from a boolean expression, digital timing diagrams with WaveDrom, gate-level logic circuits, data structure pictures (arrays, linked lists, trees, hash tables, graphs), and automata and Turing machines with a step-through of an input string.
+- **Coursework tools.** Done (see above).
 
 ## Phase 3
 
