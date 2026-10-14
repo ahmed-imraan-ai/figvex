@@ -83,7 +83,9 @@ export class Preview {
       ADD_ATTR: ["data-source-line", "data-qualified-name", "xml:space", "dominant-baseline", "target"],
       FORBID_ATTR: ["onload", "onclick"],
     });
-    const doc = new DOMParser().parseFromString(clean, "image/svg+xml");
+    // DOMPurify serialises as HTML, so a no-break space (Graphviz writes
+    // runs of spaces as &#160;) comes back as &nbsp;, which XML doesn't know.
+    const doc = new DOMParser().parseFromString(clean.replace(/&nbsp;/g, "&#160;"), "image/svg+xml");
     const svg = doc.documentElement;
     if (!(svg instanceof SVGSVGElement) || doc.querySelector("parsererror")) {
       throw new Error("The engine returned an unreadable SVG.");
