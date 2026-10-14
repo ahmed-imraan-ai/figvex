@@ -1975,3 +1975,92 @@ dialog.modal.about {
 .pe-input {
   font-family: var(--font-sans);
 }
+
+/* ---------------------------------------------------------------------------
+   Automaton step-through
+--------------------------------------------------------------------------- */
+
+.player {
+  position: absolute;
+  left: 16px;
+  bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  max-width: calc(100% - 200px);
+  padding: 3px 10px 3px 3px;
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  background: var(--surface);
+  box-shadow: var(--shadow-sheet);
+}
+
+.player[hidden] {
+  display: none;
+}
+
+.player .icon-btn {
+  width: 28px;
+  height: 28px;
+}
+
+.player-input {
+  max-width: 140px;
+  height: 28px;
+  margin-right: 4px;
+  font: 500 12px var(--font-mono);
+}
+
+.player-status {
+  overflow: hidden;
+  margin-left: 6px;
+  color: var(--ink-2);
+  font-size: 12px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+#sheet .fa-state[data-on] .fa-ring {
+  fill: rgba(245, 158, 11, 0.35);
+  stroke: #d97706;
+  stroke-width: 3;
+}
+
+#sheet .fa-edge[data-on] .fa-line {
+  stroke: #d97706;
+  stroke-width: 2.6;
+}
+
+#sheet .fa-edge[data-on] .fa-head {
+  fill: #d97706;
+}
+
+#sheet .fa-cell[data-on] rect {
+  fill: rgba(245, 158, 11, 0.3);
+  stroke: #d97706;
+  stroke-width: 2.5;
+}
+
+#sheet .fa-cell[data-done] text {
+  opacity: 0.35;
+}
+
+@media (max-width: 760px) {
+  .player {
+    max-width: calc(100% - 32px);
+    bottom: 64px;
+  }
+}
+
+/* Small buttons in pane heads, such as Icons beside the syntax link. */
+.btn-small {
+  height: 26px;
+  margin-right: 10px;
+  padding: 0 9px;
+  border-color: var(--rule-strong);
+  font-size: 12.5px;
+}
+
+.btn-small[hidden] {
+  display: none;
+}

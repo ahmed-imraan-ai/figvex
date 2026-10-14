@@ -18,6 +18,13 @@ export const ENGINE_VERSION = {
   orgchart: "",
   network: "",
   sql: "",
+  logic: "",
+  automaton: "",
+  wavedrom: "3.7.0",
+  structures: "",
+  wireframe: "",
+  nomnoml: "1.7.0",
+  d2: "0.1.33",
 } as const;
 
 /** Set VITE_REPO_URL to an empty string to hide the GitHub links. */
@@ -46,4 +53,11 @@ export const DOCS = {
   orgchart: "https://github.com/ahmed-imraan-ai/figvex#org-charts",
   network: "https://github.com/ahmed-imraan-ai/figvex#networks",
   sql: "https://github.com/ahmed-imraan-ai/figvex#er-diagrams-from-sql",
+  logic: "https://github.com/ahmed-imraan-ai/figvex#logic",
+  automaton: "https://github.com/ahmed-imraan-ai/figvex#automata",
+  wavedrom: "https://wavedrom.com/tutorial.html",
+  structures: "https://github.com/ahmed-imraan-ai/figvex#data-structures",
+  wireframe: "https://github.com/ahmed-imraan-ai/figvex#ui-wireframes",
+  nomnoml: "https://nomnoml.com/",
+  d2: "https://d2lang.com/tour/intro",
 } as const;

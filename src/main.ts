@@ -21,7 +21,7 @@ import {
   type RenderResult,
 } from "./engines";
 import { isPlantUmlLoaded, loadPlantUml } from "./engines/plantuml";
-import { BPMN_STYLES, CHART_STYLES, NET_STYLES, SQL_STYLES, ORG_STYLES, SKETCH_STYLES, GRAPHVIZ_STYLES, MERMAID_STYLES, PLANTUML_STYLES, PLANTUML_THEMES } from "./engines/themes";
+import { BPMN_STYLES, CHART_STYLES, NET_STYLES, SQL_STYLES, D2_STYLES, NOMNOML_STYLES, WIRE_STYLES, STRUCT_STYLES, WAVE_STYLES, AUTOMATON_STYLES, LOGIC_STYLES, ORG_STYLES, SKETCH_STYLES, GRAPHVIZ_STYLES, MERMAID_STYLES, PLANTUML_STYLES, PLANTUML_THEMES } from "./engines/themes";
 import { byId, debounce, h, icon, isMac, modKey } from "./lib/dom";
 import { Preview, sourceHint, type SourceHint } from "./preview";
 import { hasSharedDiagram, readSharedDiagram } from "./share";
@@ -39,8 +39,12 @@ import { buildSharePanel } from "./ui/share-panel";
 import { BpmnCanvas } from "./ui/bpmn-canvas";
 import { LanguagePicker } from "./ui/language-picker";
 import { PreviewEditor } from "./ui/preview-editor";
+import { AutomatonPlayer } from "./ui/automaton-player";
 import { SketchCanvas } from "./ui/sketch-canvas";
 import { openTemplates } from "./ui/templates-dialog";
+import { openIconSearch } from "./ui/icon-search";
+import { insertIcon } from "./engines/icon-insert";
+import { isDeviceList, networkFromCsv } from "./engines/network/import";
 
 const DEFAULT_TITLE = "Untitled diagram";
 
@@ -55,6 +59,7 @@ const ui = {
   languageHost: byId("language-picker"),
   styleSelect: byId<HTMLSelectElement>("style-select"),
   syntaxLink: byId<HTMLAnchorElement>("link-syntax"),
+  iconsBtn: byId<HTMLButtonElement>("btn-icons"),
   previewPane: document.querySelector<HTMLElement>(".pane-preview")!,
   previewMessage: byId("preview-message"),
   errorCard: byId("error-card"),
@@ -148,6 +153,9 @@ const previewEditor = new PreviewEditor({
   notify: (message) => toast(message),
 });
 
+// Stepping through an automaton's inputs.
+const player = new AutomatonPlayer({ preview, pane: ui.previewPane, engine: () => engine });
+
 // Dragging shapes in BPMN diagrams.
 const bpmnCanvas = new BpmnCanvas({
   pane: ui.previewPane,
@@ -161,6 +169,16 @@ const bpmnCanvas = new BpmnCanvas({
   },
   notify: (message) => toast(message),
 });
+
+// Cloud icons from PlantUML's standard library, for PlantUML diagrams.
+ui.iconsBtn.addEventListener("click", () =>
+  openIconSearch((index, icon) => {
+    const lib = index.libraries.find((l) => l.id === icon[0])!;
+    const result = insertIcon(editor.value, editor.cursorLine, lib, icon);
+    editor.applyText(result.code);
+    editor.goToLine(result.line);
+  }),
+);
 
 ui.btn.zoomIn.addEventListener("click", () => preview.zoomBy(1.25));
 ui.btn.zoomOut.addEventListener("click", () => preview.zoomBy(0.8));
@@ -185,6 +203,7 @@ function openDoc(next: Doc) {
   updateEngineUi();
   lastGood = null;
   previewEditor.clear();
+  player.clear();
   preview.clear();
   hideError();
   ui.saveState.textContent = "";
@@ -204,6 +223,7 @@ function updateEngineUi() {
   if (engine === "sketch") sketch.activate();
   if (engine === "bpmn") bpmnCanvas.activate();
   fillStylePicker();
+  ui.iconsBtn.hidden = engine !== "plantuml";
   ui.syntaxLink.href = DOCS[engine];
   ui.syntaxLink.textContent = `${ENGINE_LABEL[engine]} syntax`;
   updateStatusEngine();
@@ -278,6 +298,34 @@ function fillStylePicker() {
     select.append(...SQL_STYLES.map((s) => option(s.value, s.label)));
     select.value = store.settings.sqlStyle;
     select.disabled = false;
+  } else if (engine === "d2") {
+    select.append(...D2_STYLES.map((s) => option(s.value, s.label)));
+    select.value = store.settings.d2Style;
+    select.disabled = false;
+  } else if (engine === "nomnoml") {
+    select.append(...NOMNOML_STYLES.map((s) => option(s.value, s.label)));
+    select.value = store.settings.nomnomlStyle;
+    select.disabled = false;
+  } else if (engine === "wireframe") {
+    select.append(...WIRE_STYLES.map((s) => option(s.value, s.label)));
+    select.value = store.settings.wireStyle;
+    select.disabled = false;
+  } else if (engine === "structures") {
+    select.append(...STRUCT_STYLES.map((s) => option(s.value, s.label)));
+    select.value = store.settings.structStyle;
+    select.disabled = false;
+  } else if (engine === "wavedrom") {
+    select.append(...WAVE_STYLES.map((s) => option(s.value, s.label)));
+    select.value = store.settings.waveStyle;
+    select.disabled = false;
+  } else if (engine === "automaton") {
+    select.append(...AUTOMATON_STYLES.map((s) => option(s.value, s.label)));
+    select.value = store.settings.automatonStyle;
+    select.disabled = false;
+  } else if (engine === "logic") {
+    select.append(...LOGIC_STYLES.map((s) => option(s.value, s.label)));
+    select.value = store.settings.logicStyle;
+    select.disabled = false;
   } else {
     select.append(...MERMAID_STYLES.map((s) => option(s.value, s.label)));
     select.value = store.settings.mermaidTheme;
@@ -295,6 +343,13 @@ ui.styleSelect.addEventListener("change", () => {
   else if (engine === "orgchart") store.setSettings({ orgStyle: value as Settings["orgStyle"] });
   else if (engine === "network") store.setSettings({ netStyle: value as Settings["netStyle"] });
   else if (engine === "sql") store.setSettings({ sqlStyle: value as Settings["sqlStyle"] });
+  else if (engine === "d2") store.setSettings({ d2Style: value as Settings["d2Style"] });
+  else if (engine === "nomnoml") store.setSettings({ nomnomlStyle: value as Settings["nomnomlStyle"] });
+  else if (engine === "wireframe") store.setSettings({ wireStyle: value as Settings["wireStyle"] });
+  else if (engine === "structures") store.setSettings({ structStyle: value as Settings["structStyle"] });
+  else if (engine === "wavedrom") store.setSettings({ waveStyle: value as Settings["waveStyle"] });
+  else if (engine === "automaton") store.setSettings({ automatonStyle: value as Settings["automatonStyle"] });
+  else if (engine === "logic") store.setSettings({ logicStyle: value as Settings["logicStyle"] });
   else store.setSettings({ mermaidTheme: value as Settings["mermaidTheme"] });
 });
 
@@ -434,6 +489,7 @@ async function renderNow() {
     }
     lastGood = { svg: result.svg, tone };
     previewEditor.refresh();
+    player.refresh();
     hideError();
     const where = result.remote ? " on plantuml.com" : "";
     warnings = (result.warnings ?? []).map((w) => ({ ...w, line: mapLine(w.line) }));
@@ -581,7 +637,14 @@ function applySettings(force = false) {
     s.sketchStyle !== prev.sketchStyle ||
     s.orgStyle !== prev.orgStyle ||
     s.netStyle !== prev.netStyle ||
-    s.sqlStyle !== prev.sqlStyle;
+    s.sqlStyle !== prev.sqlStyle ||
+    s.logicStyle !== prev.logicStyle ||
+    s.automatonStyle !== prev.automatonStyle ||
+    s.waveStyle !== prev.waveStyle ||
+    s.structStyle !== prev.structStyle ||
+    s.wireStyle !== prev.wireStyle ||
+    s.nomnomlStyle !== prev.nomnomlStyle ||
+    s.d2Style !== prev.d2Style;
   if (styleChanged) fillStylePicker();
   const needsRender =
     s.diagramTheme !== prev.diagramTheme ||
@@ -664,15 +727,19 @@ async function openFile(file: File) {
   let eng: Engine | null = ENGINES.find((e) => ENGINE_FILE_EXTS[e].includes(ext)) ?? null;
 
   if (ext === "md" || ext === "markdown") {
-    const block = text.match(/```(plantuml|puml|mermaid|dot|graphviz|echarts|bpmn|orgchart|network|sql)\s*\n([\s\S]*?)```/);
+    const block = text.match(/```(plantuml|puml|mermaid|dot|graphviz|echarts|bpmn|orgchart|network|sql|logic|automaton|wavedrom|structures|wireframe|nomnoml|d2)\s*\n([\s\S]*?)```/);
     if (!block) {
-      toast(`No plantuml, mermaid, dot, echarts, bpmn, orgchart, network or sql code block found in ${file.name}.`, { error: true });
+      toast(`No plantuml, mermaid, dot, echarts, bpmn, orgchart, network, sql, logic, automaton, wavedrom, structures, wireframe, nomnoml or d2 code block found in ${file.name}.`, { error: true });
       return;
     }
     eng = ENGINES.find((e) => ENGINE_FENCE[e] === block[1]) ?? (block[1] === "graphviz" ? "graphviz" : "plantuml");
     text = block[2];
   }
-  if (ext === "csv" || ext === "tsv") {
+  if ((ext === "csv" || ext === "tsv") && isDeviceList(text)) {
+    // A device list (name, type, IP, uplink...) becomes a network diagram.
+    text = networkFromCsv(text, file.name.replace(/\.[^.]+$/, ""));
+    eng = "network";
+  } else if (ext === "csv" || ext === "tsv") {
     // A data file becomes a bar chart of its columns, ready to change.
     text = BLANK_CODE.echarts.replace(/---[\s\S]*$/, `---\n${text.replace(/^﻿/, "")}`);
     eng = "echarts";

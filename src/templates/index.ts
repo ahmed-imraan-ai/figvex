@@ -8,6 +8,14 @@ import { orgchartTemplates } from "./orgchart";
 import { plantumlTemplates } from "./plantuml";
 import { sketchTemplates } from "./sketch";
 import { sqlTemplates } from "./sql";
+import { logicTemplates } from "./logic";
+import { cloudTemplates } from "./cloud";
+import { advancedUmlTemplates } from "./uml-advanced";
+import { textLanguageTemplates } from "./textlangs";
+import { automatonTemplates } from "./automaton";
+import { wavedromTemplates } from "./wavedrom";
+import { structuresTemplates } from "./structures";
+import { wireframeTemplates } from "./wireframe";
 
 export interface Template {
   id: string;
@@ -60,6 +68,13 @@ r1 -- sw1
 sw1 -- pc1
 `,
   sql: "CREATE TABLE customers (\n  id int PRIMARY KEY,\n  name text NOT NULL\n);\n\nCREATE TABLE orders (\n  id int PRIMARY KEY,\n  customer_id int NOT NULL REFERENCES customers (id),\n  placed_at timestamp NOT NULL\n);\n",
+  logic: "logic\nF = A·B + C\nshow table kmap simplified\n",
+  automaton: "automaton\nstart q0\naccept q1\nq0 -a-> q1\nq1 -b-> q0\ninput aba\n",
+  wavedrom: "{ signal: [\n  { name: 'clk', wave: 'p.....' },\n  { name: 'data', wave: 'x.34.x', data: ['a', 'b'] }\n]}\n",
+  structures: "structures\narray A = [3, 1, 4, 1, 5]\nlist L = 3 -> 1 -> 4\nbst B = 8 3 10 1 6 14\n",
+  wireframe: "wireframe\nscreen home \"Home\" phone\n  header \"My app\"\n  field \"Name\" \"Your name\"\n  button \"Save\" primary\n",
+  nomnoml: "[Customer|name: String] -> [Order|total: Money]\n",
+  d2: "direction: right\nclient -> server: request\nserver -> db: query\ndb: {shape: cylinder}\n",
   echarts: '{\n  "xAxis": { "type": "category" },\n  "yAxis": {},\n  "series": [{ "type": "bar" }]\n}\n---\nname,value\nA,3\nB,5\nC,4\n',
 };
 
@@ -136,9 +151,65 @@ const blank: Template[] = [
     summary: "Two tables and a foreign key. Paste your own CREATE TABLE statements to draw them.",
     code: BLANK_CODE.sql,
   },
+  {
+    id: "blank-logic",
+    engine: "logic",
+    category: "Start from scratch",
+    title: "Blank logic",
+    summary: "One boolean function with its truth table, Karnaugh map and simplest form.",
+    code: BLANK_CODE.logic,
+  },
+  {
+    id: "blank-automaton",
+    engine: "automaton",
+    category: "Start from scratch",
+    title: "Blank automaton",
+    summary: "Two states, two transitions and an input to step through.",
+    code: BLANK_CODE.automaton,
+  },
+  {
+    id: "blank-wavedrom",
+    engine: "wavedrom",
+    category: "Start from scratch",
+    title: "Blank timing diagram",
+    summary: "A clock and a data bus in WaveJSON.",
+    code: BLANK_CODE.wavedrom,
+  },
+  {
+    id: "blank-structures",
+    engine: "structures",
+    category: "Start from scratch",
+    title: "Blank data structures",
+    summary: "An array, a linked list and a binary search tree, one per line.",
+    code: BLANK_CODE.structures,
+  },
+  {
+    id: "blank-wireframe",
+    engine: "wireframe",
+    category: "Start from scratch",
+    title: "Blank wireframe",
+    summary: "One phone screen with a header, a field and a button.",
+    code: BLANK_CODE.wireframe,
+  },
+  {
+    id: "blank-nomnoml",
+    engine: "nomnoml",
+    category: "Start from scratch",
+    title: "Blank nomnoml",
+    summary: "Two boxes and an arrow in nomnoml's bracket syntax.",
+    code: BLANK_CODE.nomnoml,
+  },
+  {
+    id: "blank-d2",
+    engine: "d2",
+    category: "Start from scratch",
+    title: "Blank D2",
+    summary: "Three shapes and two connections in D2.",
+    code: BLANK_CODE.d2,
+  },
 ];
 
-export const TEMPLATES: Template[] = [...blank, ...plantumlTemplates, ...mermaidTemplates, ...graphvizTemplates, ...chartTemplates, ...bpmnTemplates, ...sketchTemplates, ...orgchartTemplates, ...networkTemplates, ...sqlTemplates].sort(
+export const TEMPLATES: Template[] = [...blank, ...plantumlTemplates, ...mermaidTemplates, ...graphvizTemplates, ...chartTemplates, ...bpmnTemplates, ...sketchTemplates, ...orgchartTemplates, ...networkTemplates, ...sqlTemplates, ...logicTemplates, ...automatonTemplates, ...wavedromTemplates, ...structuresTemplates, ...cloudTemplates, ...wireframeTemplates, ...advancedUmlTemplates, ...textLanguageTemplates].sort(
   (a, b) => CATEGORIES.indexOf(a.category as never) - CATEGORIES.indexOf(b.category as never),
 );
 

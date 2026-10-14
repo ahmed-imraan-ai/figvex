@@ -19,7 +19,7 @@ import {
 import { tags as t } from "@lezer/highlight";
 import type { Engine } from "../engines/types";
 import { completionSource } from "./completions";
-import { chartLanguage, dotLanguage, mermaidLanguage, networkLanguage, orgLanguage, plantumlLanguage, sketchLanguage, sqlLanguage, xmlLanguage } from "./languages";
+import { automatonLanguage, chartLanguage, d2Language, dotLanguage, nomnomlLanguage, mermaidLanguage, networkLanguage, orgLanguage, plantumlLanguage, logicLanguage, sketchLanguage, sqlLanguage, structuresLanguage, waveLanguage, wireframeLanguage, xmlLanguage } from "./languages";
 
 // Colours come from CSS variables so light and dark themes share one style.
 const highlight = HighlightStyle.define([
@@ -279,6 +279,11 @@ export class DiagramEditor {
     return this.view.state.doc.toString();
   }
 
+  /** The 1-based line the cursor is on. */
+  get cursorLine(): number {
+    return this.view.state.doc.lineAt(this.view.state.selection.main.head).number;
+  }
+
   /** Switch to another document: fresh undo history, cursor at the top. */
   load(code: string, engine: Engine) {
     this.engine = engine;
@@ -370,7 +375,7 @@ export class DiagramEditor {
   }
 }
 
-const LANGUAGES = { plantuml: plantumlLanguage, mermaid: mermaidLanguage, graphviz: dotLanguage, echarts: chartLanguage, bpmn: xmlLanguage, sketch: sketchLanguage, orgchart: orgLanguage, network: networkLanguage, sql: sqlLanguage } as const;
+const LANGUAGES = { plantuml: plantumlLanguage, mermaid: mermaidLanguage, graphviz: dotLanguage, echarts: chartLanguage, bpmn: xmlLanguage, sketch: sketchLanguage, orgchart: orgLanguage, network: networkLanguage, sql: sqlLanguage, logic: logicLanguage, automaton: automatonLanguage, wavedrom: waveLanguage, structures: structuresLanguage, wireframe: wireframeLanguage, nomnoml: nomnomlLanguage, d2: d2Language } as const;
 
 function languageFor(engine: Engine) {
   return LANGUAGES[engine];

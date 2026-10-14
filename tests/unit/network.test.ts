@@ -3,6 +3,7 @@ import { detectEngine } from "../../src/engines/detect";
 import type { VizInstance } from "../../src/engines/graphviz";
 import { contains, formatAddress, lastOf, looksLikeAddress, overlaps, parseAddress, subnetText, type Address } from "../../src/engines/network/address";
 import { checkNetwork, NetworkError, parseNetwork } from "../../src/engines/network/model";
+import { splitPhysical } from "../../src/engines/network/physical";
 import { drawNetwork, layoutNetwork, type NetStyle } from "../../src/engines/network/render";
 import { TEMPLATES } from "../../src/templates";
 
@@ -241,7 +242,8 @@ describe("templates and detection", () => {
   });
 
   it.each(TEMPLATES.filter((t) => t.engine === "network").map((t) => [t.id, t] as const))("%s parses and draws", (id, t) => {
-    const net = parseNetwork(t.code);
+    // Rack and floor blocks are read separately (see network-physical.test.ts).
+    const net = parseNetwork(splitPhysical(t.code).logical);
     if (id !== "net-subnetting") expect(checkNetwork(net)).toEqual([]);
     expect(drawNetwork(net, layoutNetwork(net, viz), { dark: false, style: "tiles" }).startsWith("<svg")).toBe(true);
   });

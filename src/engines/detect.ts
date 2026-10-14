@@ -1,5 +1,8 @@
 import { SERIES_TYPES } from "./chart";
 import type { Engine } from "./types";
+import { isWaveJson } from "./wavedrom";
+import { isD2 } from "./d2";
+import { isNomnoml } from "./nomnoml";
 
 const MERMAID_TYPES = [
   "flowchart", "graph", "sequenceDiagram", "classDiagram", "classDiagram-v2", "stateDiagram",
@@ -55,6 +58,10 @@ export function detectEngine(code: string): Engine | null {
     if (line === "sketch") return "sketch";
     if (line === "orgchart") return "orgchart";
     if (line === "network") return "network";
+    if (line === "logic") return "logic";
+    if (line === "structures") return "structures";
+    if (line === "wireframe") return "wireframe";
+    if (/^(automaton|dfa|nfa|tm|turing)$/i.test(line)) return "automaton";
     if (line.startsWith("%%")) continue; // Mermaid comment or %%{init}%% directive
     if (line.startsWith("--")) continue; // SQL comment
     if (SQL_START.test(line)) return "sql";
@@ -64,10 +71,12 @@ export function detectEngine(code: string): Engine | null {
       inBlockComment = !line.includes("*/", 2);
       continue;
     }
-    if (line.startsWith("{")) return "echarts"; // a JSON chart option
+    if (line.startsWith("{")) return isWaveJson(code) ? "wavedrom" : "echarts"; // WaveJSON or a JSON chart option
     if (line.startsWith("<")) return BPMN_ROOT.test(code) ? "bpmn" : null;
     if (dotStart.test(line)) return "graphviz";
     if (mermaidStart.test(line)) return "mermaid";
+    if (isNomnoml(line)) return "nomnoml";
+    if (isD2(line)) return "d2";
     return null;
   }
   return null;

@@ -1,6 +1,6 @@
-export type Engine = "plantuml" | "mermaid" | "graphviz" | "echarts" | "bpmn" | "sketch" | "orgchart" | "network" | "sql";
+export type Engine = "plantuml" | "mermaid" | "graphviz" | "echarts" | "bpmn" | "sketch" | "orgchart" | "network" | "sql" | "logic" | "automaton" | "wavedrom" | "structures" | "wireframe" | "nomnoml" | "d2";
 
-export const ENGINES: readonly Engine[] = ["plantuml", "mermaid", "graphviz", "echarts", "bpmn", "sketch", "orgchart", "network", "sql"];
+export const ENGINES: readonly Engine[] = ["plantuml", "mermaid", "graphviz", "echarts", "bpmn", "sketch", "orgchart", "network", "sql", "logic", "automaton", "wavedrom", "structures", "wireframe", "nomnoml", "d2"];
 
 export function isEngine(value: unknown): value is Engine {
   return ENGINES.includes(value as Engine);
@@ -30,6 +30,20 @@ export interface RenderOptions {
   netStyle: NetStyle;
   /** ER diagrams from SQL: colour, black and white, or keys only. */
   sqlStyle: SqlStyle;
+  /** Logic only: how NOT, AND and OR are written. */
+  logicStyle: LogicStyle;
+  /** Automata only: plain circles, or the start and accepting states tinted. */
+  automatonStyle: AutomatonStyle;
+  /** Timing diagrams only: the WaveDrom skin. Dark diagrams always use the dark skin. */
+  waveStyle: WaveStyle;
+  /** Data structures only: plain nodes, or tree and graph nodes tinted. */
+  structStyle: StructStyle;
+  /** Wireframes only: crisp lines, or hand-drawn like a paper prototype. */
+  wireStyle: WireStyle;
+  /** nomnoml only: its own warm colours, or black and white. #fill and #stroke in the diagram win. */
+  nomnomlStyle: NomnomlStyle;
+  /** D2 only: one of D2's themes, or its sketch look. Dark diagrams use D2's dark theme. */
+  d2Style: D2Style;
 }
 
 export type GraphvizStyle = "plain" | "default";
@@ -45,6 +59,20 @@ export type OrgStyle = "cards" | "minimal" | "bold";
 export type NetStyle = "tiles" | "outline" | "mono";
 
 export type SqlStyle = "colour" | "plain" | "keys";
+
+export type LogicStyle = "overbar" | "prime" | "logic" | "code";
+
+export type AutomatonStyle = "plain" | "colour";
+
+export type WaveStyle = "default" | "narrow" | "lowkey";
+
+export type StructStyle = "plain" | "colour";
+
+export type WireStyle = "clean" | "sketchy";
+
+export type NomnomlStyle = "default" | "plain";
+
+export type D2Style = "neutral" | "grey" | "colour-blind" | "terminal" | "origami" | "sketch";
 
 export type MermaidTheme = "default" | "neutral" | "base" | "forest" | "neo" | "redux" | "redux-color";
 
@@ -82,6 +110,13 @@ export const ENGINE_LABEL: Record<Engine, string> = {
   orgchart: "Org chart",
   network: "Network",
   sql: "SQL",
+  logic: "Logic",
+  automaton: "Automata",
+  wavedrom: "Timing (WaveDrom)",
+  structures: "Data structures",
+  wireframe: "Wireframe",
+  nomnoml: "nomnoml",
+  d2: "D2",
 };
 
 export const ENGINE_EXT: Record<Engine, string> = {
@@ -94,6 +129,13 @@ export const ENGINE_EXT: Record<Engine, string> = {
   orgchart: "org",
   network: "network",
   sql: "sql",
+  logic: "logic",
+  automaton: "automaton",
+  wavedrom: "wavedrom",
+  structures: "structures",
+  wireframe: "wireframe",
+  nomnoml: "nomnoml",
+  d2: "d2",
 };
 
 /** Short tag shown next to diagrams in lists. */
@@ -107,6 +149,13 @@ export const ENGINE_TAG: Record<Engine, string> = {
   orgchart: "org",
   network: "net",
   sql: "sql",
+  logic: "logic",
+  automaton: "fa",
+  wavedrom: "wave",
+  structures: "ds",
+  wireframe: "ui",
+  nomnoml: "nml",
+  d2: "d2",
 };
 
 /** File extensions recognised when opening a file. */
@@ -120,6 +169,13 @@ export const ENGINE_FILE_EXTS: Record<Engine, string[]> = {
   orgchart: ["org", "orgchart"],
   network: ["network", "net"],
   sql: ["sql", "ddl"],
+  logic: ["logic", "bool"],
+  automaton: ["automaton", "fsm", "dfa", "nfa", "tm"],
+  wavedrom: ["wavedrom", "wavejson"],
+  structures: ["structures", "ds"],
+  wireframe: ["wireframe", "wire"],
+  nomnoml: ["nomnoml", "noml"],
+  d2: ["d2"],
 };
 
 /** Info string for a Markdown code block. */
@@ -133,4 +189,11 @@ export const ENGINE_FENCE: Record<Engine, string> = {
   orgchart: "orgchart",
   network: "network",
   sql: "sql",
+  logic: "logic",
+  automaton: "automaton",
+  wavedrom: "wavedrom",
+  structures: "structures",
+  wireframe: "wireframe",
+  nomnoml: "nomnoml",
+  d2: "d2",
 };

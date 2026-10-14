@@ -12,22 +12,28 @@ It was built for computer science students: UML for software engineering courses
 
 ## Features
 
-- Live preview for PlantUML, Mermaid, Graphviz DOT, BPMN 2.0 and ECharts data charts, with the language picked up from the first line
+- Live preview for PlantUML, Mermaid, Graphviz DOT, D2, nomnoml, BPMN 2.0 and ECharts data charts, with box plots, histograms, trend lines and density curves worked out from raw data, with the language picked up from the first line
 - ER diagrams drawn straight from SQL: paste `CREATE TABLE` statements, or a whole PostgreSQL, MySQL, SQLite or SQL Server dump, and get tables with crow's foot links
-- Network diagrams with device icons, subnets, VLANs, ports and link types, and checks that catch address mistakes as you type
+- Boolean logic: truth tables, Karnaugh maps with their groups, the simplest sum of products and product of sums, and gate circuits, from an expression or a list of minterms
+- Automata: DFAs, NFAs with ε moves and Turing machines from their transitions, with each input run through the machine and a step-through on the diagram
+- Digital timing diagrams, register bit fields and logic from assignments, with WaveDrom
+- Data structure pictures: arrays with pointers, stacks, queues, linked lists, trees, binary search trees, heaps, hash tables and graphs, one per line
+- Cloud diagrams with the official AWS, Azure, Google Cloud and Kubernetes icons, and a search that inserts any of 1,200 icons with its includes
+- UI wireframes: phone, tablet and browser screens of common controls, with arrows for the user flow, drawn clean or sketchy
+- Network diagrams with device icons, subnets, VLANs, ports and link types, and checks that catch address mistakes as you type; rack elevations and floor plans with cable runs alongside, and a device list in a CSV file opens as a network
 - Org charts from an indented list of people, with departments, assistants, vacancies, dotted lines and three card styles
 - A sketch canvas for freeform diagrams: boxes, arrows that stay attached, text and pen, in a clean or hand-drawn style
-- 74 templates written around coursework: a library system class diagram, JWT login sequence, TCP state machine, DFA for multiples of 3, binary search tree, hash table, confusion matrix, sorting benchmark, library loan process, login wireframe, society committee org chart, subnetting exercise, university ER schema from SQL, capstone Gantt plan and more
+- 120 templates written around coursework: a library system class diagram, JWT login sequence, TCP state machine, DFA for multiples of 3, binary search tree, hash table, confusion matrix, sorting benchmark, library loan process, login wireframe, an app sign-in flow, society committee org chart, subnetting exercise, university ER schema from SQL, levelled data flow diagrams, Karnaugh maps, a full adder circuit, Turing machines, an SPI timing diagram, hash tables with chaining and probing, capstone Gantt plan, communication, composite structure and interaction overview diagrams and more
 - Export to SVG, PNG, JPG, WEBP and vector PDF, at 1× to 4× scale, with a solid or transparent background
 - Copy the image straight to the clipboard for pasting into a report or slides
 - Share links that carry the whole diagram in the URL, with no server involved
 - Copy as a Markdown code block, or as a plantuml.com image link for a README
 - Plain black-and-white PlantUML by default, with PlantUML's own colours and its 40 bundled themes one click away
 - Click a shape in the diagram to jump to the line that drew it; rename, add and remove from the diagram for org charts and networks, rename for Graphviz and Mermaid flowcharts, and drag BPMN shapes
-- Errors point at the line, with a marker in the editor
+- Errors point at the line, with a marker in the editor; PlantUML class, sequence and state diagrams are also checked for common modelling mistakes
 - Every diagram saved in the browser, with rename, duplicate, delete and undo; collapsed, the list stays as a narrow rail of recent diagrams
 - A language picker above the editor that you can type into to search; changing the language of a diagram with real content starts a new one, so nothing is overwritten
-- Open `.puml`, `.mmd`, `.gv`, `.dot`, `.bpmn`, `.sketch`, `.org`, `.network`, `.sql`, chart and Markdown files, or drag them onto the window; a `.csv` file opens as a bar chart of its columns
+- Open `.puml`, `.mmd`, `.gv`, `.dot`, `.bpmn`, `.sketch`, `.org`, `.network`, `.sql`, `.logic`, `.automaton`, `.wavedrom`, `.structures`, `.wireframe`, `.d2`, `.nomnoml`, chart and Markdown files, or drag them onto the window; a `.csv` file opens as a bar chart of its columns
 - Light and dark themes for the app and for the diagrams, separately
 - Pan and zoom with mouse, trackpad or touch; works on phones as two tabs
 
@@ -64,6 +70,16 @@ PlantUML's `@startdot` blocks are drawn with Graphviz too.
 The browser build of PlantUML doesn't include these yet: Salt wireframes, ditaa, math and LaTeX, nwdiag, Chen ER, `@startfiles`, `@startchronology`, `@startboard`, `@startgit`, `@startwire`, `@starthcl`, and `!include` from a URL.
 
 When a diagram uses one of these, Figvex says so instead of showing a stack trace. In Settings you can turn on **Use server for missing types**. Only those diagrams are then sent to a PlantUML server to be drawn. The default is plantuml.com; you can point it at your own server (see Docker below).
+
+### Modelling checks
+
+PlantUML draws a class, sequence or state diagram even when the model has a mistake in it. Figvex checks for the common ones and marks them in the editor margin and the status bar, without stopping the drawing:
+
+- **Class diagrams:** inheritance that goes round in a circle, impossible multiplicities such as `5..2` or `1...*`, a class declared twice, an attribute in an interface, and a name in a relationship that looks like a typo of a declared class (PlantUML would quietly add a second class)
+- **Sequence diagrams:** a message to a name that looks like a typo of a declared participant, an activation that's never closed, and a deactivation with nothing active
+- **State diagrams:** states that can't be reached from the start
+
+The templates also show three UML diagrams PlantUML has no keyword for, drawn the way textbooks draw them: communication, composite structure and interaction overview diagrams.
 
 ## Editing from the diagram
 
@@ -177,6 +193,84 @@ ana .. mia "budget"
 
 The Style menu has **Cards** (initials and a department colour strip), **Minimal** (black and white, for printing) and **Bold** (department-coloured headers). Department colours come with a legend, and clicking a person jumps to their line. For a chart you want to arrange by hand instead, use a sketch with the Connector tool.
 
+## D2 and nomnoml
+
+For people who already write them, [D2](https://d2lang.com/tour/intro) and [nomnoml](https://nomnoml.com/) work as they do elsewhere.
+
+```
+direction: right
+user: Student {shape: person}
+user -> web: HTTPS
+web -> db
+db: {shape: cylinder}
+```
+
+```
+[<abstract>Item|title: String]
+[Book] -:> [Item]
+[Member] 1 - 0..* [Loan]
+```
+
+D2 runs through its official WebAssembly build, which is large (about 8 MB), so it loads the first time a D2 diagram is drawn and runs in its own worker. The Style menu picks one of D2's themes (Neutral, Grey, Colour-blind clear, Terminal, Origami) or its sketch look; dark diagrams use D2's dark theme. For nomnoml, the menu picks its own warm colours or black and white; `#fill` and `#stroke` lines in the diagram take priority. Errors in either point at the line.
+
+## UI wireframes
+
+Screens of common controls, one per line and indented under their screen, with arrows between screens for a user flow.
+
+```
+wireframe
+screen login "Sign in" phone
+  header "Campus app"
+  field "Email" "you@uni.ac.uk"
+  password "Password"
+  row
+    checkbox "Remember me" on
+    link "Forgot password?"
+  button "Sign in" primary
+screen home "Home" phone
+  header "Today" menu
+  list "Timetable" "Grades" "Library"
+  nav *"Home" "Search" "Profile"
+login -> home "Sign in"
+```
+
+A screen is `phone`, `tablet`, `desktop`, `browser` or `window`, or a size like `400x600`; it grows to fit what's in it. Quoted text is what a control shows, and words after it change it.
+
+| Control | Writes | Options |
+| --- | --- | --- |
+| `header "Title"` | An app bar | `back`, `menu` |
+| `nav "A" *"B" "C"`, `tabs` | A navigation bar or tabs; `*` marks the current one | |
+| `heading`, `text`, `link` | Text; `text` wraps | |
+| `field "Label" "placeholder"`, `password`, `textarea`, `search`, `dropdown "Label" "Value"` | Inputs | `filled` shows the text as typed |
+| `checkbox`, `radio`, `toggle` | Choices | `on` |
+| `slider "Label" 40`, `progress "Label" 70` | A slider or progress bar at a percentage | |
+| `button "OK"` | A button | `primary`, `danger`, `small` |
+| `image "Caption" 160`, `avatar "Name" "detail"` | Placeholders | a height for images |
+| `list "One" "Two"` | A list with chevrons | |
+| `table "Name" "Email"` | A table; indented `row "Ann" "ann@uni.ac.uk"` lines are its rows | |
+| `alert "Saved"` | A message box | `info`, `success`, `warning`, `error` |
+| `row`, `card "Title"`, `box` | Containers: `row` puts the controls indented under it side by side | `dashed` for a box |
+| `divider`, `space 24` | Spacing | |
+
+`a -> b "label"` draws an arrow from screen a to screen b. The Style menu picks **Clean** or **Sketchy**, which draws everything by hand like a paper prototype. Clicking a control jumps to its line.
+
+## Cloud diagrams
+
+PlantUML's standard library has the official AWS, Azure, Google Cloud and Kubernetes icon sets. Each icon is a macro, `Name(alias, "label", "technology")`, after two includes: the library's common file and the icon's own.
+
+```plantuml
+@startuml
+!include <awslib14/AWSCommon>
+!include <awslib14/Compute/Lambda>
+!include <awslib14/Database/DynamoDB>
+Lambda(fn, "Orders", "Node.js")
+DynamoDB(table, "Orders table", "DynamoDB")
+fn --> table
+@enduml
+```
+
+**Icons** above the editor (PlantUML only) searches all of them by name, shows a preview, and inserts the icon at the cursor along with any includes the diagram doesn't have yet. The templates include an AWS three-tier web app, an AWS serverless API, an Azure web app, a Google Cloud data pipeline and a Kubernetes deployment. The icons load from the official PlantUML host the first time a diagram uses them.
+
 ## Networks
 
 Write devices, zones and links, and Figvex lays out the network with device icons. Indenting devices under a `zone` line puts them in it. A zone can be a subnet, a VLAN or a whole site, and zones can sit inside each other.
@@ -226,6 +320,39 @@ Addresses can be IPv4 or IPv6, with or without a prefix. Figvex checks them as y
 
 The checks don't stop the drawing. The Style menu has **Colour tiles**, **Outline** and **Greyscale**. Clicking a device, link or zone jumps to its line.
 
+### Racks and floor plans
+
+The same file can show where the devices physically are. Rack and floor blocks refer to devices declared above, and are drawn under the logical diagram:
+
+```
+rack r1 "Comms rack" 12U
+  12 patch "Patch panel"
+  10 core
+  6-7 nas
+  1-2 ups "UPS"
+floor g "Ground floor" 20x10
+  room "Office" 0 0 14 10
+  room "Comms" 14 0 6 5
+  core 17 2
+  desk1 3 3
+```
+
+| Line | Does |
+| --- | --- |
+| `rack id "Label" 42U` | A rack, drawn from the front with its units numbered from the bottom |
+| `3 core`, `5-6 nas` | A device in a unit or a range of units |
+| `1 patch "Label"` | A part that isn't a device: `patch`, `blank`, `shelf`, `ups`, `pdu`, `cable` or `kvm` |
+| `floor id "Label" 20x10` | A floor plan, width and depth in metres, on a metre grid |
+| `room "Office" x y width depth` | A room on the floor |
+| `core 17 2` | A device's position on the floor, in metres |
+| `view physical` | Show only the racks and floors (`logical` hides them; `all` is the default) |
+
+Links between devices on the same floor are drawn as cable runs along the walls' directions, with the estimated length; wireless links are dotted. Overlapping rack units, units above the top of a rack and devices outside a floor are marked as warnings.
+
+### Importing a device list
+
+Opening a CSV or TSV file whose columns look like a device list makes a network diagram instead of a chart. Columns are matched by their names: a name or hostname column is needed, with any of type, IP address, zone or location, subnet, VLAN and uplink. Types are read from common words (firewall, switch, access point, NAS, workstation and so on), rows with the same zone are grouped, and each uplink becomes a link.
+
 ## ER diagrams from SQL
 
 Paste SQL and Figvex draws the tables, their keys and the foreign keys between them. It reads `CREATE TABLE`, `ALTER TABLE ... ADD`, `CREATE UNIQUE INDEX` and `COMMENT ON`, and skips everything else, so a full `pg_dump` or `mysqldump` file works as it is. PostgreSQL, MySQL, SQLite and SQL Server syntax are all understood, including quoted, backticked and bracketed names.
@@ -261,6 +388,126 @@ These are plain SQL comments, so the script still runs.
 
 Figvex marks problems in the editor margin and on the table without stopping the drawing: a foreign key to a table or column that isn't defined, a table defined twice, a table with no primary key, and an `ALTER TABLE` for a table that doesn't exist. The Style menu has **Colour**, **Black and white** and **Keys only**, which hides every column that isn't a key. Clicking a table, column or link jumps to its line.
 
+## Logic
+
+Write a boolean expression and Figvex draws its truth table, its Karnaugh map with the groups circled, the simplest form and, if you ask, the gate circuit.
+
+```
+logic
+title "Full adder"
+vars A B Cin
+S = A ^ B ^ Cin
+Cout = AB + Cin(A ^ B)
+G(A, B, C, D) = m(0, 2, 5, 7, 8, 10, 13, 15) + d(1, 9)
+show table kmap simplified circuit
+```
+
+Operators can be written the way your course writes them:
+
+| Operator | Write |
+| --- | --- |
+| NOT | `!A`, `~A`, `¬A`, `not A` or `A'` |
+| AND | `A·B`, `A.B`, `A*B`, `A&B`, `A∧B`, `A and B`, or side by side: `AB` |
+| OR | `A+B`, `A\|B`, `A∨B`, `A or B` |
+| XOR, XNOR | `A^B`, `A⊕B`, `A xor B`; `A⊙B`, `A xnor B` |
+| NAND, NOR | `A↑B`, `A nand B`; `A↓B`, `A nor B` |
+
+NOT binds tightest, then AND, XOR and OR. A variable is a letter, optionally followed by digits (`A`, `x1`), so `AB` is A AND B. Longer names such as `Cin` work once they are listed on a `vars` line.
+
+| Line | Does |
+| --- | --- |
+| `F = expression` | A function. Its variables are the ones it uses, in alphabetical order |
+| `F(A, B, C) = m(1, 3, 5) + d(7)` | A function from its minterms, with optional don't cares. `M(...)` lists maxterms instead |
+| `vars A B C` | The variables and their order, for the table and the maps |
+| `show table kmap simplified circuit minterms` | What to draw (or `all`). The default is table, map and simplified |
+| `form sop` / `pos` / `both` | Simplify to a sum of products, a product of sums, or both |
+| `circuit written` / `simplified` | Draw the circuit as written or from the simplest form |
+| `gates ansi` / `iec` | Curved gate shapes, or IEC boxes with `&` and `≥1` |
+| `compare F G` | Checks two functions give the same output for every input, or lists where they differ |
+| `title "…"`, `# comment` | A heading, and a comment |
+
+Simplification uses the Quine–McCluskey method, so the answer is minimal, and don't cares are used only where they help. Karnaugh maps are drawn for 2 to 4 variables and truth tables for up to 6, and each group on the map has the same colour as its term in the answer. The Style menu picks the notation for the answers: **Overbars** (Ā·B), **Primes** (A'B), **Logic symbols** (¬A ∧ B) or **Programming** (!A && B).
+
+## Automata
+
+Write the transitions and Figvex draws the state diagram, runs each input through it, and lets you step through a run on the diagram.
+
+```
+automaton
+title "Strings that end in ab"
+start q0
+accept q2
+q0 -b-> q0
+q0 -a-> q1
+q1 -a-> q1
+q1 -b-> q2
+q2 -a-> q1
+q2 -b-> q0
+input abab
+```
+
+| Line | Does |
+| --- | --- |
+| `q0 -a-> q1` | A transition. `q0 -a, b-> q1` takes either symbol, and `q0 -> q1 : a` is the same thing |
+| `q0 -ε-> q1` | A move that reads nothing (also `eps`) |
+| `q0 -1/0,R-> q1` | A Turing machine move: read 1, write 0, move right (`L`, `R` or `S` to stay). Separate several with `;` |
+| `start q0` | The start state. Without it, the first state written is the start |
+| `accept q2 q3` | Accepting states, drawn with a double ring |
+| `input abba` | A string to run. `input ε` is the empty string. Symbols longer than a character are separated by spaces: `input coin push` |
+| `states q0 q1 q2` | The order states are first placed in, if it matters |
+| `blank _`, `direction down`, `title "…"`, `# comment` | The Turing machine blank, a top-down layout, a heading, a comment |
+
+Figvex works out what kind of machine it is: a Turing machine when the moves are read/write,direction; a DFA when every state has at most one move per symbol and there are no ε moves; otherwise an NFA, which is run as a set of states at once. Under the diagram, each input shows whether it is accepted and why. Turing machines stop after 500 steps if they don't halt.
+
+The bar at the bottom of the diagram steps through a run: the current states and the arrows just followed are highlighted, and the tape shows where the head is. The menu in the bar picks which input to follow. Figvex warns about states that can't be reached, a machine with no accepting state and inputs that use a symbol no transition reads.
+
+## Timing diagrams
+
+Timing diagrams are drawn by [WaveDrom](https://wavedrom.com/) from WaveJSON, which Figvex picks up when the text starts with `{ signal: [...] }`, `{ reg: [...] }` or `{ assign: [...] }`.
+
+```
+{ signal: [
+  { name: 'clk',  wave: 'p.......' },
+  { name: 'data', wave: 'x.345x..', data: ['A0', 'A1', 'A2'] },
+  { name: 'ack',  wave: '0..1.0..' }
+] }
+```
+
+Each character in a `wave` is one clock cycle: `p` and `n` are clocks, `0` and `1` levels, `x` unknown, `z` high impedance, `.` the same as before, and `=`, `2` to `9` bus values labelled from `data`. `node` and `edge` draw arrows between points, square brackets group signals, and `head` and `config` set a title, tick numbers and the horizontal scale. `reg` draws register bit fields and `assign` draws gates from nested expressions. The [WaveDrom tutorial](https://wavedrom.com/tutorial.html) covers the rest.
+
+The Style menu picks WaveDrom's **default**, **narrow** or **low-key** skin; dark diagrams use its dark skin. WaveDrom is loaded the first time a timing diagram is drawn.
+
+## Data structures
+
+One structure per line, drawn the way textbooks draw them.
+
+```
+structures
+array A = [7, 2, 9, 4, 1, 8] mark 2, 3 ptr lo=0 mid=2 hi=5
+stack S = [10, 20, 30]
+queue Q = [a, b, c, d]
+list L = 3 -> 1 -> 4
+bst B = 50 30 70 20 40 60 80
+heap H = [90, 70, 80, 30, 50]
+hash T size 7 = 10, 22, 31, 4, 15
+graph G = A-B:4, A-C:2, B-C:5
+```
+
+| Line | Draws |
+| --- | --- |
+| `array A = [1, 2, 3]` | Cells with their indexes |
+| `matrix M = [[1, 0], [0, 1]]` | A grid with row and column numbers |
+| `stack S = [1, 2, 3]` | A stack with the last item on top |
+| `queue Q = [a, b, c]` | A queue with its front and rear |
+| `list L = 1 -> 2 -> 3` | A linked list ending in null; `<->` for doubly linked, `circular` to link the last node back to the first |
+| `tree T = 8(3(1, 6), 10(, 14))` | Any tree, as value(children). An empty slot (`10(, 14)`) keeps a lone child on the right |
+| `bst B = 8 3 10 1 6` | The binary search tree you get by inserting the values in order |
+| `heap H = [9, 5, 8, 1]` | A heap as a tree and as its array |
+| `hash H size 7 = 10, 22, 31` | A hash table with separate chaining; `probe linear` or `probe quadratic` for open addressing |
+| `graph G = A-B, B-C:4` | An undirected graph, with optional weights; `digraph` and `->` for a directed one |
+
+After any structure, `mark 2, 3` highlights items (by index in arrays and heaps, by value elsewhere), and `ptr i=0 j=4` puts named pointers under array cells. Hash tables hash a number by itself and text by the sum of its character codes, mod the size. Figvex warns when a heap isn't a heap, a pointer is past the end of its array, or a probing table runs out of room.
+
 ## Charts
 
 A chart is an [ECharts option](https://echarts.apache.org/en/option.html) written as JSON. Comments and trailing commas are allowed. Data can go in the JSON, or as CSV under a line of three dashes, where it becomes the chart's dataset:
@@ -282,6 +529,24 @@ C,40
 Each column after the first becomes a series, in order. `"width"` and `"height"` at the top level set the size in pixels (720 × 440 by default).
 
 Chart types: bar, line, pie, scatter, radar, box plot, heatmap, candlestick, funnel, gauge, Sankey, graph, tree, treemap, sunburst, parallel coordinates and theme river. JSON can't hold functions, so options that need a JavaScript callback, such as a custom tooltip formatter, aren't available; string templates like `"{b}: {c}"` work.
+
+### Statistics from raw data
+
+Four transforms work out statistics from raw rows, so the CSV can hold the data as it was collected. Put the data first in `"dataset"`, then the transform; series draw the result with `"datasetIndex"` or `"datasetId"`:
+
+```
+"dataset": [{}, { "transform": { "type": "stat:histogram", "config": { "dimension": "minutes", "width": 5 } } }],
+"series": [{ "type": "bar", "datasetIndex": 1 }]
+```
+
+| Transform | Config | Makes |
+| --- | --- | --- |
+| `stat:histogram` | `dimension`; `width` or `bins` (Sturges' rule if neither); `start` | Columns bin, count, percent, density, from, to |
+| `stat:boxplot` | `group` and `value` for long data, or `dimensions` for one column per group; `whiskers`: `tukey` (default) or `minmax` | Columns group, low, q1, median, q3, high, n, and a second dataset `<id>-outliers` |
+| `stat:regression` | `x`, `y`, `method` (linear, polynomial with `order`, exponential, logarithmic, power), `points` | Points along the fitted line |
+| `stat:density` | `dimension`, `bandwidth` (Silverman's rule by default), `points` | A Gaussian kernel density curve: columns x, density |
+
+Quartiles use linear interpolation between data points, as Excel's `QUARTILE.INC` and R's default do. In any text, `{equation}` and `{r2}` show the fitted equation and R² of the trend line that series draws, or of the first trend line elsewhere. The chart templates include a box plot, a histogram, a trend line and a density curve built this way.
 
 ## Styles
 
@@ -381,7 +646,7 @@ Set these as environment variables when building (in Netlify under **Site config
 ```
 src/
   main.ts             wiring: documents, rendering, toolbar, shortcuts
-  engines/            PlantUML, Mermaid, Graphviz, ECharts, BPMN, sketch, org chart, network and SQL engines, language detection, themes
+  engines/            PlantUML, Mermaid, Graphviz, ECharts, BPMN, sketch, org chart, network, SQL, logic, automaton, WaveDrom, data structure, wireframe, D2 and nomnoml engines, language detection, themes
   editor/             CodeMirror setup, syntax colouring, autocomplete
   preview.ts          pan and zoom canvas, click-to-source
   export.ts           SVG, PNG, JPG, WEBP and PDF export
@@ -418,7 +683,7 @@ docker/               nginx config for the Docker image
 The full plan is in [ROADMAP.md](ROADMAP.md). It has three phases:
 
 1. Complex networking and visual editing (done).
-2. Statistical charts, UI wireframes, network diagrams, advanced UML, cloud infrastructure, complex data models (ER diagrams from SQL are done) and coursework tools such as truth tables, Karnaugh maps and automata.
+2. Statistical charts, UI wireframes, physical network views, advanced UML, cloud infrastructure, complex data models, D2 and nomnoml, and coursework tools (done).
 3. Advanced scientific and financial charts, geographic maps, CAD, 3D, electrical schematics, formal process models and interactive visual analytics.
 
 AI assistance is planned alongside these, through MCP only: people use their own assistant and subscription, such as Claude Code or Claude Desktop, and it works with Figvex through a local `figvex-mcp` server. There's no login; links and pairing codes connect the assistant to the user's diagrams. Figvex runs no AI service of its own.

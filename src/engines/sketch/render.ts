@@ -47,7 +47,7 @@ export function keyOf(el: SketchEl, index: number): string {
   return el.type === "shape" ? el.id : `#${index}`;
 }
 
-function rng(seed: number) {
+export function rng(seed: number) {
   let s = seed >>> 0 || 1;
   return () => {
     s ^= s << 13;
@@ -57,14 +57,14 @@ function rng(seed: number) {
   };
 }
 
-function hash(text: string): number {
+export function hash(text: string): number {
   let h = 2166136261;
   for (let i = 0; i < text.length; i++) h = Math.imul(h ^ text.charCodeAt(i), 16777619);
   return h >>> 0;
 }
 
 /** A slightly bowed line, drawn twice, like a pen stroke. */
-function roughLine(a: Point, b: Point, rand: () => number): string {
+export function roughLine(a: Point, b: Point, rand: () => number): string {
   const len = Math.hypot(b.x - a.x, b.y - a.y) || 1;
   const wob = Math.min(2.5, len / 40);
   let d = "";
@@ -77,11 +77,11 @@ function roughLine(a: Point, b: Point, rand: () => number): string {
   return d;
 }
 
-function roughPolygon(points: Point[], rand: () => number): string {
+export function roughPolygon(points: Point[], rand: () => number): string {
   return points.map((p, i) => roughLine(p, points[(i + 1) % points.length], rand)).join("");
 }
 
-function roughEllipse(cx: number, cy: number, rx: number, ry: number, rand: () => number): string {
+export function roughEllipse(cx: number, cy: number, rx: number, ry: number, rand: () => number): string {
   let d = "";
   for (let pass = 0; pass < 2; pass++) {
     const steps = 18;

@@ -339,6 +339,9 @@ const NET_SETTINGS: Completion[] = [
   snippetCompletion("direction ${right}", { label: "direction", detail: "down or right", type: "keyword" }),
   snippetCompletion("lines ${square}", { label: "lines", detail: "straight, curved or square", type: "keyword" }),
   snippetCompletion("checks ${off}", { label: "checks", detail: "address checks on or off", type: "keyword" }),
+  snippetCompletion('rack ${r1} "${Comms rack}" ${24U}\n  ${1} patch "${Patch panel}"', { label: "rack", detail: "rack elevation: unit, then device", type: "keyword" }),
+  snippetCompletion('floor ${f1} "${Ground floor}" ${24x14}\n  room "${Office}" ${0} ${0} ${12} ${8}', { label: "floor", detail: "floor plan in metres", type: "keyword" }),
+  snippetCompletion("view ${physical}", { label: "view", detail: "all, logical or physical", type: "keyword" }),
 ];
 
 const NET_LINKS: Completion[] = [
@@ -408,6 +411,190 @@ function sqlSource(ctx: CompletionContext): CompletionResult | null {
   return { from: word.from, options: SQL_COLUMN_WORDS, validFor: /^\w*$/ };
 }
 
+const LOGIC_LINES: Completion[] = [
+  snippetCompletion("${F} = ${A·B + C}", { label: "F =", detail: "function from an expression", type: "function" }),
+  snippetCompletion("${F}(${A}, ${B}, ${C}) = m(${1, 3, 5})", { label: "m(...)", detail: "function from minterms", type: "function" }),
+  snippetCompletion('title "${Title}"', { label: "title", detail: "heading", type: "keyword" }),
+  snippetCompletion("vars ${A B C}", { label: "vars", detail: "variables, in order", type: "keyword" }),
+  snippetCompletion("show ${table kmap simplified circuit}", { label: "show", detail: "what to draw", type: "keyword" }),
+  snippetCompletion("form ${both}", { label: "form", detail: "sop, pos or both", type: "keyword" }),
+  snippetCompletion("gates ${iec}", { label: "gates", detail: "ansi or iec symbols", type: "keyword" }),
+  snippetCompletion("circuit ${simplified}", { label: "circuit", detail: "written or simplified", type: "keyword" }),
+  snippetCompletion("compare ${F} ${G}", { label: "compare", detail: "check two functions match", type: "keyword" }),
+];
+
+const LOGIC_SHOW = ["table", "kmap", "simplified", "circuit", "minterms", "all"].map((label) => ({ label, type: "constant" }));
+
+function logicSource(ctx: CompletionContext): CompletionResult | null {
+  const line = ctx.state.doc.lineAt(ctx.pos);
+  const before = line.text.slice(0, ctx.pos - line.from);
+  const word = ctx.matchBefore(/\w*/);
+  if (!word || (word.from === word.to && !ctx.explicit)) return null;
+  if (/^\s*show\b/.test(before)) return { from: word.from, options: LOGIC_SHOW, validFor: /^\w*$/ };
+  if (/^\s*\w*$/.test(before)) return { from: word.from, options: LOGIC_LINES, validFor: /^\w*$/ };
+  if (/=/.test(before)) {
+    const ops = ["and", "or", "not", "xor", "nand", "nor", "xnor"].map((label) => ({ label, type: "keyword" }));
+    return { from: word.from, options: ops, validFor: /^\w*$/ };
+  }
+  return null;
+}
+
+const AUTOMATON_LINES: Completion[] = [
+  snippetCompletion("${q0} -${a}-> ${q1}", { label: "->", detail: "transition", type: "function" }),
+  snippetCompletion("start ${q0}", { label: "start", detail: "start state", type: "keyword" }),
+  snippetCompletion("accept ${q1}", { label: "accept", detail: "accepting states", type: "keyword" }),
+  snippetCompletion("input ${abba}", { label: "input", detail: "a string to run", type: "keyword" }),
+  snippetCompletion('title "${Title}"', { label: "title", detail: "heading", type: "keyword" }),
+  snippetCompletion("direction ${down}", { label: "direction", detail: "right or down", type: "keyword" }),
+  snippetCompletion("blank ${_}", { label: "blank", detail: "Turing machine blank", type: "keyword" }),
+];
+
+function automatonSource(ctx: CompletionContext): CompletionResult | null {
+  const doc = ctx.state.doc.toString();
+  const line = ctx.state.doc.lineAt(ctx.pos);
+  const before = line.text.slice(0, ctx.pos - line.from);
+  const states = [...new Set([...doc.matchAll(/^\s*(\S+)\s+-.*?->\s*(\S+)/gm)].flatMap((m) => [m[1], m[2]]))].map((label) => ({ label, type: "variable" }));
+  const word = ctx.matchBefore(/[\w']*/);
+  if (!word || (word.from === word.to && !ctx.explicit)) return null;
+  // After -> or on start/accept lines: the states.
+  if (/->\s*[\w']*$/.test(before) || /^\s*(start|accept|final)\b/.test(before)) return { from: word.from, options: states, validFor: /^[\w']*$/ };
+  if (/^\s*[\w']*$/.test(before)) return { from: word.from, options: [...AUTOMATON_LINES, ...states], validFor: /^[\w']*$/ };
+  return null;
+}
+
+const WAVE_SNIPPETS: Completion[] = [
+  snippetCompletion("{ name: '${clk}', wave: '${p.......}' },", { label: "clock", detail: "clock signal", type: "function" }),
+  snippetCompletion("{ name: '${data}', wave: '${x.345x}', data: ['${a}', '${b}', '${c}'] },", { label: "bus", detail: "data bus with labels", type: "function" }),
+  snippetCompletion("{ name: '${req}', wave: '${0.1..0}' },", { label: "signal", detail: "a 0/1 signal", type: "function" }),
+  snippetCompletion("{},", { label: "gap", detail: "empty row", type: "function" }),
+  snippetCompletion("['${Group}',\n  ${}\n],", { label: "group", detail: "a named group of signals", type: "function" }),
+  snippetCompletion("head: { text: '${Title}', tick: 0 },", { label: "head", detail: "title and tick numbers", type: "keyword" }),
+  snippetCompletion("config: { hscale: ${2} },", { label: "config", detail: "horizontal scale", type: "keyword" }),
+  snippetCompletion("edge: ['${a~>b} ${label}'],", { label: "edge", detail: "arrows between nodes", type: "keyword" }),
+];
+
+function waveSource(ctx: CompletionContext): CompletionResult | null {
+  const word = ctx.matchBefore(/\w*/);
+  if (!word || (word.from === word.to && !ctx.explicit)) return null;
+  const line = ctx.state.doc.lineAt(ctx.pos);
+  const before = line.text.slice(0, ctx.pos - line.from);
+  // Inside a string (a wave), don't complete.
+  if ((before.match(/'/g) ?? []).length % 2 === 1) return null;
+  return { from: word.from, options: WAVE_SNIPPETS, validFor: /^\w*$/ };
+}
+
+const STRUCTURE_LINES: Completion[] = [
+  snippetCompletion("array ${A} = [${3, 1, 4, 1, 5}]", { label: "array", detail: "indexed cells", type: "class" }),
+  snippetCompletion("matrix ${M} = [[${1, 0}], [${0, 1}]]", { label: "matrix", detail: "rows of cells", type: "class" }),
+  snippetCompletion("stack ${S} = [${1, 2, 3}]", { label: "stack", detail: "last item on top", type: "class" }),
+  snippetCompletion("queue ${Q} = [${a, b, c}]", { label: "queue", detail: "front and rear", type: "class" }),
+  snippetCompletion("list ${L} = ${3 -> 1 -> 4}", { label: "list", detail: "linked list; <-> for doubly", type: "class" }),
+  snippetCompletion("tree ${T} = ${8(3(1, 6), 10(, 14))}", { label: "tree", detail: "value(children)", type: "class" }),
+  snippetCompletion("bst ${B} = ${8 3 10 1 6 14}", { label: "bst", detail: "binary search tree by insertion", type: "class" }),
+  snippetCompletion("heap ${H} = [${9, 5, 8, 1, 3}]", { label: "heap", detail: "array and tree", type: "class" }),
+  snippetCompletion("hash ${H} size ${7} = ${10, 22, 31, 4}", { label: "hash", detail: "hash table with chaining", type: "class" }),
+  snippetCompletion("graph ${G} = ${A-B, B-C:4, C-A}", { label: "graph", detail: "undirected, optional weights", type: "class" }),
+  snippetCompletion("digraph ${G} = ${A->B, B->C}", { label: "digraph", detail: "directed graph", type: "class" }),
+  snippetCompletion('title "${Title}"', { label: "title", detail: "heading", type: "keyword" }),
+];
+
+const STRUCTURE_OPTIONS: Completion[] = [
+  snippetCompletion("mark ${2}", { label: "mark", detail: "highlight items", type: "keyword" }),
+  snippetCompletion("ptr ${i}=${0}", { label: "ptr", detail: "named pointers into an array", type: "keyword" }),
+  { label: "circular", detail: "last node links to the first", type: "keyword" },
+  snippetCompletion("probe ${linear}", { label: "probe", detail: "linear or quadratic probing", type: "keyword" }),
+];
+
+function structuresSource(ctx: CompletionContext): CompletionResult | null {
+  const line = ctx.state.doc.lineAt(ctx.pos);
+  const before = line.text.slice(0, ctx.pos - line.from);
+  const word = ctx.matchBefore(/\w*/);
+  if (!word || (word.from === word.to && !ctx.explicit)) return null;
+  if (/^\s*\w*$/.test(before)) return { from: word.from, options: STRUCTURE_LINES, validFor: /^\w*$/ };
+  if (/=/.test(before) && /\s\w*$/.test(before)) return { from: word.from, options: STRUCTURE_OPTIONS, validFor: /^\w*$/ };
+  return null;
+}
+
+const WIRE_TOP: Completion[] = [
+  snippetCompletion('screen ${home} "${Home}" ${phone}', { label: "screen", detail: "phone, tablet, desktop, browser or window", type: "keyword" }),
+  snippetCompletion('${from} -> ${to} "${label}"', { label: "->", detail: "flow between screens", type: "keyword" }),
+  snippetCompletion('title "${Title}"', { label: "title", detail: "heading", type: "keyword" }),
+];
+
+const WIRE_CONTROL_SNIPPETS: Completion[] = [
+  snippetCompletion('header "${Title}" ${back}', { label: "header", detail: "app bar; back, menu", type: "class" }),
+  snippetCompletion('nav "${Home}" *"${Search}" "${Profile}"', { label: "nav", detail: "* marks the current item", type: "class" }),
+  snippetCompletion('tabs *"${One}" "${Two}"', { label: "tabs", detail: "* marks the current tab", type: "class" }),
+  snippetCompletion('heading "${Heading}"', { label: "heading", type: "class" }),
+  snippetCompletion('text "${Some text}"', { label: "text", detail: "wrapped paragraph", type: "class" }),
+  snippetCompletion('field "${Label}" "${placeholder}"', { label: "field", detail: "text field", type: "class" }),
+  snippetCompletion('password "${Password}"', { label: "password", type: "class" }),
+  snippetCompletion('textarea "${Message}" "${placeholder}"', { label: "textarea", type: "class" }),
+  snippetCompletion('search "${Search}"', { label: "search", type: "class" }),
+  snippetCompletion('dropdown "${Label}" "${Value}"', { label: "dropdown", type: "class" }),
+  snippetCompletion('checkbox "${Label}" ${on}', { label: "checkbox", type: "class" }),
+  snippetCompletion('radio "${Label}" ${on}', { label: "radio", type: "class" }),
+  snippetCompletion('toggle "${Label}" ${on}', { label: "toggle", type: "class" }),
+  snippetCompletion('slider "${Volume}" ${60}', { label: "slider", detail: "percent", type: "class" }),
+  snippetCompletion('progress "${Upload}" ${40}', { label: "progress", detail: "percent", type: "class" }),
+  snippetCompletion('button "${OK}" ${primary}', { label: "button", detail: "primary, danger, small", type: "class" }),
+  snippetCompletion('link "${Forgot password?}"', { label: "link", type: "class" }),
+  snippetCompletion('image "${Photo}" ${140}', { label: "image", detail: "placeholder, height", type: "class" }),
+  snippetCompletion('avatar "${Name}" "${detail}"', { label: "avatar", type: "class" }),
+  snippetCompletion('list "${One}" "${Two}" "${Three}"', { label: "list", type: "class" }),
+  snippetCompletion('table "${Name}" "${Email}"\n    row "${Ann}" "${ann@example.com}"', { label: "table", detail: "header, then indented rows", type: "class" }),
+  snippetCompletion("row", { label: "row", detail: "indented controls side by side", type: "class" }),
+  snippetCompletion('card "${Title}"', { label: "card", detail: "indented controls in a card", type: "class" }),
+  snippetCompletion('alert "${Saved}" ${success}', { label: "alert", detail: "info, success, warning, error", type: "class" }),
+  { label: "divider", type: "class" },
+  snippetCompletion("space ${16}", { label: "space", type: "class" }),
+];
+
+function wireframeSource(ctx: CompletionContext): CompletionResult | null {
+  const line = ctx.state.doc.lineAt(ctx.pos);
+  const before = line.text.slice(0, ctx.pos - line.from);
+  const word = ctx.matchBefore(/\w*/);
+  if (!word || (word.from === word.to && !ctx.explicit)) return null;
+  if (/^\w*$/.test(before)) return { from: word.from, options: WIRE_TOP, validFor: /^\w*$/ };
+  if (/^\s+\w*$/.test(before)) return { from: word.from, options: WIRE_CONTROL_SNIPPETS, validFor: /^\w*$/ };
+  return null;
+}
+
+const NOMNOML_SNIPPETS: Completion[] = [
+  snippetCompletion("[${Name}|${field: Type}|${method()}]", { label: "[class]", detail: "box with compartments", type: "class" }),
+  snippetCompletion("[<abstract>${Name}]", { label: "<abstract>", type: "keyword" }),
+  snippetCompletion("[<actor>${User}]", { label: "<actor>", type: "keyword" }),
+  snippetCompletion("[<database>${Store}]", { label: "<database>", type: "keyword" }),
+  snippetCompletion("[<choice>${Ok?}]", { label: "<choice>", type: "keyword" }),
+  snippetCompletion("[<package>${Group}|\n  ${}\n]", { label: "<package>", type: "keyword" }),
+  snippetCompletion("#direction: ${right}", { label: "#direction", type: "keyword" }),
+  snippetCompletion("#fill: ${#eee8d5}", { label: "#fill", type: "keyword" }),
+  snippetCompletion("#stroke: ${#33322e}", { label: "#stroke", type: "keyword" }),
+];
+
+function nomnomlSource(ctx: CompletionContext): CompletionResult | null {
+  const word = ctx.matchBefore(/[#<\w]*/);
+  if (!word || (word.from === word.to && !ctx.explicit)) return null;
+  return { from: word.from, options: NOMNOML_SNIPPETS, validFor: /^[#<\w]*$/ };
+}
+
+const D2_SNIPPETS: Completion[] = [
+  snippetCompletion("${a} -> ${b}: ${label}", { label: "->", detail: "connection", type: "keyword" }),
+  snippetCompletion("${name}: {\n  ${}\n}", { label: "{ }", detail: "container", type: "keyword" }),
+  snippetCompletion("shape: ${rectangle}", { label: "shape", detail: "rectangle, circle, cylinder, person, cloud, sql_table...", type: "property" }),
+  snippetCompletion("direction: ${right}", { label: "direction", type: "property" }),
+  snippetCompletion("style.fill: ${\"#e8f0fe\"}", { label: "style.fill", type: "property" }),
+  snippetCompletion("style.stroke-dash: ${3}", { label: "style.stroke-dash", type: "property" }),
+  snippetCompletion("icon: ${https://icons.terrastruct.com/essentials/112-server.svg}", { label: "icon", type: "property" }),
+  snippetCompletion("tooltip: ${text}", { label: "tooltip", type: "property" }),
+];
+
+function d2Source(ctx: CompletionContext): CompletionResult | null {
+  const word = ctx.matchBefore(/[\w.-]*/);
+  if (!word || (word.from === word.to && !ctx.explicit)) return null;
+  return { from: word.from, options: D2_SNIPPETS, validFor: /^[\w.-]*$/ };
+}
+
 const SOURCES = {
   plantuml: plantumlSource,
   mermaid: mermaidSource,
@@ -418,6 +605,13 @@ const SOURCES = {
   orgchart: orgSource,
   network: networkSource,
   sql: sqlSource,
+  logic: logicSource,
+  automaton: automatonSource,
+  wavedrom: waveSource,
+  structures: structuresSource,
+  wireframe: wireframeSource,
+  nomnoml: nomnomlSource,
+  d2: d2Source,
 } as const;
 
 export function completionSource(engine: Engine) {

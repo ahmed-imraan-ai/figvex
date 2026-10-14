@@ -309,6 +309,122 @@ describe.skipIf(!chrome || !built)("Figvex in the browser", () => {
     expect(await page.$eval("#status-cursor", (el) => el.textContent)).toMatch(/^Ln 4,/);
   });
 
+  it("draws a truth table and Karnaugh map from a boolean expression", async () => {
+    const broken = await openDiagram("logic", "Logic broken", "logic\nF = A + (B\n");
+    expect(broken.error).toContain("line 2");
+    expect(broken.error).toContain("bracket isn't closed");
+
+    const ok = await openDiagram("logic", "Logic test", "logic\nF = A'B' + A'B + AB\nshow table kmap simplified\n");
+    expect(ok.error).toBeNull();
+    expect(await page.$eval("#lang-input", (el) => (el as HTMLInputElement).value)).toBe("Logic");
+    // Two groups on the map, and the answer A' + B.
+    expect(await page.$$eval('#sheet rect[rx="12"]', (els) => els.length)).toBe(2);
+    expect(await page.$eval("#sheet svg", (el) => el.textContent)).toContain("A + B");
+  });
+
+  it("steps through an automaton's input on the diagram", async () => {
+    const code = "automaton\nstart e2\naccept e3\ne2 -x-> e3\ne3 -y-> e2\ninput xyx\ninput xx\n";
+    const ok = await openDiagram("automaton", "Automaton test", code);
+    expect(ok.error).toBeNull();
+    expect(await page.$eval("#lang-input", (el) => (el as HTMLInputElement).value)).toBe("Automata");
+    expect(await page.$eval(".player", (el) => (el as HTMLElement).hidden)).toBe(false);
+    // Clicked through the DOM: the "Opened a shared diagram" toast can sit over the bar.
+    const press = (label: string) => page.$eval(`.player [aria-label="${label}"]`, (el) => (el as HTMLElement).click());
+    const on = () => page.$$eval("#sheet [data-on]", (els) => els.map((e) => e.getAttribute("data-state") ?? e.getAttribute("data-edge") ?? `cell${e.getAttribute("data-cell")}`));
+    expect(await on()).toEqual(["e2", "cell0"]);
+    await press("Next step");
+    expect(await on()).toEqual(["0", "e3", "cell1"]);
+    await press("Last step");
+    expect(await page.$eval(".player-status", (el) => el.textContent)).toContain("✓ accepted, ending in e3");
+    // The second input is rejected partway.
+    await page.select(".player-input", "1");
+    await press("Last step");
+    expect(await page.$eval(".player-status", (el) => el.textContent)).toContain("no move on x");
+    // Other languages hide the bar.
+    await openDiagram("graphviz", "No player", "digraph { nobar }");
+    expect(await page.$eval(".player", (el) => (el as HTMLElement).hidden)).toBe(true);
+  });
+
+  it("draws a WaveDrom timing diagram with its waves", async () => {
+    const ok = await openDiagram("wavedrom", "Wave test", "{ signal: [{ name: 'clk', wave: 'p...' }, { name: 'd', wave: 'x.3x', data: ['v'] }] }");
+    expect(ok.error).toBeNull();
+    expect(await page.$eval("#lang-input", (el) => (el as HTMLInputElement).value)).toBe("Timing (WaveDrom)");
+    // The bricks are copied in place, so the lanes have drawing in them.
+    expect(await page.$$eval("#sheet [id^='wavelane_draw'] path", (els) => els.length)).toBeGreaterThan(4);
+    expect(await page.$$eval("#sheet use", (els) => els.length)).toBe(0);
+  });
+
+  it("draws data structures and jumps to a structure's line", async () => {
+    const ok = await openDiagram("structures", "Structures test", "structures\narray Arr = [4, 2]\nbst Tree = 5 3 8\ngraph Gr = X-Y:2\n");
+    expect(ok.error).toBeNull();
+    expect(await page.$eval("#lang-input", (el) => (el as HTMLInputElement).value)).toBe("Data structures");
+    expect(await page.$$eval("#sheet [data-qualified-name]", (els) => els.map((e) => e.getAttribute("data-qualified-name")))).toEqual(["Arr", "Tree", "Gr"]);
+    const tree = await (await page.$('#sheet [data-qualified-name="Tree"] circle'))!.boundingBox();
+    await page.mouse.click(tree!.x + tree!.width / 2, tree!.y + tree!.height / 2);
+    expect(await page.$eval("#status-cursor", (el) => el.textContent)).toMatch(/^Ln 3,/);
+  });
+
+  it("searches cloud icons and inserts one with its includes", async () => {
+    await openDiagram("plantuml", "Icons test", "@startuml\nactor IconUser\n@enduml");
+    expect(await page.$eval("#btn-icons", (el) => (el as HTMLElement).hidden)).toBe(false);
+    await page.click("#btn-icons");
+    await page.waitForSelector("dialog .template-item");
+    await page.type("dialog input[type=search]", "kubernetes pod");
+    await page.waitForFunction(() => document.querySelector("dialog .template-item span")?.textContent === "Kubernetes Pod");
+    await page.keyboard.press("Enter");
+    // The icons themselves load from plantuml.github.io, so only the text is checked here.
+    const text = await page.evaluate(() => document.querySelector(".cm-content")!.textContent ?? "");
+    expect(text).toContain("!include <k8s/Common>");
+    expect(text).toContain("!include <k8s/oss/kubernetespod>");
+    expect(text).toContain('KubernetesPod(kubernetespod, "Kubernetes Pod", "Kubernetes")');
+    // Only PlantUML has the button.
+    await openDiagram("graphviz", "No icons", "digraph { noicons }");
+    expect(await page.$eval("#btn-icons", (el) => (el as HTMLElement).hidden)).toBe(true);
+  });
+
+  it("draws a wireframe and jumps to a control's line", async () => {
+    const code = 'wireframe\nscreen wa "First" phone\n  header "Top"\n  button "Press me" primary\nscreen wb "Second" phone\n  text "Done"\nwa -> wb "next"\n';
+    const ok = await openDiagram("wireframe", "Wire test", code);
+    expect(ok.error).toBeNull();
+    expect(await page.$eval("#lang-input", (el) => (el as HTMLInputElement).value)).toBe("Wireframe");
+    expect(await page.$$eval("#sheet [data-qualified-name]", (els) => els.map((e) => e.getAttribute("data-qualified-name")))).toEqual(["wa", "wb"]);
+    const button = await page.$$eval("#sheet text", (els) => {
+      const t = els.find((e) => e.textContent === "Press me")!;
+      const r = t.getBoundingClientRect();
+      return { x: r.x + r.width / 2, y: r.y + r.height / 2 };
+    });
+    await page.mouse.click(button.x, button.y);
+    expect(await page.$eval("#status-cursor", (el) => el.textContent)).toMatch(/^Ln 4,/);
+  });
+
+  it("marks modelling mistakes in a PlantUML class diagram", async () => {
+    const code = "@startuml\nclass Lecturer\nclass Module\nLectuer --> Module : teaches\n@enduml";
+    const ok = await openDiagram("plantuml", "Lint test", code);
+    expect(ok.error).toBeNull();
+    expect(ok.state).toBe("warn");
+    expect(await page.$eval(".cm-warnMarker", (el) => (el as HTMLElement).title)).toContain("Did you mean Lecturer?");
+    // The marker sits on the line with the typo, after the theme line Figvex adds.
+    await page.click("#status-render");
+    expect(await page.$eval("#status-cursor", (el) => el.textContent)).toMatch(/^Ln 4,/);
+  });
+
+  it("draws D2 and points at D2 mistakes", async () => {
+    const broken = await openDiagram("d2", "D2 broken", "a -> b\nx.shape: hexagonz\n");
+    expect(broken.error).toContain("line 2");
+    expect(broken.error).toContain('Unknown shape "hexagonz"');
+    const ok = await openDiagram("d2", "D2 test", "direction: right\nd2a -> d2b: label\nd2b: {shape: cylinder}\n");
+    expect(ok.error).toBeNull();
+    expect(await page.$eval("#lang-input", (el) => (el as HTMLInputElement).value)).toBe("D2");
+    expect(await page.$eval("#sheet svg", (el) => el.textContent)).toContain("d2a");
+  });
+
+  it("draws Graphviz labels with runs of spaces", async () => {
+    // Graphviz writes them as no-break spaces, which the sanitiser turns into &nbsp;.
+    const ok = await openDiagram("graphviz", "Spaces", 'digraph { spaced [label="two  spaces"] }');
+    expect(ok.error).toBeNull();
+    expect(await page.$eval("#sheet svg text", (el) => el.textContent)).toMatch(/^two\s{2}spaces$/);
+  });
+
   it("draws tables from SQL, warns about a missing table and jumps to a column", async () => {
     const code = "CREATE TABLE sqlteams (\n  id int PRIMARY KEY,\n  name text\n);\nCREATE TABLE sqlplayers (\n  id int PRIMARY KEY,\n  team_id int NOT NULL REFERENCES sqlteams (id),\n  coach_id int REFERENCES coaches (id)\n);\n";
     const ok = await openDiagram("sql", "SQL test", code);

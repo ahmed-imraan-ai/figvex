@@ -266,6 +266,40 @@ export const chartLanguage = StreamLanguage.define<ChartState>({
   },
 });
 
+/** WaveJSON: JSON5 with bare keys and single-quoted strings. */
+export const waveLanguage = StreamLanguage.define<{ blockComment: boolean }>({
+  name: "wavedrom",
+  startState: () => ({ blockComment: false }),
+  token(stream: StringStream, state) {
+    if (state.blockComment) {
+      if (stream.skipTo("*/")) {
+        stream.pos += 2;
+        state.blockComment = false;
+      } else stream.skipToEnd();
+      return "comment";
+    }
+    if (stream.eatSpace()) return null;
+    if (stream.match("//")) {
+      stream.skipToEnd();
+      return "comment";
+    }
+    if (stream.match("/*")) {
+      state.blockComment = true;
+      return "comment";
+    }
+    if (stream.match(/^(["'])(?:(?!\1)[^\\]|\\.)*\1?/)) return stream.match(/^\s*:/, false) ? "propertyName" : "string";
+    if (stream.match(/^[A-Za-z_$][\w$]*(?=\s*:)/)) return "propertyName";
+    if (stream.match(/^-?\d+(\.\d+)?/)) return "number";
+    if (stream.match(/^(true|false|null)\b/)) return "atom";
+    if (stream.match(/^[{}[\]]/)) return "bracket";
+    stream.next();
+    return null;
+  },
+  languageData: {
+    commentTokens: { line: "//", block: { open: "/*", close: "*/" } },
+  },
+});
+
 interface XmlState {
   comment: boolean;
   cdata: boolean;
@@ -388,7 +422,8 @@ export const networkLanguage = StreamLanguage.define<{ first: boolean }>({
     }
     if (state.first) {
       state.first = false;
-      if (stream.match(/^(network|title|direction|lines|checks|zone)\b/)) return "keyword";
+      if (stream.match(/^(network|title|direction|lines|checks|zone|rack|floor|room|view)\b/)) return "keyword";
+      if (stream.match(/^\d+(-\d+)?(?=\s)/)) return "number";
       if (stream.match(NET_KINDS)) return "typeName";
     }
     if (stream.match(/^"(?:[^"\\]|\\.)*"?/)) return "string";
@@ -459,6 +494,207 @@ export const sqlLanguage = StreamLanguage.define<{ inComment: boolean }>({
   },
   languageData: {
     commentTokens: { line: "--", block: { open: "/*", close: "*/" } },
+  },
+});
+
+/** Logic files: settings, function names, operators, minterm lists. */
+export const logicLanguage = StreamLanguage.define<{ first: boolean; setting: boolean }>({
+  name: "logic",
+  startState: () => ({ first: true, setting: false }),
+  token(stream: StringStream, state) {
+    if (stream.sol()) {
+      state.first = true;
+      state.setting = false;
+    }
+    if (stream.eatSpace()) return null;
+    if (stream.match(/^(#|\/\/)/)) {
+      stream.skipToEnd();
+      return "comment";
+    }
+    if (state.first) {
+      state.first = false;
+      if (stream.match(/^(logic|title|vars|show|form|gates|circuit|compare)\b/)) {
+        state.setting = true;
+        return "keyword";
+      }
+      if (stream.match(/^[A-Za-z]\w*(?=\s*(\(|=))/)) return "def";
+    }
+    if (stream.match(/^"[^"]*"?/)) return "string";
+    if (state.setting) {
+      if (stream.match(/^(table|kmap|simplified|circuit|minterms|all|sop|pos|both|ansi|iec|written)\b/)) return "atom";
+      stream.match(/^[^\s#]+/) || stream.next();
+      return "variableName";
+    }
+    if (stream.match(/^(sum|prod|Σm|ΠM|Σ|Π|m|M|d|dc)(?=\s*\()/)) return "macroName";
+    if (stream.match(/^(and|or|not|xor|xnor|nand|nor)\b/i)) return "operator";
+    if (stream.match(/^(&&|\|\||[·.*&∧⋅+|∨^⊕⊙↑↓!~¬'’=])/)) return "operator";
+    if (stream.match(/^\d+/)) return "number";
+    if (stream.match(/^[A-Za-z]\w*/)) return "variableName";
+    stream.next();
+    return null;
+  },
+  languageData: {
+    commentTokens: { line: "#" },
+  },
+});
+
+/** Automata: settings, state names and transition labels. */
+export const automatonLanguage = StreamLanguage.define<{ first: boolean; label: boolean }>({
+  name: "automaton",
+  startState: () => ({ first: true, label: false }),
+  token(stream: StringStream, state) {
+    if (stream.sol()) {
+      state.first = true;
+      state.label = false;
+    }
+    if (stream.eatSpace()) return null;
+    if ((stream.sol() || /\s/.test(stream.string.charAt(stream.pos - 1))) && stream.match(/^(#|\/\/)/)) {
+      stream.skipToEnd();
+      return "comment";
+    }
+    if (state.first) {
+      state.first = false;
+      if (stream.match(/^(automaton|dfa|nfa|tm|turing|title|start|accept|final|input|direction|blank|states?)\b(?!\s*-)/)) return "keyword";
+    }
+    if (state.label) {
+      if (stream.match("->")) {
+        state.label = false;
+        return "operator";
+      }
+      if (stream.match(/^(ε|eps|epsilon|λ)\b/)) return "atom";
+      if (stream.match(/^[,;/]/)) return "punctuation";
+      if (stream.match(/^[LRSN](?=\s*(;|->))/)) return "keyword";
+      stream.next();
+      return "string";
+    }
+    if (stream.match(/^"[^"]*"?/)) return "string";
+    if (stream.match(/^-(?!>)/)) {
+      state.label = true;
+      return "operator";
+    }
+    if (stream.match(/^(->|:)/)) return "operator";
+    if (stream.match(/^\S+/)) return "variableName";
+    stream.next();
+    return null;
+  },
+  languageData: {
+    commentTokens: { line: "#" },
+  },
+});
+
+/** Data structures: the kind, the name, values and options. */
+export const structuresLanguage = StreamLanguage.define<{ first: boolean }>({
+  name: "structures",
+  startState: () => ({ first: true }),
+  token(stream: StringStream, state) {
+    if (stream.sol()) state.first = true;
+    if (stream.eatSpace()) return null;
+    if ((stream.sol() || /\s/.test(stream.string.charAt(stream.pos - 1))) && stream.match(/^(#|\/\/)/)) {
+      stream.skipToEnd();
+      return "comment";
+    }
+    if (state.first) {
+      state.first = false;
+      if (stream.match(/^(structures|title|array|matrix|stack|queue|list|tree|bst|heap|hash|graph|digraph)\b/)) return "keyword";
+    }
+    if (stream.match(/^(mark|ptr|circular|probe|size|linear|quadratic|chain|null)\b/)) return "atom";
+    if (stream.match(/^"[^"]*"?/) || stream.match(/^'[^']*'?/)) return "string";
+    if (stream.match(/^(<->|->|--|=)/)) return "operator";
+    if (stream.match(/^-?\d+(\.\d+)?/)) return "number";
+    if (stream.match(/^[[\](),:]/)) return "bracket";
+    if (stream.match(/^[\w.]+/)) return "variableName";
+    stream.next();
+    return null;
+  },
+  languageData: {
+    commentTokens: { line: "#" },
+  },
+});
+
+const WIRE_CONTROLS = /^(header|nav|tabs|heading|text|field|password|textarea|search|dropdown|checkbox|radio|toggle|slider|progress|button|link|image|avatar|list|table|row|divider|space|alert|card|box|columns)\b/;
+
+/** Wireframes: screens, controls, "texts" and flags. */
+export const wireframeLanguage = StreamLanguage.define<{ first: boolean }>({
+  name: "wireframe",
+  startState: () => ({ first: true }),
+  token(stream: StringStream, state) {
+    if (stream.sol()) state.first = true;
+    if (stream.eatSpace()) return null;
+    if ((stream.sol() || /\s/.test(stream.string.charAt(stream.pos - 1))) && stream.match("#")) {
+      stream.skipToEnd();
+      return "comment";
+    }
+    if (state.first) {
+      state.first = false;
+      if (stream.match(/^(wireframe|title|screen)\b/)) return "keyword";
+      if (stream.match(WIRE_CONTROLS)) return "typeName";
+    }
+    if (stream.match(/^\*?"(?:[^"\\]|\\.)*"?/)) return "string";
+    if (stream.match(/^->/)) return "operator";
+    if (stream.match(/^(phone|tablet|desktop|browser|window|primary|danger|small|on|checked|back|menu|filled|dashed|success|warning|error|info)\b/)) return "atom";
+    if (stream.match(/^\d+(%|x\d+)?/)) return "number";
+    if (stream.match(/^[\w-]+/)) return "variableName";
+    stream.next();
+    return null;
+  },
+  languageData: {
+    commentTokens: { line: "#" },
+  },
+});
+
+/** nomnoml: [boxes], <classifiers>, arrows and #directives. */
+export const nomnomlLanguage = StreamLanguage.define<null>({
+  name: "nomnoml",
+  startState: () => null,
+  token(stream: StringStream) {
+    if (stream.eatSpace()) return null;
+    if (stream.sol() && stream.match(/^\/\/.*/)) return "comment";
+    if (stream.sol() && stream.match(/^#[\w.]+\s*:/)) {
+      stream.skipToEnd();
+      return "meta";
+    }
+    if (stream.match(/^<[\w-]+>/)) return "keyword";
+    if (stream.match(/^[\[\]|;]/)) return "bracket";
+    if (stream.match(/^(<:-|-:>|<-|->|-\/-|--|-|o->|\+->|o-|\+-|:>|<:)/)) return "operator";
+    if (stream.match(/^[^\[\]|;<>\-]+/)) return "variableName";
+    stream.next();
+    return null;
+  },
+  languageData: {
+    commentTokens: { line: "//" },
+  },
+});
+
+const D2_KEYWORDS = /^(shape|label|style|direction|icon|near|width|height|link|tooltip|constraint|vars|classes|class|layers|scenarios|steps|grid-rows|grid-columns|fill|stroke|stroke-width|stroke-dash|border-radius|font-size|font-color|opacity|shadow|3d|multiple|animated|bold|italic|underline|source-arrowhead|target-arrowhead)(?=\s*:)/;
+
+/** D2: shapes, connections, keys like shape: and style.fill:, strings and comments. */
+export const d2Language = StreamLanguage.define<{ block: boolean }>({
+  name: "d2",
+  startState: () => ({ block: false }),
+  token(stream: StringStream, state) {
+    if (state.block) {
+      if (stream.match(/^.*?\|/)) state.block = false;
+      else stream.skipToEnd();
+      return "string";
+    }
+    if (stream.eatSpace()) return null;
+    if (stream.match(/^#.*/)) return "comment";
+    if (stream.match(/^\|(md|latex|tex|\w+)?\s*$/)) {
+      state.block = true;
+      return "string";
+    }
+    if (stream.match(/^"(?:[^"\\]|\\.)*"?/) || stream.match(/^'[^']*'?/)) return "string";
+    if (stream.match(D2_KEYWORDS)) return "keyword";
+    if (stream.match(/^(<->|<-|->|--)/)) return "operator";
+    if (stream.match(/^-?\d+(\.\d+)?/)) return "number";
+    if (stream.match(/^(true|false|null)\b/)) return "atom";
+    if (stream.match(/^[{}]/)) return "bracket";
+    if (stream.match(/^[\w.-]+/)) return "variableName";
+    stream.next();
+    return null;
+  },
+  languageData: {
+    commentTokens: { line: "#" },
   },
 });
 
