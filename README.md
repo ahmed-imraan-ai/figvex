@@ -18,10 +18,11 @@ It was built for computer science students: UML for software engineering courses
 - Automata: DFAs, NFAs with ε moves and Turing machines from their transitions, with each input run through the machine and a step-through on the diagram
 - Digital timing diagrams, register bit fields and logic from assignments, with WaveDrom
 - Data structure pictures: arrays with pointers, stacks, queues, linked lists, trees, binary search trees, heaps, hash tables and graphs, one per line
+- Cloud diagrams with the official AWS, Azure, Google Cloud and Kubernetes icons, and a search that inserts any of 1,200 icons with its includes
 - Network diagrams with device icons, subnets, VLANs, ports and link types, and checks that catch address mistakes as you type
 - Org charts from an indented list of people, with departments, assistants, vacancies, dotted lines and three card styles
 - A sketch canvas for freeform diagrams: boxes, arrows that stay attached, text and pen, in a clean or hand-drawn style
-- 103 templates written around coursework: a library system class diagram, JWT login sequence, TCP state machine, DFA for multiples of 3, binary search tree, hash table, confusion matrix, sorting benchmark, library loan process, login wireframe, society committee org chart, subnetting exercise, university ER schema from SQL, levelled data flow diagrams, Karnaugh maps, a full adder circuit, Turing machines, an SPI timing diagram, hash tables with chaining and probing, capstone Gantt plan and more
+- 108 templates written around coursework: a library system class diagram, JWT login sequence, TCP state machine, DFA for multiples of 3, binary search tree, hash table, confusion matrix, sorting benchmark, library loan process, login wireframe, society committee org chart, subnetting exercise, university ER schema from SQL, levelled data flow diagrams, Karnaugh maps, a full adder circuit, Turing machines, an SPI timing diagram, hash tables with chaining and probing, capstone Gantt plan and more
 - Export to SVG, PNG, JPG, WEBP and vector PDF, at 1× to 4× scale, with a solid or transparent background
 - Copy the image straight to the clipboard for pasting into a report or slides
 - Share links that carry the whole diagram in the URL, with no server involved
@@ -180,6 +181,23 @@ ana .. mia "budget"
 | `counts` | Show how many people sit under each manager |
 
 The Style menu has **Cards** (initials and a department colour strip), **Minimal** (black and white, for printing) and **Bold** (department-coloured headers). Department colours come with a legend, and clicking a person jumps to their line. For a chart you want to arrange by hand instead, use a sketch with the Connector tool.
+
+## Cloud diagrams
+
+PlantUML's standard library has the official AWS, Azure, Google Cloud and Kubernetes icon sets. Each icon is a macro, `Name(alias, "label", "technology")`, after two includes: the library's common file and the icon's own.
+
+```plantuml
+@startuml
+!include <awslib14/AWSCommon>
+!include <awslib14/Compute/Lambda>
+!include <awslib14/Database/DynamoDB>
+Lambda(fn, "Orders", "Node.js")
+DynamoDB(table, "Orders table", "DynamoDB")
+fn --> table
+@enduml
+```
+
+**Icons** above the editor (PlantUML only) searches all of them by name, shows a preview, and inserts the icon at the cursor along with any includes the diagram doesn't have yet. The templates include an AWS three-tier web app, an AWS serverless API, an Azure web app, a Google Cloud data pipeline and a Kubernetes deployment. The icons load from the official PlantUML host the first time a diagram uses them.
 
 ## Networks
 

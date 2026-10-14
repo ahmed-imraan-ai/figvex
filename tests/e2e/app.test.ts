@@ -364,6 +364,24 @@ describe.skipIf(!chrome || !built)("Figvex in the browser", () => {
     expect(await page.$eval("#status-cursor", (el) => el.textContent)).toMatch(/^Ln 3,/);
   });
 
+  it("searches cloud icons and inserts one with its includes", async () => {
+    await openDiagram("plantuml", "Icons test", "@startuml\nactor IconUser\n@enduml");
+    expect(await page.$eval("#btn-icons", (el) => (el as HTMLElement).hidden)).toBe(false);
+    await page.click("#btn-icons");
+    await page.waitForSelector("dialog .template-item");
+    await page.type("dialog input[type=search]", "kubernetes pod");
+    await page.waitForFunction(() => document.querySelector("dialog .template-item span")?.textContent === "Kubernetes Pod");
+    await page.keyboard.press("Enter");
+    // The icons themselves load from plantuml.github.io, so only the text is checked here.
+    const text = await page.evaluate(() => document.querySelector(".cm-content")!.textContent ?? "");
+    expect(text).toContain("!include <k8s/Common>");
+    expect(text).toContain("!include <k8s/oss/kubernetespod>");
+    expect(text).toContain('KubernetesPod(kubernetespod, "Kubernetes Pod", "Kubernetes")');
+    // Only PlantUML has the button.
+    await openDiagram("graphviz", "No icons", "digraph { noicons }");
+    expect(await page.$eval("#btn-icons", (el) => (el as HTMLElement).hidden)).toBe(true);
+  });
+
   it("draws Graphviz labels with runs of spaces", async () => {
     // Graphviz writes them as no-break spaces, which the sanitiser turns into &nbsp;.
     const ok = await openDiagram("graphviz", "Spaces", 'digraph { spaced [label="two  spaces"] }');
