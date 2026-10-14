@@ -13,6 +13,7 @@ Figvex started with PlantUML and Mermaid, and now also draws Graphviz DOT, BPMN,
 - **Visual editing.** Changes made in the diagram are written back to the text, so undo, saving and sharing behave as for typing. BPMN shapes can be dragged, with alignment guides, right-angled rerouting of flows, lane changes, and positions added to files that had none. Org charts and networks can be built from the diagram: rename, add a report or a linked device, and remove. Graphviz nodes and Mermaid flowchart nodes can be renamed. Sketches are drawn on a canvas. Between them, a diagram can be made without writing code.
 - **Complex data models (phase 2).** ER diagrams drawn from SQL DDL, including whole PostgreSQL, MySQL, SQLite and SQL Server dumps. Foreign keys become crow's foot links between the columns, with cardinality taken from NOT NULL and unique constraints. `-- group:` comments box tables by area (or by schema), `-- focus:` draws one part of the model, and a keys-only style keeps large schemas readable. Missing tables and columns are marked as you type.
 - **Coursework tools (phase 2).** Boolean logic: truth tables, Karnaugh maps with their groups, minimal sum of products and product of sums (Quine–McCluskey), equivalence checks and gate circuits in ANSI or IEC symbols. Automata: DFAs, NFAs with ε moves and Turing machines from their transitions, with each input run through the machine and a step-through on the diagram. Timing diagrams, register fields and logic with WaveDrom (MIT). Data structure pictures: arrays with pointers, stacks, queues, linked lists, trees, binary search trees, heaps, hash tables and graphs.
+- **Statistical charts (phase 2).** Box plots, histograms, trend lines and density curves worked out from raw CSV data by stat: transforms in the chart engine: Tukey whiskers and outliers, Sturges or fixed-width bins, least-squares fits (linear, polynomial, exponential, logarithmic, power) with the equation and R², and Gaussian kernel density.
 
 ## How new types fit in
 
@@ -46,7 +47,7 @@ Done. See above.
 
 ## Phase 2
 
-- **Statistical charts.** Box plots and histograms computed from raw data rather than summaries, scatter plots with trend lines, and distributions, built on the chart engine.
+- **Statistical charts.** Done (see above).
 - **UI wireframes.** Salt once the PlantUML browser build includes it, and a wireframe mode with common controls.
 - **Network diagrams.** Physical views (racks, floor plans and cabling) alongside the logical network language, and import from a device list.
 - **Advanced UML.** The UML diagrams PlantUML and Mermaid cover poorly or not at all, such as composite structure, communication and interaction overview diagrams, and checks for common modelling mistakes.
