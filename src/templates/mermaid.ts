@@ -220,6 +220,35 @@ classDiagram
 `,
   },
   {
+    id: "mmd-dfd-context",
+    engine: "mermaid",
+    category: "Data & databases",
+    title: "Data flow diagram, context (level 0)",
+    summary: "A library system as one process, with the data flowing to and from the people and systems around it.",
+    code: `---
+title: Library system, context diagram (level 0)
+---
+%% The whole system is one process (the circle). Boxes are external
+%% entities and labelled arrows are data flows. Level 1 splits the
+%% circle into processes and data stores, with these same flows.
+flowchart LR
+    member[Member]
+    librarian[Librarian]
+    email[Email service]
+    system(("0<br>Library<br>system"))
+
+    member -->|membership details| system
+    member -->|search terms| system
+    member -->|book and card| system
+    member -->|returned book| system
+    system -->|search results| member
+    system -->|due date| member
+    librarian -->|new book details| system
+    system -->|overdue report| librarian
+    system -->|reminder| email
+`,
+  },
+  {
     id: "mmd-gantt",
     engine: "mermaid",
     category: "Planning",
