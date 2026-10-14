@@ -18,6 +18,7 @@ export const ENGINE_VERSION = {
   orgchart: "",
   network: "",
   sql: "",
+  logic: "",
 } as const;
 
 /** Set VITE_REPO_URL to an empty string to hide the GitHub links. */
@@ -46,4 +47,5 @@ export const DOCS = {
   orgchart: "https://github.com/ahmed-imraan-ai/figvex#org-charts",
   network: "https://github.com/ahmed-imraan-ai/figvex#networks",
   sql: "https://github.com/ahmed-imraan-ai/figvex#er-diagrams-from-sql",
+  logic: "https://github.com/ahmed-imraan-ai/figvex#logic",
 } as const;

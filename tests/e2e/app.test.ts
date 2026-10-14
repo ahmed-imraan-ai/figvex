@@ -309,6 +309,19 @@ describe.skipIf(!chrome || !built)("Figvex in the browser", () => {
     expect(await page.$eval("#status-cursor", (el) => el.textContent)).toMatch(/^Ln 4,/);
   });
 
+  it("draws a truth table and Karnaugh map from a boolean expression", async () => {
+    const broken = await openDiagram("logic", "Logic broken", "logic\nF = A + (B\n");
+    expect(broken.error).toContain("line 2");
+    expect(broken.error).toContain("bracket isn't closed");
+
+    const ok = await openDiagram("logic", "Logic test", "logic\nF = A'B' + A'B + AB\nshow table kmap simplified\n");
+    expect(ok.error).toBeNull();
+    expect(await page.$eval("#lang-input", (el) => (el as HTMLInputElement).value)).toBe("Logic");
+    // Two groups on the map, and the answer A' + B.
+    expect(await page.$$eval('#sheet rect[rx="12"]', (els) => els.length)).toBe(2);
+    expect(await page.$eval("#sheet svg", (el) => el.textContent)).toContain("A + B");
+  });
+
   it("draws Graphviz labels with runs of spaces", async () => {
     // Graphviz writes them as no-break spaces, which the sanitiser turns into &nbsp;.
     const ok = await openDiagram("graphviz", "Spaces", 'digraph { spaced [label="two  spaces"] }');

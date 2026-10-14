@@ -1,6 +1,6 @@
-export type Engine = "plantuml" | "mermaid" | "graphviz" | "echarts" | "bpmn" | "sketch" | "orgchart" | "network" | "sql";
+export type Engine = "plantuml" | "mermaid" | "graphviz" | "echarts" | "bpmn" | "sketch" | "orgchart" | "network" | "sql" | "logic";
 
-export const ENGINES: readonly Engine[] = ["plantuml", "mermaid", "graphviz", "echarts", "bpmn", "sketch", "orgchart", "network", "sql"];
+export const ENGINES: readonly Engine[] = ["plantuml", "mermaid", "graphviz", "echarts", "bpmn", "sketch", "orgchart", "network", "sql", "logic"];
 
 export function isEngine(value: unknown): value is Engine {
   return ENGINES.includes(value as Engine);
@@ -30,6 +30,8 @@ export interface RenderOptions {
   netStyle: NetStyle;
   /** ER diagrams from SQL: colour, black and white, or keys only. */
   sqlStyle: SqlStyle;
+  /** Logic only: how NOT, AND and OR are written. */
+  logicStyle: LogicStyle;
 }
 
 export type GraphvizStyle = "plain" | "default";
@@ -45,6 +47,8 @@ export type OrgStyle = "cards" | "minimal" | "bold";
 export type NetStyle = "tiles" | "outline" | "mono";
 
 export type SqlStyle = "colour" | "plain" | "keys";
+
+export type LogicStyle = "overbar" | "prime" | "logic" | "code";
 
 export type MermaidTheme = "default" | "neutral" | "base" | "forest" | "neo" | "redux" | "redux-color";
 
@@ -82,6 +86,7 @@ export const ENGINE_LABEL: Record<Engine, string> = {
   orgchart: "Org chart",
   network: "Network",
   sql: "SQL",
+  logic: "Logic",
 };
 
 export const ENGINE_EXT: Record<Engine, string> = {
@@ -94,6 +99,7 @@ export const ENGINE_EXT: Record<Engine, string> = {
   orgchart: "org",
   network: "network",
   sql: "sql",
+  logic: "logic",
 };
 
 /** Short tag shown next to diagrams in lists. */
@@ -107,6 +113,7 @@ export const ENGINE_TAG: Record<Engine, string> = {
   orgchart: "org",
   network: "net",
   sql: "sql",
+  logic: "logic",
 };
 
 /** File extensions recognised when opening a file. */
@@ -120,6 +127,7 @@ export const ENGINE_FILE_EXTS: Record<Engine, string[]> = {
   orgchart: ["org", "orgchart"],
   network: ["network", "net"],
   sql: ["sql", "ddl"],
+  logic: ["logic", "bool"],
 };
 
 /** Info string for a Markdown code block. */
@@ -133,4 +141,5 @@ export const ENGINE_FENCE: Record<Engine, string> = {
   orgchart: "orgchart",
   network: "network",
   sql: "sql",
+  logic: "logic",
 };

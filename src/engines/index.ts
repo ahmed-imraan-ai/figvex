@@ -4,6 +4,7 @@ import { renderGraphviz } from "./graphviz";
 import { renderNetwork } from "./network";
 import { renderOrgChart } from "./orgchart";
 import { renderSketch } from "./sketch";
+import { renderLogic } from "./logic";
 import { renderSql } from "./sql";
 import { renderMermaid } from "./mermaid";
 import { renderPlantUml } from "./plantuml";
@@ -22,6 +23,7 @@ const RENDERERS: Record<Engine, (code: string, options: RenderOptions) => Promis
   orgchart: renderOrgChart,
   network: renderNetwork,
   sql: renderSql,
+  logic: renderLogic,
 };
 
 export function renderDiagram(engine: Engine, code: string, options: RenderOptions): Promise<RenderResult> {
