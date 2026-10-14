@@ -436,6 +436,29 @@ function logicSource(ctx: CompletionContext): CompletionResult | null {
   return null;
 }
 
+const AUTOMATON_LINES: Completion[] = [
+  snippetCompletion("${q0} -${a}-> ${q1}", { label: "->", detail: "transition", type: "function" }),
+  snippetCompletion("start ${q0}", { label: "start", detail: "start state", type: "keyword" }),
+  snippetCompletion("accept ${q1}", { label: "accept", detail: "accepting states", type: "keyword" }),
+  snippetCompletion("input ${abba}", { label: "input", detail: "a string to run", type: "keyword" }),
+  snippetCompletion('title "${Title}"', { label: "title", detail: "heading", type: "keyword" }),
+  snippetCompletion("direction ${down}", { label: "direction", detail: "right or down", type: "keyword" }),
+  snippetCompletion("blank ${_}", { label: "blank", detail: "Turing machine blank", type: "keyword" }),
+];
+
+function automatonSource(ctx: CompletionContext): CompletionResult | null {
+  const doc = ctx.state.doc.toString();
+  const line = ctx.state.doc.lineAt(ctx.pos);
+  const before = line.text.slice(0, ctx.pos - line.from);
+  const states = [...new Set([...doc.matchAll(/^\s*(\S+)\s+-.*?->\s*(\S+)/gm)].flatMap((m) => [m[1], m[2]]))].map((label) => ({ label, type: "variable" }));
+  const word = ctx.matchBefore(/[\w']*/);
+  if (!word || (word.from === word.to && !ctx.explicit)) return null;
+  // After -> or on start/accept lines: the states.
+  if (/->\s*[\w']*$/.test(before) || /^\s*(start|accept|final)\b/.test(before)) return { from: word.from, options: states, validFor: /^[\w']*$/ };
+  if (/^\s*[\w']*$/.test(before)) return { from: word.from, options: [...AUTOMATON_LINES, ...states], validFor: /^[\w']*$/ };
+  return null;
+}
+
 const SOURCES = {
   plantuml: plantumlSource,
   mermaid: mermaidSource,
@@ -447,6 +470,7 @@ const SOURCES = {
   network: networkSource,
   sql: sqlSource,
   logic: logicSource,
+  automaton: automatonSource,
 } as const;
 
 export function completionSource(engine: Engine) {

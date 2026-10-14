@@ -9,6 +9,7 @@ import { plantumlTemplates } from "./plantuml";
 import { sketchTemplates } from "./sketch";
 import { sqlTemplates } from "./sql";
 import { logicTemplates } from "./logic";
+import { automatonTemplates } from "./automaton";
 
 export interface Template {
   id: string;
@@ -62,6 +63,7 @@ sw1 -- pc1
 `,
   sql: "CREATE TABLE customers (\n  id int PRIMARY KEY,\n  name text NOT NULL\n);\n\nCREATE TABLE orders (\n  id int PRIMARY KEY,\n  customer_id int NOT NULL REFERENCES customers (id),\n  placed_at timestamp NOT NULL\n);\n",
   logic: "logic\nF = A·B + C\nshow table kmap simplified\n",
+  automaton: "automaton\nstart q0\naccept q1\nq0 -a-> q1\nq1 -b-> q0\ninput aba\n",
   echarts: '{\n  "xAxis": { "type": "category" },\n  "yAxis": {},\n  "series": [{ "type": "bar" }]\n}\n---\nname,value\nA,3\nB,5\nC,4\n',
 };
 
@@ -146,9 +148,17 @@ const blank: Template[] = [
     summary: "One boolean function with its truth table, Karnaugh map and simplest form.",
     code: BLANK_CODE.logic,
   },
+  {
+    id: "blank-automaton",
+    engine: "automaton",
+    category: "Start from scratch",
+    title: "Blank automaton",
+    summary: "Two states, two transitions and an input to step through.",
+    code: BLANK_CODE.automaton,
+  },
 ];
 
-export const TEMPLATES: Template[] = [...blank, ...plantumlTemplates, ...mermaidTemplates, ...graphvizTemplates, ...chartTemplates, ...bpmnTemplates, ...sketchTemplates, ...orgchartTemplates, ...networkTemplates, ...sqlTemplates, ...logicTemplates].sort(
+export const TEMPLATES: Template[] = [...blank, ...plantumlTemplates, ...mermaidTemplates, ...graphvizTemplates, ...chartTemplates, ...bpmnTemplates, ...sketchTemplates, ...orgchartTemplates, ...networkTemplates, ...sqlTemplates, ...logicTemplates, ...automatonTemplates].sort(
   (a, b) => CATEGORIES.indexOf(a.category as never) - CATEGORIES.indexOf(b.category as never),
 );
 

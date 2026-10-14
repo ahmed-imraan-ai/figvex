@@ -322,6 +322,29 @@ describe.skipIf(!chrome || !built)("Figvex in the browser", () => {
     expect(await page.$eval("#sheet svg", (el) => el.textContent)).toContain("A + B");
   });
 
+  it("steps through an automaton's input on the diagram", async () => {
+    const code = "automaton\nstart e2\naccept e3\ne2 -x-> e3\ne3 -y-> e2\ninput xyx\ninput xx\n";
+    const ok = await openDiagram("automaton", "Automaton test", code);
+    expect(ok.error).toBeNull();
+    expect(await page.$eval("#lang-input", (el) => (el as HTMLInputElement).value)).toBe("Automata");
+    expect(await page.$eval(".player", (el) => (el as HTMLElement).hidden)).toBe(false);
+    // Clicked through the DOM: the "Opened a shared diagram" toast can sit over the bar.
+    const press = (label: string) => page.$eval(`.player [aria-label="${label}"]`, (el) => (el as HTMLElement).click());
+    const on = () => page.$$eval("#sheet [data-on]", (els) => els.map((e) => e.getAttribute("data-state") ?? e.getAttribute("data-edge") ?? `cell${e.getAttribute("data-cell")}`));
+    expect(await on()).toEqual(["e2", "cell0"]);
+    await press("Next step");
+    expect(await on()).toEqual(["0", "e3", "cell1"]);
+    await press("Last step");
+    expect(await page.$eval(".player-status", (el) => el.textContent)).toContain("✓ accepted, ending in e3");
+    // The second input is rejected partway.
+    await page.select(".player-input", "1");
+    await press("Last step");
+    expect(await page.$eval(".player-status", (el) => el.textContent)).toContain("no move on x");
+    // Other languages hide the bar.
+    await openDiagram("graphviz", "No player", "digraph { nobar }");
+    expect(await page.$eval(".player", (el) => (el as HTMLElement).hidden)).toBe(true);
+  });
+
   it("draws Graphviz labels with runs of spaces", async () => {
     // Graphviz writes them as no-break spaces, which the sanitiser turns into &nbsp;.
     const ok = await openDiagram("graphviz", "Spaces", 'digraph { spaced [label="two  spaces"] }');
