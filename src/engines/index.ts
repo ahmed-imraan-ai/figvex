@@ -4,6 +4,8 @@ import { renderGraphviz } from "./graphviz";
 import { renderNetwork } from "./network";
 import { renderOrgChart } from "./orgchart";
 import { renderSketch } from "./sketch";
+import { renderD2 } from "./d2";
+import { renderNomnoml } from "./nomnoml";
 import { renderWireframe } from "./wireframe";
 import { renderStructures } from "./structures";
 import { renderWaveDrom } from "./wavedrom";
@@ -32,6 +34,8 @@ const RENDERERS: Record<Engine, (code: string, options: RenderOptions) => Promis
   wavedrom: renderWaveDrom,
   structures: renderStructures,
   wireframe: renderWireframe,
+  nomnoml: renderNomnoml,
+  d2: renderD2,
 };
 
 export function renderDiagram(engine: Engine, code: string, options: RenderOptions): Promise<RenderResult> {

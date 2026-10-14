@@ -642,6 +642,62 @@ export const wireframeLanguage = StreamLanguage.define<{ first: boolean }>({
   },
 });
 
+/** nomnoml: [boxes], <classifiers>, arrows and #directives. */
+export const nomnomlLanguage = StreamLanguage.define<null>({
+  name: "nomnoml",
+  startState: () => null,
+  token(stream: StringStream) {
+    if (stream.eatSpace()) return null;
+    if (stream.sol() && stream.match(/^\/\/.*/)) return "comment";
+    if (stream.sol() && stream.match(/^#[\w.]+\s*:/)) {
+      stream.skipToEnd();
+      return "meta";
+    }
+    if (stream.match(/^<[\w-]+>/)) return "keyword";
+    if (stream.match(/^[\[\]|;]/)) return "bracket";
+    if (stream.match(/^(<:-|-:>|<-|->|-\/-|--|-|o->|\+->|o-|\+-|:>|<:)/)) return "operator";
+    if (stream.match(/^[^\[\]|;<>\-]+/)) return "variableName";
+    stream.next();
+    return null;
+  },
+  languageData: {
+    commentTokens: { line: "//" },
+  },
+});
+
+const D2_KEYWORDS = /^(shape|label|style|direction|icon|near|width|height|link|tooltip|constraint|vars|classes|class|layers|scenarios|steps|grid-rows|grid-columns|fill|stroke|stroke-width|stroke-dash|border-radius|font-size|font-color|opacity|shadow|3d|multiple|animated|bold|italic|underline|source-arrowhead|target-arrowhead)(?=\s*:)/;
+
+/** D2: shapes, connections, keys like shape: and style.fill:, strings and comments. */
+export const d2Language = StreamLanguage.define<{ block: boolean }>({
+  name: "d2",
+  startState: () => ({ block: false }),
+  token(stream: StringStream, state) {
+    if (state.block) {
+      if (stream.match(/^.*?\|/)) state.block = false;
+      else stream.skipToEnd();
+      return "string";
+    }
+    if (stream.eatSpace()) return null;
+    if (stream.match(/^#.*/)) return "comment";
+    if (stream.match(/^\|(md|latex|tex|\w+)?\s*$/)) {
+      state.block = true;
+      return "string";
+    }
+    if (stream.match(/^"(?:[^"\\]|\\.)*"?/) || stream.match(/^'[^']*'?/)) return "string";
+    if (stream.match(D2_KEYWORDS)) return "keyword";
+    if (stream.match(/^(<->|<-|->|--)/)) return "operator";
+    if (stream.match(/^-?\d+(\.\d+)?/)) return "number";
+    if (stream.match(/^(true|false|null)\b/)) return "atom";
+    if (stream.match(/^[{}]/)) return "bracket";
+    if (stream.match(/^[\w.-]+/)) return "variableName";
+    stream.next();
+    return null;
+  },
+  languageData: {
+    commentTokens: { line: "#" },
+  },
+});
+
 const SKETCH_KINDS =/^(sketch|box|ellipse|diamond|text|arrow|line|pen)\b/;
 
 /** The sketch format: element kind, id, numbers, "labels" and options. */

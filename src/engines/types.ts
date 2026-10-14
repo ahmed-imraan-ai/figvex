@@ -1,6 +1,6 @@
-export type Engine = "plantuml" | "mermaid" | "graphviz" | "echarts" | "bpmn" | "sketch" | "orgchart" | "network" | "sql" | "logic" | "automaton" | "wavedrom" | "structures" | "wireframe";
+export type Engine = "plantuml" | "mermaid" | "graphviz" | "echarts" | "bpmn" | "sketch" | "orgchart" | "network" | "sql" | "logic" | "automaton" | "wavedrom" | "structures" | "wireframe" | "nomnoml" | "d2";
 
-export const ENGINES: readonly Engine[] = ["plantuml", "mermaid", "graphviz", "echarts", "bpmn", "sketch", "orgchart", "network", "sql", "logic", "automaton", "wavedrom", "structures", "wireframe"];
+export const ENGINES: readonly Engine[] = ["plantuml", "mermaid", "graphviz", "echarts", "bpmn", "sketch", "orgchart", "network", "sql", "logic", "automaton", "wavedrom", "structures", "wireframe", "nomnoml", "d2"];
 
 export function isEngine(value: unknown): value is Engine {
   return ENGINES.includes(value as Engine);
@@ -40,6 +40,10 @@ export interface RenderOptions {
   structStyle: StructStyle;
   /** Wireframes only: crisp lines, or hand-drawn like a paper prototype. */
   wireStyle: WireStyle;
+  /** nomnoml only: its own warm colours, or black and white. #fill and #stroke in the diagram win. */
+  nomnomlStyle: NomnomlStyle;
+  /** D2 only: one of D2's themes, or its sketch look. Dark diagrams use D2's dark theme. */
+  d2Style: D2Style;
 }
 
 export type GraphvizStyle = "plain" | "default";
@@ -65,6 +69,10 @@ export type WaveStyle = "default" | "narrow" | "lowkey";
 export type StructStyle = "plain" | "colour";
 
 export type WireStyle = "clean" | "sketchy";
+
+export type NomnomlStyle = "default" | "plain";
+
+export type D2Style = "neutral" | "grey" | "colour-blind" | "terminal" | "origami" | "sketch";
 
 export type MermaidTheme = "default" | "neutral" | "base" | "forest" | "neo" | "redux" | "redux-color";
 
@@ -107,6 +115,8 @@ export const ENGINE_LABEL: Record<Engine, string> = {
   wavedrom: "Timing (WaveDrom)",
   structures: "Data structures",
   wireframe: "Wireframe",
+  nomnoml: "nomnoml",
+  d2: "D2",
 };
 
 export const ENGINE_EXT: Record<Engine, string> = {
@@ -124,6 +134,8 @@ export const ENGINE_EXT: Record<Engine, string> = {
   wavedrom: "wavedrom",
   structures: "structures",
   wireframe: "wireframe",
+  nomnoml: "nomnoml",
+  d2: "d2",
 };
 
 /** Short tag shown next to diagrams in lists. */
@@ -142,6 +154,8 @@ export const ENGINE_TAG: Record<Engine, string> = {
   wavedrom: "wave",
   structures: "ds",
   wireframe: "ui",
+  nomnoml: "nml",
+  d2: "d2",
 };
 
 /** File extensions recognised when opening a file. */
@@ -160,6 +174,8 @@ export const ENGINE_FILE_EXTS: Record<Engine, string[]> = {
   wavedrom: ["wavedrom", "wavejson"],
   structures: ["structures", "ds"],
   wireframe: ["wireframe", "wire"],
+  nomnoml: ["nomnoml", "noml"],
+  d2: ["d2"],
 };
 
 /** Info string for a Markdown code block. */
@@ -178,4 +194,6 @@ export const ENGINE_FENCE: Record<Engine, string> = {
   wavedrom: "wavedrom",
   structures: "structures",
   wireframe: "wireframe",
+  nomnoml: "nomnoml",
+  d2: "d2",
 };

@@ -23,6 +23,8 @@ export const ENGINE_VERSION = {
   wavedrom: "3.7.0",
   structures: "",
   wireframe: "",
+  nomnoml: "1.7.0",
+  d2: "0.1.33",
 } as const;
 
 /** Set VITE_REPO_URL to an empty string to hide the GitHub links. */
@@ -56,4 +58,6 @@ export const DOCS = {
   wavedrom: "https://wavedrom.com/tutorial.html",
   structures: "https://github.com/ahmed-imraan-ai/figvex#data-structures",
   wireframe: "https://github.com/ahmed-imraan-ai/figvex#ui-wireframes",
+  nomnoml: "https://nomnoml.com/",
+  d2: "https://d2lang.com/tour/intro",
 } as const;
