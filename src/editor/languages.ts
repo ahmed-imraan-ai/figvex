@@ -581,6 +581,35 @@ export const automatonLanguage = StreamLanguage.define<{ first: boolean; label: 
   },
 });
 
+/** Data structures: the kind, the name, values and options. */
+export const structuresLanguage = StreamLanguage.define<{ first: boolean }>({
+  name: "structures",
+  startState: () => ({ first: true }),
+  token(stream: StringStream, state) {
+    if (stream.sol()) state.first = true;
+    if (stream.eatSpace()) return null;
+    if ((stream.sol() || /\s/.test(stream.string.charAt(stream.pos - 1))) && stream.match(/^(#|\/\/)/)) {
+      stream.skipToEnd();
+      return "comment";
+    }
+    if (state.first) {
+      state.first = false;
+      if (stream.match(/^(structures|title|array|matrix|stack|queue|list|tree|bst|heap|hash|graph|digraph)\b/)) return "keyword";
+    }
+    if (stream.match(/^(mark|ptr|circular|probe|size|linear|quadratic|chain|null)\b/)) return "atom";
+    if (stream.match(/^"[^"]*"?/) || stream.match(/^'[^']*'?/)) return "string";
+    if (stream.match(/^(<->|->|--|=)/)) return "operator";
+    if (stream.match(/^-?\d+(\.\d+)?/)) return "number";
+    if (stream.match(/^[[\](),:]/)) return "bracket";
+    if (stream.match(/^[\w.]+/)) return "variableName";
+    stream.next();
+    return null;
+  },
+  languageData: {
+    commentTokens: { line: "#" },
+  },
+});
+
 const SKETCH_KINDS =/^(sketch|box|ellipse|diamond|text|arrow|line|pen)\b/;
 
 /** The sketch format: element kind, id, numbers, "labels" and options. */
