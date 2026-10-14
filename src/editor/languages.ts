@@ -422,7 +422,8 @@ export const networkLanguage = StreamLanguage.define<{ first: boolean }>({
     }
     if (state.first) {
       state.first = false;
-      if (stream.match(/^(network|title|direction|lines|checks|zone)\b/)) return "keyword";
+      if (stream.match(/^(network|title|direction|lines|checks|zone|rack|floor|room|view)\b/)) return "keyword";
+      if (stream.match(/^\d+(-\d+)?(?=\s)/)) return "number";
       if (stream.match(NET_KINDS)) return "typeName";
     }
     if (stream.match(/^"(?:[^"\\]|\\.)*"?/)) return "string";

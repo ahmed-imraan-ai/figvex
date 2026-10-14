@@ -44,6 +44,7 @@ import { SketchCanvas } from "./ui/sketch-canvas";
 import { openTemplates } from "./ui/templates-dialog";
 import { openIconSearch } from "./ui/icon-search";
 import { insertIcon } from "./engines/icon-insert";
+import { isDeviceList, networkFromCsv } from "./engines/network/import";
 
 const DEFAULT_TITLE = "Untitled diagram";
 
@@ -722,7 +723,11 @@ async function openFile(file: File) {
     eng = ENGINES.find((e) => ENGINE_FENCE[e] === block[1]) ?? (block[1] === "graphviz" ? "graphviz" : "plantuml");
     text = block[2];
   }
-  if (ext === "csv" || ext === "tsv") {
+  if ((ext === "csv" || ext === "tsv") && isDeviceList(text)) {
+    // A device list (name, type, IP, uplink...) becomes a network diagram.
+    text = networkFromCsv(text, file.name.replace(/\.[^.]+$/, ""));
+    eng = "network";
+  } else if (ext === "csv" || ext === "tsv") {
     // A data file becomes a bar chart of its columns, ready to change.
     text = BLANK_CODE.echarts.replace(/---[\s\S]*$/, `---\n${text.replace(/^﻿/, "")}`);
     eng = "echarts";
