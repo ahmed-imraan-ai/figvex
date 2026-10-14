@@ -8,19 +8,20 @@ Diagrams you make with Figvex are yours. Figvex's licence doesn't cover your dia
 
 ## What the site ships
 
-The build bundles 158 open-source packages. `scripts/collect-licenses.mjs` runs during every build and writes `third-party-licenses.txt` with each package's name, version, licence and full licence text. The deployed site serves it at `/third-party-licenses.txt`, linked from the Help dialog. Run `npm run licenses` to regenerate it.
+The build bundles 183 open-source packages. `scripts/collect-licenses.mjs` runs during every build and writes `third-party-licenses.txt` with each package's name, version, licence and full licence text. The deployed site serves it at `/third-party-licenses.txt`, linked from the Help dialog. Run `npm run licenses` to regenerate it.
 
 At the time of writing:
 
 | Licence | Packages |
 | --- | --- |
-| MIT | 103 |
-| ISC | 33 |
+| MIT | 122 |
+| ISC | 38 |
 | Apache-2.0 | 7 |
 | BSD-3-Clause | 7 |
 | SIL OFL 1.1 (IBM Plex fonts) | 2 |
 | MPL-2.0 or Apache-2.0 (DOMPurify) | 1 |
 | EPL-2.0 (elkjs) | 1 |
+| BSD-2-Clause (estraverse) | 1 |
 | MIT and Zlib | 1 |
 | MIT, with an extra "feel free" note (rgbcolor) | 1 |
 | Unlicense | 1 |
@@ -45,6 +46,8 @@ The main components:
 | CodeMirror | MIT | |
 | DOMPurify | MPL-2.0 or Apache-2.0 | |
 | jsPDF, svg2pdf.js | MIT | |
+| WaveDrom, with onml, logidrom, bit-field and tspan | MIT | Loaded only when a timing diagram is drawn |
+| JSON5 | MIT | |
 | IBM Plex Sans and Mono | SIL OFL 1.1 | |
 
 EPL-2.0 lets Graphviz and ELK ship inside an MIT project. The EPL-2.0 parts stay under EPL-2.0, and their source is available at the addresses above.

@@ -19,7 +19,7 @@ import {
 import { tags as t } from "@lezer/highlight";
 import type { Engine } from "../engines/types";
 import { completionSource } from "./completions";
-import { automatonLanguage, chartLanguage, dotLanguage, mermaidLanguage, networkLanguage, orgLanguage, plantumlLanguage, logicLanguage, sketchLanguage, sqlLanguage, xmlLanguage } from "./languages";
+import { automatonLanguage, chartLanguage, dotLanguage, mermaidLanguage, networkLanguage, orgLanguage, plantumlLanguage, logicLanguage, sketchLanguage, sqlLanguage, waveLanguage, xmlLanguage } from "./languages";
 
 // Colours come from CSS variables so light and dark themes share one style.
 const highlight = HighlightStyle.define([
@@ -370,7 +370,7 @@ export class DiagramEditor {
   }
 }
 
-const LANGUAGES = { plantuml: plantumlLanguage, mermaid: mermaidLanguage, graphviz: dotLanguage, echarts: chartLanguage, bpmn: xmlLanguage, sketch: sketchLanguage, orgchart: orgLanguage, network: networkLanguage, sql: sqlLanguage, logic: logicLanguage, automaton: automatonLanguage } as const;
+const LANGUAGES = { plantuml: plantumlLanguage, mermaid: mermaidLanguage, graphviz: dotLanguage, echarts: chartLanguage, bpmn: xmlLanguage, sketch: sketchLanguage, orgchart: orgLanguage, network: networkLanguage, sql: sqlLanguage, logic: logicLanguage, automaton: automatonLanguage, wavedrom: waveLanguage } as const;
 
 function languageFor(engine: Engine) {
   return LANGUAGES[engine];

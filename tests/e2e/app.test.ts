@@ -345,6 +345,15 @@ describe.skipIf(!chrome || !built)("Figvex in the browser", () => {
     expect(await page.$eval(".player", (el) => (el as HTMLElement).hidden)).toBe(true);
   });
 
+  it("draws a WaveDrom timing diagram with its waves", async () => {
+    const ok = await openDiagram("wavedrom", "Wave test", "{ signal: [{ name: 'clk', wave: 'p...' }, { name: 'd', wave: 'x.3x', data: ['v'] }] }");
+    expect(ok.error).toBeNull();
+    expect(await page.$eval("#lang-input", (el) => (el as HTMLInputElement).value)).toBe("Timing (WaveDrom)");
+    // The bricks are copied in place, so the lanes have drawing in them.
+    expect(await page.$$eval("#sheet [id^='wavelane_draw'] path", (els) => els.length)).toBeGreaterThan(4);
+    expect(await page.$$eval("#sheet use", (els) => els.length)).toBe(0);
+  });
+
   it("draws Graphviz labels with runs of spaces", async () => {
     // Graphviz writes them as no-break spaces, which the sanitiser turns into &nbsp;.
     const ok = await openDiagram("graphviz", "Spaces", 'digraph { spaced [label="two  spaces"] }');

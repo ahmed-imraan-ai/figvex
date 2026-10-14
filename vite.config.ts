@@ -1,4 +1,5 @@
 import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 import { defineConfig } from "vite";
 
 const readVersion = (path: string): string =>
@@ -28,6 +29,11 @@ const graphvizVersion =
   )?.[1] ?? "";
 
 export default defineConfig({
+  resolve: {
+    // WaveDrom only exports its main entry, which includes an eval-based
+    // page helper; this reaches the renderer modules directly.
+    alias: [{ find: /^wavedrom\/lib\/(.*)$/, replacement: fileURLToPath(new URL("./node_modules/wavedrom/lib/$1", import.meta.url)) }],
+  },
   plugins: [
     {
       name: "figvex-deploy-context",

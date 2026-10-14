@@ -266,6 +266,40 @@ export const chartLanguage = StreamLanguage.define<ChartState>({
   },
 });
 
+/** WaveJSON: JSON5 with bare keys and single-quoted strings. */
+export const waveLanguage = StreamLanguage.define<{ blockComment: boolean }>({
+  name: "wavedrom",
+  startState: () => ({ blockComment: false }),
+  token(stream: StringStream, state) {
+    if (state.blockComment) {
+      if (stream.skipTo("*/")) {
+        stream.pos += 2;
+        state.blockComment = false;
+      } else stream.skipToEnd();
+      return "comment";
+    }
+    if (stream.eatSpace()) return null;
+    if (stream.match("//")) {
+      stream.skipToEnd();
+      return "comment";
+    }
+    if (stream.match("/*")) {
+      state.blockComment = true;
+      return "comment";
+    }
+    if (stream.match(/^(["'])(?:(?!\1)[^\\]|\\.)*\1?/)) return stream.match(/^\s*:/, false) ? "propertyName" : "string";
+    if (stream.match(/^[A-Za-z_$][\w$]*(?=\s*:)/)) return "propertyName";
+    if (stream.match(/^-?\d+(\.\d+)?/)) return "number";
+    if (stream.match(/^(true|false|null)\b/)) return "atom";
+    if (stream.match(/^[{}[\]]/)) return "bracket";
+    stream.next();
+    return null;
+  },
+  languageData: {
+    commentTokens: { line: "//", block: { open: "/*", close: "*/" } },
+  },
+});
+
 interface XmlState {
   comment: boolean;
   cdata: boolean;

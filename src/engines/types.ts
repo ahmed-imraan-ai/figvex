@@ -1,6 +1,6 @@
-export type Engine = "plantuml" | "mermaid" | "graphviz" | "echarts" | "bpmn" | "sketch" | "orgchart" | "network" | "sql" | "logic" | "automaton";
+export type Engine = "plantuml" | "mermaid" | "graphviz" | "echarts" | "bpmn" | "sketch" | "orgchart" | "network" | "sql" | "logic" | "automaton" | "wavedrom";
 
-export const ENGINES: readonly Engine[] = ["plantuml", "mermaid", "graphviz", "echarts", "bpmn", "sketch", "orgchart", "network", "sql", "logic", "automaton"];
+export const ENGINES: readonly Engine[] = ["plantuml", "mermaid", "graphviz", "echarts", "bpmn", "sketch", "orgchart", "network", "sql", "logic", "automaton", "wavedrom"];
 
 export function isEngine(value: unknown): value is Engine {
   return ENGINES.includes(value as Engine);
@@ -34,6 +34,8 @@ export interface RenderOptions {
   logicStyle: LogicStyle;
   /** Automata only: plain circles, or the start and accepting states tinted. */
   automatonStyle: AutomatonStyle;
+  /** Timing diagrams only: the WaveDrom skin. Dark diagrams always use the dark skin. */
+  waveStyle: WaveStyle;
 }
 
 export type GraphvizStyle = "plain" | "default";
@@ -53,6 +55,8 @@ export type SqlStyle = "colour" | "plain" | "keys";
 export type LogicStyle = "overbar" | "prime" | "logic" | "code";
 
 export type AutomatonStyle = "plain" | "colour";
+
+export type WaveStyle = "default" | "narrow" | "lowkey";
 
 export type MermaidTheme = "default" | "neutral" | "base" | "forest" | "neo" | "redux" | "redux-color";
 
@@ -92,6 +96,7 @@ export const ENGINE_LABEL: Record<Engine, string> = {
   sql: "SQL",
   logic: "Logic",
   automaton: "Automata",
+  wavedrom: "Timing (WaveDrom)",
 };
 
 export const ENGINE_EXT: Record<Engine, string> = {
@@ -106,6 +111,7 @@ export const ENGINE_EXT: Record<Engine, string> = {
   sql: "sql",
   logic: "logic",
   automaton: "automaton",
+  wavedrom: "wavedrom",
 };
 
 /** Short tag shown next to diagrams in lists. */
@@ -121,6 +127,7 @@ export const ENGINE_TAG: Record<Engine, string> = {
   sql: "sql",
   logic: "logic",
   automaton: "fa",
+  wavedrom: "wave",
 };
 
 /** File extensions recognised when opening a file. */
@@ -136,6 +143,7 @@ export const ENGINE_FILE_EXTS: Record<Engine, string[]> = {
   sql: ["sql", "ddl"],
   logic: ["logic", "bool"],
   automaton: ["automaton", "fsm", "dfa", "nfa", "tm"],
+  wavedrom: ["wavedrom", "wavejson"],
 };
 
 /** Info string for a Markdown code block. */
@@ -151,4 +159,5 @@ export const ENGINE_FENCE: Record<Engine, string> = {
   sql: "sql",
   logic: "logic",
   automaton: "automaton",
+  wavedrom: "wavedrom",
 };
