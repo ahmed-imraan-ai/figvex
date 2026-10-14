@@ -382,6 +382,21 @@ describe.skipIf(!chrome || !built)("Figvex in the browser", () => {
     expect(await page.$eval("#btn-icons", (el) => (el as HTMLElement).hidden)).toBe(true);
   });
 
+  it("draws a wireframe and jumps to a control's line", async () => {
+    const code = 'wireframe\nscreen wa "First" phone\n  header "Top"\n  button "Press me" primary\nscreen wb "Second" phone\n  text "Done"\nwa -> wb "next"\n';
+    const ok = await openDiagram("wireframe", "Wire test", code);
+    expect(ok.error).toBeNull();
+    expect(await page.$eval("#lang-input", (el) => (el as HTMLInputElement).value)).toBe("Wireframe");
+    expect(await page.$$eval("#sheet [data-qualified-name]", (els) => els.map((e) => e.getAttribute("data-qualified-name")))).toEqual(["wa", "wb"]);
+    const button = await page.$$eval("#sheet text", (els) => {
+      const t = els.find((e) => e.textContent === "Press me")!;
+      const r = t.getBoundingClientRect();
+      return { x: r.x + r.width / 2, y: r.y + r.height / 2 };
+    });
+    await page.mouse.click(button.x, button.y);
+    expect(await page.$eval("#status-cursor", (el) => el.textContent)).toMatch(/^Ln 4,/);
+  });
+
   it("draws Graphviz labels with runs of spaces", async () => {
     // Graphviz writes them as no-break spaces, which the sanitiser turns into &nbsp;.
     const ok = await openDiagram("graphviz", "Spaces", 'digraph { spaced [label="two  spaces"] }');

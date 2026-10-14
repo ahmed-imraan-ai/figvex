@@ -13,6 +13,7 @@ import { cloudTemplates } from "./cloud";
 import { automatonTemplates } from "./automaton";
 import { wavedromTemplates } from "./wavedrom";
 import { structuresTemplates } from "./structures";
+import { wireframeTemplates } from "./wireframe";
 
 export interface Template {
   id: string;
@@ -69,6 +70,7 @@ sw1 -- pc1
   automaton: "automaton\nstart q0\naccept q1\nq0 -a-> q1\nq1 -b-> q0\ninput aba\n",
   wavedrom: "{ signal: [\n  { name: 'clk', wave: 'p.....' },\n  { name: 'data', wave: 'x.34.x', data: ['a', 'b'] }\n]}\n",
   structures: "structures\narray A = [3, 1, 4, 1, 5]\nlist L = 3 -> 1 -> 4\nbst B = 8 3 10 1 6 14\n",
+  wireframe: "wireframe\nscreen home \"Home\" phone\n  header \"My app\"\n  field \"Name\" \"Your name\"\n  button \"Save\" primary\n",
   echarts: '{\n  "xAxis": { "type": "category" },\n  "yAxis": {},\n  "series": [{ "type": "bar" }]\n}\n---\nname,value\nA,3\nB,5\nC,4\n',
 };
 
@@ -177,9 +179,17 @@ const blank: Template[] = [
     summary: "An array, a linked list and a binary search tree, one per line.",
     code: BLANK_CODE.structures,
   },
+  {
+    id: "blank-wireframe",
+    engine: "wireframe",
+    category: "Start from scratch",
+    title: "Blank wireframe",
+    summary: "One phone screen with a header, a field and a button.",
+    code: BLANK_CODE.wireframe,
+  },
 ];
 
-export const TEMPLATES: Template[] = [...blank, ...plantumlTemplates, ...mermaidTemplates, ...graphvizTemplates, ...chartTemplates, ...bpmnTemplates, ...sketchTemplates, ...orgchartTemplates, ...networkTemplates, ...sqlTemplates, ...logicTemplates, ...automatonTemplates, ...wavedromTemplates, ...structuresTemplates, ...cloudTemplates].sort(
+export const TEMPLATES: Template[] = [...blank, ...plantumlTemplates, ...mermaidTemplates, ...graphvizTemplates, ...chartTemplates, ...bpmnTemplates, ...sketchTemplates, ...orgchartTemplates, ...networkTemplates, ...sqlTemplates, ...logicTemplates, ...automatonTemplates, ...wavedromTemplates, ...structuresTemplates, ...cloudTemplates, ...wireframeTemplates].sort(
   (a, b) => CATEGORIES.indexOf(a.category as never) - CATEGORIES.indexOf(b.category as never),
 );
 
