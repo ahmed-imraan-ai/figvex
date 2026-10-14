@@ -309,6 +309,13 @@ describe.skipIf(!chrome || !built)("Figvex in the browser", () => {
     expect(await page.$eval("#status-cursor", (el) => el.textContent)).toMatch(/^Ln 4,/);
   });
 
+  it("draws Graphviz labels with runs of spaces", async () => {
+    // Graphviz writes them as no-break spaces, which the sanitiser turns into &nbsp;.
+    const ok = await openDiagram("graphviz", "Spaces", 'digraph { spaced [label="two  spaces"] }');
+    expect(ok.error).toBeNull();
+    expect(await page.$eval("#sheet svg text", (el) => el.textContent)).toMatch(/^two\s{2}spaces$/);
+  });
+
   it("draws tables from SQL, warns about a missing table and jumps to a column", async () => {
     const code = "CREATE TABLE sqlteams (\n  id int PRIMARY KEY,\n  name text\n);\nCREATE TABLE sqlplayers (\n  id int PRIMARY KEY,\n  team_id int NOT NULL REFERENCES sqlteams (id),\n  coach_id int REFERENCES coaches (id)\n);\n";
     const ok = await openDiagram("sql", "SQL test", code);
