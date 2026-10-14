@@ -2051,3 +2051,16 @@ dialog.modal.about {
     bottom: 64px;
   }
 }
+
+/* Small buttons in pane heads, such as Icons beside the syntax link. */
+.btn-small {
+  height: 26px;
+  margin-right: 10px;
+  padding: 0 9px;
+  border-color: var(--rule-strong);
+  font-size: 12.5px;
+}
+
+.btn-small[hidden] {
+  display: none;
+}

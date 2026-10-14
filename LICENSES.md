@@ -58,6 +58,8 @@ EPL-2.0 lets Graphviz and ELK ship inside an MIT project. The EPL-2.0 parts stay
 
 Every other bundle still works. The browser loads it from the official PlantUML host (`plantuml.github.io`) when a diagram includes it, so Figvex doesn't redistribute it. At the time of writing, AdaML declares GPL and twelve others declare no licence, so they stay on the official host.
 
+The Icons search in the editor lists the AWS, Azure, Google Cloud and Kubernetes icons by name. `public/icon-index.json` holds only those names and include paths, made by `npm run icons`; the icons themselves load from the official host like any other bundle, under the terms of each icon set.
+
 ## Services contacted at runtime
 
 | Service | When | Terms |

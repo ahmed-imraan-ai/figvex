@@ -279,6 +279,11 @@ export class DiagramEditor {
     return this.view.state.doc.toString();
   }
 
+  /** The 1-based line the cursor is on. */
+  get cursorLine(): number {
+    return this.view.state.doc.lineAt(this.view.state.selection.main.head).number;
+  }
+
   /** Switch to another document: fresh undo history, cursor at the top. */
   load(code: string, engine: Engine) {
     this.engine = engine;
