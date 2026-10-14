@@ -214,4 +214,210 @@ bin,students
 }
 `,
   },
+  {
+    id: "chart-stat-boxplot",
+    engine: "echarts",
+    category: "Charts",
+    title: "Box plot from raw data",
+    summary: "Marks for three groups as raw rows; the quartiles, whiskers and outliers are worked out for you.",
+    code: `// stat:boxplot summarises the raw rows under ---. "group" and
+// "value" name the columns. Whiskers reach the furthest point within
+// 1.5 × IQR; points beyond are outliers, in a dataset of their own.
+{
+  "title": { "text": "Exam marks by group", "left": "center" },
+  "dataset": [
+    {},
+    { "id": "box", "transform": { "type": "stat:boxplot", "config": { "group": "group", "value": "mark" } } }
+  ],
+  "tooltip": { "trigger": "item" },
+  "xAxis": { "type": "category" },
+  "yAxis": { "type": "value", "name": "mark", "min": 0, "max": 100 },
+  "series": [
+    { "name": "marks", "type": "boxplot", "datasetId": "box", "encode": { "x": "group", "y": ["low", "q1", "median", "q3", "high"] } },
+    { "name": "outliers", "type": "scatter", "datasetId": "box-outliers", "encode": { "x": "group", "y": "value" } }
+  ]
+}
+---
+group,mark
+A,62
+A,71
+A,58
+A,66
+A,74
+A,69
+A,55
+A,80
+A,64
+A,12
+B,48
+B,57
+B,63
+B,51
+B,70
+B,66
+B,59
+B,45
+B,61
+B,54
+C,77
+C,82
+C,69
+C,88
+C,74
+C,79
+C,85
+C,72
+C,91
+C,80
+`,
+  },
+  {
+    id: "chart-stat-histogram",
+    engine: "echarts",
+    category: "Charts",
+    title: "Histogram from raw data",
+    summary: "One column of raw times, binned for you: set a bin width or a number of bins.",
+    code: `// stat:histogram counts the values into bins. Set "width" or "bins";
+// with neither, it uses Sturges' rule. The table it makes has the
+// columns bin, count, percent, density, from and to.
+{
+  "title": { "text": "Time to finish the quiz", "subtext": "40 students", "left": "center" },
+  "dataset": [{}, { "transform": { "type": "stat:histogram", "config": { "dimension": "minutes", "width": 5 } } }],
+  "grid": { "top": 80 },
+  "xAxis": { "type": "category", "name": "minutes" },
+  "yAxis": { "type": "value", "name": "students" },
+  "series": [{ "type": "bar", "datasetIndex": 1, "barCategoryGap": "2%", "label": { "show": true, "position": "top" } }]
+}
+---
+minutes
+12
+18
+21
+23
+24
+25
+26
+27
+27
+28
+29
+29
+30
+31
+31
+32
+32
+33
+33
+34
+34
+35
+35
+36
+36
+37
+38
+38
+39
+40
+41
+42
+43
+44
+46
+47
+49
+52
+55
+58
+`,
+  },
+  {
+    id: "chart-stat-trend",
+    engine: "echarts",
+    category: "Charts",
+    title: "Scatter plot with a trend line",
+    summary: "Hours of revision against marks, with a least-squares line, its equation and R².",
+    code: `// stat:regression fits a line to x and y. "method" can also be
+// polynomial (with "order"), exponential, logarithmic or power.
+// {equation} and {r2} in the series name show the fit.
+{
+  "title": { "text": "Revision and results", "left": "center" },
+  "dataset": [{}, { "transform": { "type": "stat:regression", "config": { "x": "hours", "y": "mark", "method": "linear" } } }],
+  "legend": { "bottom": 10 },
+  "xAxis": { "type": "value", "name": "hours" },
+  "yAxis": { "type": "value", "name": "mark", "min": 0, "max": 100 },
+  "series": [
+    { "name": "students", "type": "scatter", "datasetIndex": 0, "symbolSize": 9 },
+    { "name": "{equation}, R² = {r2}", "type": "line", "datasetIndex": 1, "showSymbol": false, "lineStyle": { "width": 2 } }
+  ]
+}
+---
+hours,mark
+2,41
+3,48
+4,45
+5,55
+6,52
+7,61
+8,58
+9,66
+10,63
+11,72
+12,70
+14,78
+15,74
+16,83
+18,86
+`,
+  },
+  {
+    id: "chart-stat-density",
+    engine: "echarts",
+    category: "Charts",
+    title: "Distribution curve",
+    summary: "A smooth density curve of raw heights, from a Gaussian kernel density estimate.",
+    code: `// stat:density estimates the shape of the distribution. The bandwidth
+// comes from Silverman's rule unless you set "bandwidth".
+{
+  "title": { "text": "Heights of 30 students", "left": "center" },
+  "dataset": [{}, { "transform": { "type": "stat:density", "config": { "dimension": "cm" } } }],
+  "xAxis": { "type": "value", "name": "cm", "min": 130, "max": 220 },
+  "yAxis": { "type": "value", "name": "density" },
+  "series": [{ "type": "line", "datasetIndex": 1, "showSymbol": false, "smooth": true, "areaStyle": { "opacity": 0.25 } }]
+}
+---
+cm
+152
+156
+158
+160
+161
+163
+164
+165
+166
+167
+168
+168
+169
+170
+171
+172
+173
+174
+175
+176
+177
+178
+179
+181
+182
+184
+186
+188
+191
+195
+`,
+  },
 ];

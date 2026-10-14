@@ -12,7 +12,7 @@ It was built for computer science students: UML for software engineering courses
 
 ## Features
 
-- Live preview for PlantUML, Mermaid, Graphviz DOT, BPMN 2.0 and ECharts data charts, with the language picked up from the first line
+- Live preview for PlantUML, Mermaid, Graphviz DOT, BPMN 2.0 and ECharts data charts, with box plots, histograms, trend lines and density curves worked out from raw data, with the language picked up from the first line
 - ER diagrams drawn straight from SQL: paste `CREATE TABLE` statements, or a whole PostgreSQL, MySQL, SQLite or SQL Server dump, and get tables with crow's foot links
 - Boolean logic: truth tables, Karnaugh maps with their groups, the simplest sum of products and product of sums, and gate circuits, from an expression or a list of minterms
 - Automata: DFAs, NFAs with ε moves and Turing machines from their transitions, with each input run through the machine and a step-through on the diagram
@@ -21,7 +21,7 @@ It was built for computer science students: UML for software engineering courses
 - Network diagrams with device icons, subnets, VLANs, ports and link types, and checks that catch address mistakes as you type
 - Org charts from an indented list of people, with departments, assistants, vacancies, dotted lines and three card styles
 - A sketch canvas for freeform diagrams: boxes, arrows that stay attached, text and pen, in a clean or hand-drawn style
-- 99 templates written around coursework: a library system class diagram, JWT login sequence, TCP state machine, DFA for multiples of 3, binary search tree, hash table, confusion matrix, sorting benchmark, library loan process, login wireframe, society committee org chart, subnetting exercise, university ER schema from SQL, levelled data flow diagrams, Karnaugh maps, a full adder circuit, Turing machines, an SPI timing diagram, hash tables with chaining and probing, capstone Gantt plan and more
+- 103 templates written around coursework: a library system class diagram, JWT login sequence, TCP state machine, DFA for multiples of 3, binary search tree, hash table, confusion matrix, sorting benchmark, library loan process, login wireframe, society committee org chart, subnetting exercise, university ER schema from SQL, levelled data flow diagrams, Karnaugh maps, a full adder circuit, Turing machines, an SPI timing diagram, hash tables with chaining and probing, capstone Gantt plan and more
 - Export to SVG, PNG, JPG, WEBP and vector PDF, at 1× to 4× scale, with a solid or transparent background
 - Copy the image straight to the clipboard for pasting into a report or slides
 - Share links that carry the whole diagram in the URL, with no server involved
@@ -406,6 +406,24 @@ C,40
 Each column after the first becomes a series, in order. `"width"` and `"height"` at the top level set the size in pixels (720 × 440 by default).
 
 Chart types: bar, line, pie, scatter, radar, box plot, heatmap, candlestick, funnel, gauge, Sankey, graph, tree, treemap, sunburst, parallel coordinates and theme river. JSON can't hold functions, so options that need a JavaScript callback, such as a custom tooltip formatter, aren't available; string templates like `"{b}: {c}"` work.
+
+### Statistics from raw data
+
+Four transforms work out statistics from raw rows, so the CSV can hold the data as it was collected. Put the data first in `"dataset"`, then the transform; series draw the result with `"datasetIndex"` or `"datasetId"`:
+
+```
+"dataset": [{}, { "transform": { "type": "stat:histogram", "config": { "dimension": "minutes", "width": 5 } } }],
+"series": [{ "type": "bar", "datasetIndex": 1 }]
+```
+
+| Transform | Config | Makes |
+| --- | --- | --- |
+| `stat:histogram` | `dimension`; `width` or `bins` (Sturges' rule if neither); `start` | Columns bin, count, percent, density, from, to |
+| `stat:boxplot` | `group` and `value` for long data, or `dimensions` for one column per group; `whiskers`: `tukey` (default) or `minmax` | Columns group, low, q1, median, q3, high, n, and a second dataset `<id>-outliers` |
+| `stat:regression` | `x`, `y`, `method` (linear, polynomial with `order`, exponential, logarithmic, power), `points` | Points along the fitted line |
+| `stat:density` | `dimension`, `bandwidth` (Silverman's rule by default), `points` | A Gaussian kernel density curve: columns x, density |
+
+Quartiles use linear interpolation between data points, as Excel's `QUARTILE.INC` and R's default do. In any text, `{equation}` and `{r2}` show the fitted equation and R² of the trend line that series draws, or of the first trend line elsewhere. The chart templates include a box plot, a histogram, a trend line and a density curve built this way.
 
 ## Styles
 
