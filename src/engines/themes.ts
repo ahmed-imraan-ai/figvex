@@ -1,4 +1,4 @@
-import type { AutomatonStyle, LogicStyle, SqlStyle, BpmnStyle, ChartStyle, NetStyle, OrgStyle, SketchStyle, GraphvizStyle, MermaidTheme } from "./types";
+import type { WaveStyle, AutomatonStyle, LogicStyle, SqlStyle, BpmnStyle, ChartStyle, NetStyle, OrgStyle, SketchStyle, GraphvizStyle, MermaidTheme } from "./types";
 
 /** Themes bundled with PlantUML (themes.js), minus "plain" and "_none_". */
 export const PLANTUML_THEMES = `amiga aws-orange black-knight bluegray blueprint carbon-gray cerulean
@@ -72,4 +72,10 @@ export const LOGIC_STYLES: { value: LogicStyle; label: string }[] = [
 export const AUTOMATON_STYLES: { value: AutomatonStyle; label: string }[] = [
   { value: "plain", label: "Plain" },
   { value: "colour", label: "Colour" },
+];
+
+export const WAVE_STYLES: { value: WaveStyle; label: string }[] = [
+  { value: "default", label: "WaveDrom" },
+  { value: "narrow", label: "Narrow" },
+  { value: "lowkey", label: "Low-key" },
 ];

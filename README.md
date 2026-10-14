@@ -16,10 +16,11 @@ It was built for computer science students: UML for software engineering courses
 - ER diagrams drawn straight from SQL: paste `CREATE TABLE` statements, or a whole PostgreSQL, MySQL, SQLite or SQL Server dump, and get tables with crow's foot links
 - Boolean logic: truth tables, Karnaugh maps with their groups, the simplest sum of products and product of sums, and gate circuits, from an expression or a list of minterms
 - Automata: DFAs, NFAs with ε moves and Turing machines from their transitions, with each input run through the machine and a step-through on the diagram
+- Digital timing diagrams, register bit fields and logic from assignments, with WaveDrom
 - Network diagrams with device icons, subnets, VLANs, ports and link types, and checks that catch address mistakes as you type
 - Org charts from an indented list of people, with departments, assistants, vacancies, dotted lines and three card styles
 - A sketch canvas for freeform diagrams: boxes, arrows that stay attached, text and pen, in a clean or hand-drawn style
-- 89 templates written around coursework: a library system class diagram, JWT login sequence, TCP state machine, DFA for multiples of 3, binary search tree, hash table, confusion matrix, sorting benchmark, library loan process, login wireframe, society committee org chart, subnetting exercise, university ER schema from SQL, levelled data flow diagrams, Karnaugh maps, a full adder circuit, Turing machines, capstone Gantt plan and more
+- 95 templates written around coursework: a library system class diagram, JWT login sequence, TCP state machine, DFA for multiples of 3, binary search tree, hash table, confusion matrix, sorting benchmark, library loan process, login wireframe, society committee org chart, subnetting exercise, university ER schema from SQL, levelled data flow diagrams, Karnaugh maps, a full adder circuit, Turing machines, an SPI timing diagram, capstone Gantt plan and more
 - Export to SVG, PNG, JPG, WEBP and vector PDF, at 1× to 4× scale, with a solid or transparent background
 - Copy the image straight to the clipboard for pasting into a report or slides
 - Share links that carry the whole diagram in the URL, with no server involved
@@ -29,7 +30,7 @@ It was built for computer science students: UML for software engineering courses
 - Errors point at the line, with a marker in the editor
 - Every diagram saved in the browser, with rename, duplicate, delete and undo; collapsed, the list stays as a narrow rail of recent diagrams
 - A language picker above the editor that you can type into to search; changing the language of a diagram with real content starts a new one, so nothing is overwritten
-- Open `.puml`, `.mmd`, `.gv`, `.dot`, `.bpmn`, `.sketch`, `.org`, `.network`, `.sql`, `.logic`, `.automaton`, chart and Markdown files, or drag them onto the window; a `.csv` file opens as a bar chart of its columns
+- Open `.puml`, `.mmd`, `.gv`, `.dot`, `.bpmn`, `.sketch`, `.org`, `.network`, `.sql`, `.logic`, `.automaton`, `.wavedrom`, chart and Markdown files, or drag them onto the window; a `.csv` file opens as a bar chart of its columns
 - Light and dark themes for the app and for the diagrams, separately
 - Pan and zoom with mouse, trackpad or touch; works on phones as two tabs
 
@@ -336,6 +337,22 @@ Figvex works out what kind of machine it is: a Turing machine when the moves are
 
 The bar at the bottom of the diagram steps through a run: the current states and the arrows just followed are highlighted, and the tape shows where the head is. The menu in the bar picks which input to follow. Figvex warns about states that can't be reached, a machine with no accepting state and inputs that use a symbol no transition reads.
 
+## Timing diagrams
+
+Timing diagrams are drawn by [WaveDrom](https://wavedrom.com/) from WaveJSON, which Figvex picks up when the text starts with `{ signal: [...] }`, `{ reg: [...] }` or `{ assign: [...] }`.
+
+```
+{ signal: [
+  { name: 'clk',  wave: 'p.......' },
+  { name: 'data', wave: 'x.345x..', data: ['A0', 'A1', 'A2'] },
+  { name: 'ack',  wave: '0..1.0..' }
+] }
+```
+
+Each character in a `wave` is one clock cycle: `p` and `n` are clocks, `0` and `1` levels, `x` unknown, `z` high impedance, `.` the same as before, and `=`, `2` to `9` bus values labelled from `data`. `node` and `edge` draw arrows between points, square brackets group signals, and `head` and `config` set a title, tick numbers and the horizontal scale. `reg` draws register bit fields and `assign` draws gates from nested expressions. The [WaveDrom tutorial](https://wavedrom.com/tutorial.html) covers the rest.
+
+The Style menu picks WaveDrom's **default**, **narrow** or **low-key** skin; dark diagrams use its dark skin. WaveDrom is loaded the first time a timing diagram is drawn.
+
 ## Charts
 
 A chart is an [ECharts option](https://echarts.apache.org/en/option.html) written as JSON. Comments and trailing commas are allowed. Data can go in the JSON, or as CSV under a line of three dashes, where it becomes the chart's dataset:
@@ -456,7 +473,7 @@ Set these as environment variables when building (in Netlify under **Site config
 ```
 src/
   main.ts             wiring: documents, rendering, toolbar, shortcuts
-  engines/            PlantUML, Mermaid, Graphviz, ECharts, BPMN, sketch, org chart, network, SQL, logic and automaton engines, language detection, themes
+  engines/            PlantUML, Mermaid, Graphviz, ECharts, BPMN, sketch, org chart, network, SQL, logic, automaton and WaveDrom engines, language detection, themes
   editor/             CodeMirror setup, syntax colouring, autocomplete
   preview.ts          pan and zoom canvas, click-to-source
   export.ts           SVG, PNG, JPG, WEBP and PDF export

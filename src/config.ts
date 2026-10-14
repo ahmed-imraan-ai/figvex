@@ -20,6 +20,7 @@ export const ENGINE_VERSION = {
   sql: "",
   logic: "",
   automaton: "",
+  wavedrom: "3.7.0",
 } as const;
 
 /** Set VITE_REPO_URL to an empty string to hide the GitHub links. */
@@ -50,4 +51,5 @@ export const DOCS = {
   sql: "https://github.com/ahmed-imraan-ai/figvex#er-diagrams-from-sql",
   logic: "https://github.com/ahmed-imraan-ai/figvex#logic",
   automaton: "https://github.com/ahmed-imraan-ai/figvex#automata",
+  wavedrom: "https://wavedrom.com/tutorial.html",
 } as const;
