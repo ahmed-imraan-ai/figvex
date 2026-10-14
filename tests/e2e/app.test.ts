@@ -408,6 +408,16 @@ describe.skipIf(!chrome || !built)("Figvex in the browser", () => {
     expect(await page.$eval("#status-cursor", (el) => el.textContent)).toMatch(/^Ln 4,/);
   });
 
+  it("draws D2 and points at D2 mistakes", async () => {
+    const broken = await openDiagram("d2", "D2 broken", "a -> b\nx.shape: hexagonz\n");
+    expect(broken.error).toContain("line 2");
+    expect(broken.error).toContain('Unknown shape "hexagonz"');
+    const ok = await openDiagram("d2", "D2 test", "direction: right\nd2a -> d2b: label\nd2b: {shape: cylinder}\n");
+    expect(ok.error).toBeNull();
+    expect(await page.$eval("#lang-input", (el) => (el as HTMLInputElement).value)).toBe("D2");
+    expect(await page.$eval("#sheet svg", (el) => el.textContent)).toContain("d2a");
+  });
+
   it("draws Graphviz labels with runs of spaces", async () => {
     // Graphviz writes them as no-break spaces, which the sanitiser turns into &nbsp;.
     const ok = await openDiagram("graphviz", "Spaces", 'digraph { spaced [label="two  spaces"] }');

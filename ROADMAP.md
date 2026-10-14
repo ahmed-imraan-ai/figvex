@@ -17,6 +17,7 @@ Figvex started with PlantUML and Mermaid, and now also draws Graphviz DOT, BPMN,
 - **Cloud infrastructure (phase 2).** Templates for AWS, Azure, Google Cloud and Kubernetes with the official icons from PlantUML's standard library, and an icon search above the editor that previews any of about 1,200 icons and inserts it with its includes.
 - **UI wireframes (phase 2).** A wireframe language: phone, tablet, desktop, browser and window screens with headers, navigation, tabs, inputs, choices, sliders, buttons, lists, tables, alerts, cards and rows, and arrows between screens for user flows. Drawn clean or hand-drawn.
 - **Advanced UML (phase 2).** Templates for communication, composite structure and interaction overview diagrams, and modelling checks on PlantUML class, sequence and state diagrams: inheritance cycles, impossible multiplicities, duplicate classes, attributes in interfaces, likely typos of declared classes and participants, unbalanced activations and unreachable states.
+- **D2 and nomnoml (phase 2).** Two more text languages for people coming from those tools: nomnoml (MIT) for quick UML-style boxes, and D2 (MPL-2.0) through its WebAssembly build, with D2's themes and sketch look in the Style menu. Both load only when used.
 - **Physical network views (phase 2).** Rack elevations and floor plans in the network language, referring to its devices, with cable runs and estimated lengths from its links, and checks for overlapping units and devices off the plan. A device list in a CSV file opens as a network diagram.
 
 ## How new types fit in
@@ -51,14 +52,7 @@ Done. See above.
 
 ## Phase 2
 
-- **Statistical charts.** Done (see above).
-- **UI wireframes.** Done (see above). Salt still needs the PlantUML browser build to include it.
-- **Network diagrams.** Done (see above).
-- **Advanced UML.** Done (see above).
-- **Cloud infrastructure.** Done (see above).
-- **Complex data models.** Done (see above).
-- **More text languages.** D2 and nomnoml, for people coming from those tools.
-- **Coursework tools.** Done (see above).
+Done. See above. PlantUML's Salt wireframes still need the PlantUML browser build to include them.
 
 ## Phase 3
 

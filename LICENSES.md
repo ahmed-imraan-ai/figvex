@@ -8,17 +8,18 @@ Diagrams you make with Figvex are yours. Figvex's licence doesn't cover your dia
 
 ## What the site ships
 
-The build bundles 183 open-source packages. `scripts/collect-licenses.mjs` runs during every build and writes `third-party-licenses.txt` with each package's name, version, licence and full licence text. The deployed site serves it at `/third-party-licenses.txt`, linked from the Help dialog. Run `npm run licenses` to regenerate it.
+The build bundles 186 open-source packages. `scripts/collect-licenses.mjs` runs during every build and writes `third-party-licenses.txt` with each package's name, version, licence and full licence text. The deployed site serves it at `/third-party-licenses.txt`, linked from the Help dialog. Run `npm run licenses` to regenerate it.
 
 At the time of writing:
 
 | Licence | Packages |
 | --- | --- |
-| MIT | 122 |
+| MIT | 124 |
 | ISC | 38 |
 | Apache-2.0 | 7 |
 | BSD-3-Clause | 7 |
 | SIL OFL 1.1 (IBM Plex fonts) | 2 |
+| MPL-2.0 (D2) | 1 |
 | MPL-2.0 or Apache-2.0 (DOMPurify) | 1 |
 | EPL-2.0 (elkjs) | 1 |
 | BSD-2-Clause (estraverse) | 1 |
@@ -48,9 +49,11 @@ The main components:
 | jsPDF, svg2pdf.js | MIT | |
 | WaveDrom, with onml, logidrom, bit-field and tspan | MIT | Loaded only when a timing diagram is drawn |
 | JSON5 | MIT | |
+| nomnoml, with graphre | MIT | Loaded only when a nomnoml diagram is drawn |
+| D2 (`@terrastruct/d2`) | MPL-2.0 | Unmodified; loaded only when a D2 diagram is drawn. Source at github.com/terrastruct/d2 |
 | IBM Plex Sans and Mono | SIL OFL 1.1 | |
 
-EPL-2.0 lets Graphviz and ELK ship inside an MIT project. The EPL-2.0 parts stay under EPL-2.0, and their source is available at the addresses above.
+MPL-2.0 applies file by file: D2's files stay under MPL-2.0 and are shipped unchanged, and the rest of Figvex stays MIT. EPL-2.0 lets Graphviz and ELK ship inside an MIT project. The EPL-2.0 parts stay under EPL-2.0, and their source is available at the addresses above.
 
 ## PlantUML standard library
 
