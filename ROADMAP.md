@@ -1,6 +1,6 @@
 # Roadmap
 
-Figvex started with PlantUML and Mermaid, and now also draws Graphviz DOT, BPMN, network diagrams, org charts, data charts and freeform sketches. The plan is to add more kinds of diagram and chart behind the same editor, preview, export and sharing. The work is split into three phases. Items within a phase aren't in a fixed order.
+Figvex started with PlantUML and Mermaid, and now also draws Graphviz DOT, BPMN, network diagrams, ER diagrams from SQL, org charts, data charts and freeform sketches. The plan is to add more kinds of diagram and chart behind the same editor, preview, export and sharing. The work is split into three phases. Items within a phase aren't in a fixed order.
 
 ## Done
 
@@ -11,6 +11,7 @@ Figvex started with PlantUML and Mermaid, and now also draws Graphviz DOT, BPMN,
 - **Org charts.** Written as an indented list of people and laid out as a tidy tree by our own layout: departments with colours and a legend, assistants, vacant posts, dotted-line reporting, team sizes, a compact layout, top-down or left-to-right, and three card styles.
 - **Complex networking.** A network language with 18 device icons, zones for subnets, VLANs and sites that nest, port names, cable, trunk, VPN and wireless links, and straight, curved or right-angled lines. Graphviz does the layout; the icons and drawing are ours. IPv4 and IPv6 addresses are checked as you type: addresses outside their subnet, duplicates, network and broadcast addresses, overlapping subnets and VLAN clashes.
 - **Visual editing.** Changes made in the diagram are written back to the text, so undo, saving and sharing behave as for typing. BPMN shapes can be dragged, with alignment guides, right-angled rerouting of flows, lane changes, and positions added to files that had none. Org charts and networks can be built from the diagram: rename, add a report or a linked device, and remove. Graphviz nodes and Mermaid flowchart nodes can be renamed. Sketches are drawn on a canvas. Between them, a diagram can be made without writing code.
+- **Complex data models (phase 2).** ER diagrams drawn from SQL DDL, including whole PostgreSQL, MySQL, SQLite and SQL Server dumps. Foreign keys become crow's foot links between the columns, with cardinality taken from NOT NULL and unique constraints. `-- group:` comments box tables by area (or by schema), `-- focus:` draws one part of the model, and a keys-only style keeps large schemas readable. Missing tables and columns are marked as you type.
 
 ## How new types fit in
 
@@ -49,7 +50,7 @@ Done. See above.
 - **Network diagrams.** Physical views (racks, floor plans and cabling) alongside the logical network language, and import from a device list.
 - **Advanced UML.** The UML diagrams PlantUML and Mermaid cover poorly or not at all, such as composite structure, communication and interaction overview diagrams, and checks for common modelling mistakes.
 - **Cloud infrastructure.** AWS, Azure, GCP and Kubernetes diagrams with official icons. PlantUML's standard library already has these icon sets; the work is templates, icon search and layout.
-- **Complex data models.** Large ER schemas imported from SQL DDL, with grouping and a way to focus on part of the model.
+- **Complex data models.** Done (see above).
 - **More text languages.** D2 and nomnoml, for people coming from those tools.
 - **Coursework tools.** Truth tables and Karnaugh maps from a boolean expression, digital timing diagrams with WaveDrom, gate-level logic circuits, data structure pictures (arrays, linked lists, trees, hash tables, graphs), and automata and Turing machines with a step-through of an input string.
 
