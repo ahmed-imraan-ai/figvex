@@ -2,7 +2,7 @@ import { beforeAll, describe, expect, it } from "vitest";
 import { detectEngine, diagramKind } from "../../src/engines/detect";
 import type { VizInstance } from "../../src/engines/graphviz";
 import { parseSql, SqlError, tokenize, visibleTables } from "../../src/engines/sql/model";
-import { drawSql, groupOf, layoutSql } from "../../src/engines/sql/render";
+import { drawSql, groupOf, layoutSql, spreadEnds } from "../../src/engines/sql/render";
 import { sqlTemplates } from "../../src/templates/sql";
 
 let viz: VizInstance;
@@ -190,6 +190,21 @@ describe("SQL drawing", () => {
     // The link ends on the customer_id row, the second row.
     expect(end.y).toBeGreaterThan(orders.y + 32 + 22);
     expect(end.y).toBeLessThan(orders.y + 32 + 44);
+  });
+
+  it("spreads out link ends that start at the same key", () => {
+    const s = parseSql(SHOP);
+    const lay = layoutSql(s, viz, "colour");
+    // orders.customer_id and orders.gift_for both point at customers.id.
+    const [a, b] = [lay.routes.get(s.relations[0])!, lay.routes.get(s.relations[1])!];
+    expect(a[0]).toEqual(b[0]);
+    const spread = spreadEnds(lay.routes);
+    const [sa, sb] = [spread.get(s.relations[0])!, spread.get(s.relations[1])!];
+    expect(Math.abs(sa[0].y - sb[0].y)).toBeCloseTo(7, 5);
+    expect(sa[0].x).toBe(a[0].x);
+    // The originals are left alone, and ends that don't share a point don't move.
+    expect(lay.routes.get(s.relations[0])![0]).toEqual(a[0]);
+    expect(spread.get(s.relations[2])!).toEqual(lay.routes.get(s.relations[2]));
   });
 
   it("draws every style, with source lines and warnings", () => {
