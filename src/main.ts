@@ -21,7 +21,7 @@ import {
   type RenderResult,
 } from "./engines";
 import { isPlantUmlLoaded, loadPlantUml } from "./engines/plantuml";
-import { BPMN_STYLES, CHART_STYLES, NET_STYLES, SQL_STYLES, WIRE_STYLES, STRUCT_STYLES, WAVE_STYLES, AUTOMATON_STYLES, LOGIC_STYLES, ORG_STYLES, SKETCH_STYLES, GRAPHVIZ_STYLES, MERMAID_STYLES, PLANTUML_STYLES, PLANTUML_THEMES } from "./engines/themes";
+import { BPMN_STYLES, CHART_STYLES, NET_STYLES, SQL_STYLES, D2_STYLES, NOMNOML_STYLES, WIRE_STYLES, STRUCT_STYLES, WAVE_STYLES, AUTOMATON_STYLES, LOGIC_STYLES, ORG_STYLES, SKETCH_STYLES, GRAPHVIZ_STYLES, MERMAID_STYLES, PLANTUML_STYLES, PLANTUML_THEMES } from "./engines/themes";
 import { byId, debounce, h, icon, isMac, modKey } from "./lib/dom";
 import { Preview, sourceHint, type SourceHint } from "./preview";
 import { hasSharedDiagram, readSharedDiagram } from "./share";
@@ -298,6 +298,14 @@ function fillStylePicker() {
     select.append(...SQL_STYLES.map((s) => option(s.value, s.label)));
     select.value = store.settings.sqlStyle;
     select.disabled = false;
+  } else if (engine === "d2") {
+    select.append(...D2_STYLES.map((s) => option(s.value, s.label)));
+    select.value = store.settings.d2Style;
+    select.disabled = false;
+  } else if (engine === "nomnoml") {
+    select.append(...NOMNOML_STYLES.map((s) => option(s.value, s.label)));
+    select.value = store.settings.nomnomlStyle;
+    select.disabled = false;
   } else if (engine === "wireframe") {
     select.append(...WIRE_STYLES.map((s) => option(s.value, s.label)));
     select.value = store.settings.wireStyle;
@@ -335,6 +343,8 @@ ui.styleSelect.addEventListener("change", () => {
   else if (engine === "orgchart") store.setSettings({ orgStyle: value as Settings["orgStyle"] });
   else if (engine === "network") store.setSettings({ netStyle: value as Settings["netStyle"] });
   else if (engine === "sql") store.setSettings({ sqlStyle: value as Settings["sqlStyle"] });
+  else if (engine === "d2") store.setSettings({ d2Style: value as Settings["d2Style"] });
+  else if (engine === "nomnoml") store.setSettings({ nomnomlStyle: value as Settings["nomnomlStyle"] });
   else if (engine === "wireframe") store.setSettings({ wireStyle: value as Settings["wireStyle"] });
   else if (engine === "structures") store.setSettings({ structStyle: value as Settings["structStyle"] });
   else if (engine === "wavedrom") store.setSettings({ waveStyle: value as Settings["waveStyle"] });
@@ -632,7 +642,9 @@ function applySettings(force = false) {
     s.automatonStyle !== prev.automatonStyle ||
     s.waveStyle !== prev.waveStyle ||
     s.structStyle !== prev.structStyle ||
-    s.wireStyle !== prev.wireStyle;
+    s.wireStyle !== prev.wireStyle ||
+    s.nomnomlStyle !== prev.nomnomlStyle ||
+    s.d2Style !== prev.d2Style;
   if (styleChanged) fillStylePicker();
   const needsRender =
     s.diagramTheme !== prev.diagramTheme ||
@@ -715,9 +727,9 @@ async function openFile(file: File) {
   let eng: Engine | null = ENGINES.find((e) => ENGINE_FILE_EXTS[e].includes(ext)) ?? null;
 
   if (ext === "md" || ext === "markdown") {
-    const block = text.match(/```(plantuml|puml|mermaid|dot|graphviz|echarts|bpmn|orgchart|network|sql|logic|automaton|wavedrom|structures|wireframe)\s*\n([\s\S]*?)```/);
+    const block = text.match(/```(plantuml|puml|mermaid|dot|graphviz|echarts|bpmn|orgchart|network|sql|logic|automaton|wavedrom|structures|wireframe|nomnoml|d2)\s*\n([\s\S]*?)```/);
     if (!block) {
-      toast(`No plantuml, mermaid, dot, echarts, bpmn, orgchart, network, sql, logic, automaton, wavedrom, structures or wireframe code block found in ${file.name}.`, { error: true });
+      toast(`No plantuml, mermaid, dot, echarts, bpmn, orgchart, network, sql, logic, automaton, wavedrom, structures, wireframe, nomnoml or d2 code block found in ${file.name}.`, { error: true });
       return;
     }
     eng = ENGINES.find((e) => ENGINE_FENCE[e] === block[1]) ?? (block[1] === "graphviz" ? "graphviz" : "plantuml");

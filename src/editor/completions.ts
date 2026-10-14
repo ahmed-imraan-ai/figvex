@@ -560,6 +560,41 @@ function wireframeSource(ctx: CompletionContext): CompletionResult | null {
   return null;
 }
 
+const NOMNOML_SNIPPETS: Completion[] = [
+  snippetCompletion("[${Name}|${field: Type}|${method()}]", { label: "[class]", detail: "box with compartments", type: "class" }),
+  snippetCompletion("[<abstract>${Name}]", { label: "<abstract>", type: "keyword" }),
+  snippetCompletion("[<actor>${User}]", { label: "<actor>", type: "keyword" }),
+  snippetCompletion("[<database>${Store}]", { label: "<database>", type: "keyword" }),
+  snippetCompletion("[<choice>${Ok?}]", { label: "<choice>", type: "keyword" }),
+  snippetCompletion("[<package>${Group}|\n  ${}\n]", { label: "<package>", type: "keyword" }),
+  snippetCompletion("#direction: ${right}", { label: "#direction", type: "keyword" }),
+  snippetCompletion("#fill: ${#eee8d5}", { label: "#fill", type: "keyword" }),
+  snippetCompletion("#stroke: ${#33322e}", { label: "#stroke", type: "keyword" }),
+];
+
+function nomnomlSource(ctx: CompletionContext): CompletionResult | null {
+  const word = ctx.matchBefore(/[#<\w]*/);
+  if (!word || (word.from === word.to && !ctx.explicit)) return null;
+  return { from: word.from, options: NOMNOML_SNIPPETS, validFor: /^[#<\w]*$/ };
+}
+
+const D2_SNIPPETS: Completion[] = [
+  snippetCompletion("${a} -> ${b}: ${label}", { label: "->", detail: "connection", type: "keyword" }),
+  snippetCompletion("${name}: {\n  ${}\n}", { label: "{ }", detail: "container", type: "keyword" }),
+  snippetCompletion("shape: ${rectangle}", { label: "shape", detail: "rectangle, circle, cylinder, person, cloud, sql_table...", type: "property" }),
+  snippetCompletion("direction: ${right}", { label: "direction", type: "property" }),
+  snippetCompletion("style.fill: ${\"#e8f0fe\"}", { label: "style.fill", type: "property" }),
+  snippetCompletion("style.stroke-dash: ${3}", { label: "style.stroke-dash", type: "property" }),
+  snippetCompletion("icon: ${https://icons.terrastruct.com/essentials/112-server.svg}", { label: "icon", type: "property" }),
+  snippetCompletion("tooltip: ${text}", { label: "tooltip", type: "property" }),
+];
+
+function d2Source(ctx: CompletionContext): CompletionResult | null {
+  const word = ctx.matchBefore(/[\w.-]*/);
+  if (!word || (word.from === word.to && !ctx.explicit)) return null;
+  return { from: word.from, options: D2_SNIPPETS, validFor: /^[\w.-]*$/ };
+}
+
 const SOURCES = {
   plantuml: plantumlSource,
   mermaid: mermaidSource,
@@ -575,6 +610,8 @@ const SOURCES = {
   wavedrom: waveSource,
   structures: structuresSource,
   wireframe: wireframeSource,
+  nomnoml: nomnomlSource,
+  d2: d2Source,
 } as const;
 
 export function completionSource(engine: Engine) {

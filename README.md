@@ -12,7 +12,7 @@ It was built for computer science students: UML for software engineering courses
 
 ## Features
 
-- Live preview for PlantUML, Mermaid, Graphviz DOT, BPMN 2.0 and ECharts data charts, with box plots, histograms, trend lines and density curves worked out from raw data, with the language picked up from the first line
+- Live preview for PlantUML, Mermaid, Graphviz DOT, D2, nomnoml, BPMN 2.0 and ECharts data charts, with box plots, histograms, trend lines and density curves worked out from raw data, with the language picked up from the first line
 - ER diagrams drawn straight from SQL: paste `CREATE TABLE` statements, or a whole PostgreSQL, MySQL, SQLite or SQL Server dump, and get tables with crow's foot links
 - Boolean logic: truth tables, Karnaugh maps with their groups, the simplest sum of products and product of sums, and gate circuits, from an expression or a list of minterms
 - Automata: DFAs, NFAs with ε moves and Turing machines from their transitions, with each input run through the machine and a step-through on the diagram
@@ -23,7 +23,7 @@ It was built for computer science students: UML for software engineering courses
 - Network diagrams with device icons, subnets, VLANs, ports and link types, and checks that catch address mistakes as you type; rack elevations and floor plans with cable runs alongside, and a device list in a CSV file opens as a network
 - Org charts from an indented list of people, with departments, assistants, vacancies, dotted lines and three card styles
 - A sketch canvas for freeform diagrams: boxes, arrows that stay attached, text and pen, in a clean or hand-drawn style
-- 115 templates written around coursework: a library system class diagram, JWT login sequence, TCP state machine, DFA for multiples of 3, binary search tree, hash table, confusion matrix, sorting benchmark, library loan process, login wireframe, an app sign-in flow, society committee org chart, subnetting exercise, university ER schema from SQL, levelled data flow diagrams, Karnaugh maps, a full adder circuit, Turing machines, an SPI timing diagram, hash tables with chaining and probing, capstone Gantt plan, communication, composite structure and interaction overview diagrams and more
+- 120 templates written around coursework: a library system class diagram, JWT login sequence, TCP state machine, DFA for multiples of 3, binary search tree, hash table, confusion matrix, sorting benchmark, library loan process, login wireframe, an app sign-in flow, society committee org chart, subnetting exercise, university ER schema from SQL, levelled data flow diagrams, Karnaugh maps, a full adder circuit, Turing machines, an SPI timing diagram, hash tables with chaining and probing, capstone Gantt plan, communication, composite structure and interaction overview diagrams and more
 - Export to SVG, PNG, JPG, WEBP and vector PDF, at 1× to 4× scale, with a solid or transparent background
 - Copy the image straight to the clipboard for pasting into a report or slides
 - Share links that carry the whole diagram in the URL, with no server involved
@@ -33,7 +33,7 @@ It was built for computer science students: UML for software engineering courses
 - Errors point at the line, with a marker in the editor; PlantUML class, sequence and state diagrams are also checked for common modelling mistakes
 - Every diagram saved in the browser, with rename, duplicate, delete and undo; collapsed, the list stays as a narrow rail of recent diagrams
 - A language picker above the editor that you can type into to search; changing the language of a diagram with real content starts a new one, so nothing is overwritten
-- Open `.puml`, `.mmd`, `.gv`, `.dot`, `.bpmn`, `.sketch`, `.org`, `.network`, `.sql`, `.logic`, `.automaton`, `.wavedrom`, `.structures`, `.wireframe`, chart and Markdown files, or drag them onto the window; a `.csv` file opens as a bar chart of its columns
+- Open `.puml`, `.mmd`, `.gv`, `.dot`, `.bpmn`, `.sketch`, `.org`, `.network`, `.sql`, `.logic`, `.automaton`, `.wavedrom`, `.structures`, `.wireframe`, `.d2`, `.nomnoml`, chart and Markdown files, or drag them onto the window; a `.csv` file opens as a bar chart of its columns
 - Light and dark themes for the app and for the diagrams, separately
 - Pan and zoom with mouse, trackpad or touch; works on phones as two tabs
 
@@ -192,6 +192,26 @@ ana .. mia "budget"
 | `counts` | Show how many people sit under each manager |
 
 The Style menu has **Cards** (initials and a department colour strip), **Minimal** (black and white, for printing) and **Bold** (department-coloured headers). Department colours come with a legend, and clicking a person jumps to their line. For a chart you want to arrange by hand instead, use a sketch with the Connector tool.
+
+## D2 and nomnoml
+
+For people who already write them, [D2](https://d2lang.com/tour/intro) and [nomnoml](https://nomnoml.com/) work as they do elsewhere.
+
+```
+direction: right
+user: Student {shape: person}
+user -> web: HTTPS
+web -> db
+db: {shape: cylinder}
+```
+
+```
+[<abstract>Item|title: String]
+[Book] -:> [Item]
+[Member] 1 - 0..* [Loan]
+```
+
+D2 runs through its official WebAssembly build, which is large (about 8 MB), so it loads the first time a D2 diagram is drawn and runs in its own worker. The Style menu picks one of D2's themes (Neutral, Grey, Colour-blind clear, Terminal, Origami) or its sketch look; dark diagrams use D2's dark theme. For nomnoml, the menu picks its own warm colours or black and white; `#fill` and `#stroke` lines in the diagram take priority. Errors in either point at the line.
 
 ## UI wireframes
 
@@ -626,7 +646,7 @@ Set these as environment variables when building (in Netlify under **Site config
 ```
 src/
   main.ts             wiring: documents, rendering, toolbar, shortcuts
-  engines/            PlantUML, Mermaid, Graphviz, ECharts, BPMN, sketch, org chart, network, SQL, logic, automaton, WaveDrom, data structure and wireframe engines, language detection, themes
+  engines/            PlantUML, Mermaid, Graphviz, ECharts, BPMN, sketch, org chart, network, SQL, logic, automaton, WaveDrom, data structure, wireframe, D2 and nomnoml engines, language detection, themes
   editor/             CodeMirror setup, syntax colouring, autocomplete
   preview.ts          pan and zoom canvas, click-to-source
   export.ts           SVG, PNG, JPG, WEBP and PDF export
@@ -663,7 +683,7 @@ docker/               nginx config for the Docker image
 The full plan is in [ROADMAP.md](ROADMAP.md). It has three phases:
 
 1. Complex networking and visual editing (done).
-2. Statistical charts, UI wireframes, network diagrams, advanced UML, cloud infrastructure, complex data models and coursework tools (both done: ER diagrams from SQL, logic, automata, timing diagrams and data structures).
+2. Statistical charts, UI wireframes, physical network views, advanced UML, cloud infrastructure, complex data models, D2 and nomnoml, and coursework tools (done).
 3. Advanced scientific and financial charts, geographic maps, CAD, 3D, electrical schematics, formal process models and interactive visual analytics.
 
 AI assistance is planned alongside these, through MCP only: people use their own assistant and subscription, such as Claude Code or Claude Desktop, and it works with Figvex through a local `figvex-mcp` server. There's no login; links and pairing codes connect the assistant to the user's diagrams. Figvex runs no AI service of its own.

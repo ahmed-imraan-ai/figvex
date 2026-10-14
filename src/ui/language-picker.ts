@@ -14,6 +14,8 @@ const ABOUT: Record<Engine, { blurb: string; words: string }> = {
   sketch: { blurb: "Draw boxes and arrows by hand", words: "draw whiteboard freeform canvas pen" },
   orgchart: { blurb: "People and who they report to", words: "organisation organization team people hierarchy staff" },
   network: { blurb: "Devices, subnets, VLANs and links", words: "lan wan ip subnet vlan router switch firewall topology infrastructure" },
+  d2: { blurb: "The D2 diagram language: shapes, containers and connections", words: "d2 terrastruct architecture boxes containers sql_table sequence" },
+  nomnoml: { blurb: "Quick UML-style boxes and arrows in bracket syntax", words: "nomnoml uml class boxes brackets sketch quick" },
   wireframe: { blurb: "Screens, forms and user flows for apps and sites", words: "wireframe mockup ui ux screen form app website prototype layout login" },
   structures: { blurb: "Arrays, linked lists, trees, heaps, hash tables, graphs", words: "array list linked stack queue tree bst heap hash table graph matrix algorithm data structure" },
   wavedrom: { blurb: "Digital timing diagrams, registers and logic in WaveJSON", words: "timing waveform signal clock bus digital electronics register bitfield wavejson waveform hardware" },
