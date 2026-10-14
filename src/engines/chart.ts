@@ -10,6 +10,7 @@
 // This file parses the text. ECharts itself loads on first use from
 // chart-runtime.ts, so other diagram types never download it.
 
+import { applyStats, StatError } from "./chart-stats";
 import type { ChartStyle, RenderOptions, RenderResult } from "./types";
 
 /** Series types registered in chart-runtime.ts. */
@@ -176,6 +177,12 @@ export function parseChart(code: string): ParsedChart {
   delete option.height;
 
   if (csv !== null) attachCsv(option, csv, csvLine);
+  try {
+    applyStats(option);
+  } catch (err) {
+    if (err instanceof StatError) throw new ChartError(err.message, keyLine(json, "type", err.type));
+    throw err;
+  }
   checkSeries(option, json);
   return { option, width, height };
 }
