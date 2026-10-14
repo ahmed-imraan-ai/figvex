@@ -20,10 +20,10 @@ It was built for computer science students: UML for software engineering courses
 - Data structure pictures: arrays with pointers, stacks, queues, linked lists, trees, binary search trees, heaps, hash tables and graphs, one per line
 - Cloud diagrams with the official AWS, Azure, Google Cloud and Kubernetes icons, and a search that inserts any of 1,200 icons with its includes
 - UI wireframes: phone, tablet and browser screens of common controls, with arrows for the user flow, drawn clean or sketchy
-- Network diagrams with device icons, subnets, VLANs, ports and link types, and checks that catch address mistakes as you type
+- Network diagrams with device icons, subnets, VLANs, ports and link types, and checks that catch address mistakes as you type; rack elevations and floor plans with cable runs alongside, and a device list in a CSV file opens as a network
 - Org charts from an indented list of people, with departments, assistants, vacancies, dotted lines and three card styles
 - A sketch canvas for freeform diagrams: boxes, arrows that stay attached, text and pen, in a clean or hand-drawn style
-- 114 templates written around coursework: a library system class diagram, JWT login sequence, TCP state machine, DFA for multiples of 3, binary search tree, hash table, confusion matrix, sorting benchmark, library loan process, login wireframe, an app sign-in flow, society committee org chart, subnetting exercise, university ER schema from SQL, levelled data flow diagrams, Karnaugh maps, a full adder circuit, Turing machines, an SPI timing diagram, hash tables with chaining and probing, capstone Gantt plan, communication, composite structure and interaction overview diagrams and more
+- 115 templates written around coursework: a library system class diagram, JWT login sequence, TCP state machine, DFA for multiples of 3, binary search tree, hash table, confusion matrix, sorting benchmark, library loan process, login wireframe, an app sign-in flow, society committee org chart, subnetting exercise, university ER schema from SQL, levelled data flow diagrams, Karnaugh maps, a full adder circuit, Turing machines, an SPI timing diagram, hash tables with chaining and probing, capstone Gantt plan, communication, composite structure and interaction overview diagrams and more
 - Export to SVG, PNG, JPG, WEBP and vector PDF, at 1× to 4× scale, with a solid or transparent background
 - Copy the image straight to the clipboard for pasting into a report or slides
 - Share links that carry the whole diagram in the URL, with no server involved
@@ -299,6 +299,39 @@ Addresses can be IPv4 or IPv6, with or without a prefix. Figvex checks them as y
 - devices that aren't linked to anything
 
 The checks don't stop the drawing. The Style menu has **Colour tiles**, **Outline** and **Greyscale**. Clicking a device, link or zone jumps to its line.
+
+### Racks and floor plans
+
+The same file can show where the devices physically are. Rack and floor blocks refer to devices declared above, and are drawn under the logical diagram:
+
+```
+rack r1 "Comms rack" 12U
+  12 patch "Patch panel"
+  10 core
+  6-7 nas
+  1-2 ups "UPS"
+floor g "Ground floor" 20x10
+  room "Office" 0 0 14 10
+  room "Comms" 14 0 6 5
+  core 17 2
+  desk1 3 3
+```
+
+| Line | Does |
+| --- | --- |
+| `rack id "Label" 42U` | A rack, drawn from the front with its units numbered from the bottom |
+| `3 core`, `5-6 nas` | A device in a unit or a range of units |
+| `1 patch "Label"` | A part that isn't a device: `patch`, `blank`, `shelf`, `ups`, `pdu`, `cable` or `kvm` |
+| `floor id "Label" 20x10` | A floor plan, width and depth in metres, on a metre grid |
+| `room "Office" x y width depth` | A room on the floor |
+| `core 17 2` | A device's position on the floor, in metres |
+| `view physical` | Show only the racks and floors (`logical` hides them; `all` is the default) |
+
+Links between devices on the same floor are drawn as cable runs along the walls' directions, with the estimated length; wireless links are dotted. Overlapping rack units, units above the top of a rack and devices outside a floor are marked as warnings.
+
+### Importing a device list
+
+Opening a CSV or TSV file whose columns look like a device list makes a network diagram instead of a chart. Columns are matched by their names: a name or hostname column is needed, with any of type, IP address, zone or location, subnet, VLAN and uplink. Types are read from common words (firewall, switch, access point, NAS, workstation and so on), rows with the same zone are grouped, and each uplink becomes a link.
 
 ## ER diagrams from SQL
 

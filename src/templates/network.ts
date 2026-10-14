@@ -181,4 +181,50 @@ s3 -- hr1
 s4 -- mon
 `,
   },
+  {
+    id: "net-physical",
+    engine: "network",
+    category: "Architecture & networks",
+    title: "Comms rack and floor plan",
+    summary: "The same small office three ways: the logical network, the rack it lives in, and a floor plan with cable runs.",
+    code: `network
+title "Small office: logical and physical"
+internet
+firewall fw "Firewall" 10.0.0.1
+switch core "Core switch" 10.0.0.2
+server nas "File server" 10.0.0.10
+ap wap "Wi-Fi" 10.0.0.3
+pc desk1 "Desk 1" 10.0.0.21
+pc desk2 "Desk 2" 10.0.0.22
+printer prn "Printer" 10.0.0.30
+laptop lap "Laptop"
+internet -- fw
+fw -- core
+core -- nas, wap, desk1, desk2, prn
+wap ~~ lap
+
+# A rack elevation: the unit (counting from 1 at the bottom), then a
+# device from above or a part: patch, blank, shelf, ups, pdu, cable, kvm.
+rack r1 "Comms rack" 12U
+  12 patch "Patch panel"
+  11 cable
+  10 core
+  9 fw
+  6-7 nas
+  1-2 ups "UPS"
+
+# A floor plan in metres: rooms as x y width depth, devices at x y.
+# Cables follow the links above, with an estimated length.
+floor g "Ground floor" 20x10
+  room "Office" 0 0 14 10
+  room "Comms" 14 0 6 5
+  room "Print" 14 5 6 5
+  core 17 2
+  desk1 3 3
+  desk2 3 7
+  wap 8 5
+  lap 10 7
+  prn 17 8
+`,
+  },
 ];
